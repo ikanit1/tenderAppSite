@@ -107,7 +107,7 @@
 
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
   align-items: stretch;
@@ -377,5 +377,11 @@
   .cardModel {
     min-height: 3rem;
     font-size: 1.1rem;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .cards {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   }
 }

@@ -106,7 +106,7 @@
 }
 
 .marqueeCard {
-  flex: 0 0 200px;
+  flex: 0 0 180px;
   background: rgba(10, 0, 31, 0.9);
   backdrop-filter: blur(10px);
   border: 1px solid var(--color-border, rgba(157, 78, 221, 0.2));
@@ -226,11 +226,11 @@
 
 @media (max-width: 768px) {
   .marqueeCard {
-    flex: 0 0 160px;
+    flex: 0 0 140px;
   }
   
   .marqueeCardImage {
-    height: 100px;
+    height: 90px;
   }
   
   .marqueeGradientLeft,

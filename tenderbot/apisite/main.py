@@ -1,7 +1,7 @@
 """Основной API сервер"""
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, FileResponse, Response
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from typing import Optional
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -23,6 +23,7 @@ import shutil
 import subprocess
 import threading
 import re
+import uuid
 from functools import lru_cache
 
 logging.basicConfig(
@@ -178,12 +179,32 @@ image_parser_state = {
     "task": None
 }
 
+# Хранилище корзин по session ID (in-memory)
+_cart_storage: dict[str, list] = {}
+_cart_storage_lock = threading.Lock()
+
 # Инициализируем lock при первом использовании
 def get_lock():
     """Получает или создает lock для кэша"""
     if cache_state["lock"] is None:
         cache_state["lock"] = asyncio.Lock()
     return cache_state["lock"]
+
+
+def get_or_create_session_id(request: Request, response: Response) -> str:
+    """Получает session ID из cookie или создает новый"""
+    session_id = request.cookies.get("cart_session_id")
+    if not session_id:
+        session_id = str(uuid.uuid4())
+        response.set_cookie(
+            key="cart_session_id",
+            value=session_id,
+            max_age=30 * 24 * 60 * 60,  # 30 дней
+            httponly=False,  # Нужен доступ из JavaScript
+            samesite="lax",  # Для работы с cross-origin запросами
+            secure=False  # Для dev (localhost), в production должно быть True
+        )
+    return session_id
 
 
 @lru_cache()
@@ -1142,6 +1163,138 @@ class AssistantChatRequest(BaseModel):
 class AssistantChatResponse(BaseModel):
     text: str
     product_models: list[str] = []
+
+
+# ==================== API для корзины ====================
+
+class CartItem(BaseModel):
+    model: str
+    name: Optional[str] = None
+    brand: Optional[str] = None
+    price: Optional[float] = None
+    quantity: int = 1
+
+
+class CartRequest(BaseModel):
+    items: list[CartItem]
+
+
+class AddItemRequest(BaseModel):
+    item: CartItem
+    quantity: int = 1
+
+
+@app.get("/api/cart")
+async def get_cart(request: Request, response: Response):
+    """Получает корзину пользователя"""
+    try:
+        session_id = get_or_create_session_id(request, response)
+        with _cart_storage_lock:
+            cart = _cart_storage.get(session_id, [])
+        return JSONResponse(content={"items": cart})
+    except Exception as e:
+        logger.error(f"Ошибка при получении корзины: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/cart")
+async def save_cart(request: Request, response: Response, cart_request: CartRequest):
+    """Сохраняет корзину пользователя"""
+    try:
+        session_id = get_or_create_session_id(request, response)
+        # Валидация и нормализация данных
+        items = []
+        for item in cart_request.items:
+            if not item.model or not item.model.strip():
+                continue
+            items.append({
+                "model": item.model.strip(),
+                "name": item.name.strip() if item.name else None,
+                "brand": item.brand.strip() if item.brand else None,
+                "price": float(item.price) if item.price is not None and not (isinstance(item.price, float) and (item.price != item.price or item.price == float('inf'))) else None,
+                "quantity": max(1, int(item.quantity)) if item.quantity else 1
+            })
+        
+        with _cart_storage_lock:
+            _cart_storage[session_id] = items
+        
+        return JSONResponse(content={"status": "success", "items": items})
+    except Exception as e:
+        logger.error(f"Ошибка при сохранении корзины: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/cart")
+async def clear_cart(request: Request, response: Response):
+    """Очищает корзину пользователя"""
+    try:
+        session_id = get_or_create_session_id(request, response)
+        with _cart_storage_lock:
+            _cart_storage[session_id] = []
+        return JSONResponse(content={"status": "success"})
+    except Exception as e:
+        logger.error(f"Ошибка при очистке корзины: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/cart/items")
+async def add_item_to_cart(request: Request, response: Response, add_request: AddItemRequest):
+    """Добавляет товар в корзину"""
+    try:
+        session_id = get_or_create_session_id(request, response)
+        if not add_request.item.model or not add_request.item.model.strip():
+            raise HTTPException(status_code=400, detail="Model is required")
+        
+        new_item = {
+            "model": add_request.item.model.strip(),
+            "name": add_request.item.name.strip() if add_request.item.name else None,
+            "brand": add_request.item.brand.strip() if add_request.item.brand else None,
+            "price": float(add_request.item.price) if add_request.item.price is not None and not (isinstance(add_request.item.price, float) and (add_request.item.price != add_request.item.price or add_request.item.price == float('inf'))) else None,
+            "quantity": max(1, int(add_request.quantity)) if add_request.quantity else 1
+        }
+        
+        with _cart_storage_lock:
+            cart = _cart_storage.get(session_id, [])
+            # Ищем существующий товар
+            existing_index = None
+            for i, item in enumerate(cart):
+                if item.get("model", "").strip() == new_item["model"]:
+                    existing_index = i
+                    break
+            
+            if existing_index is not None:
+                # Увеличиваем количество
+                cart[existing_index]["quantity"] += new_item["quantity"]
+            else:
+                # Добавляем новый товар
+                cart.append(new_item)
+            
+            _cart_storage[session_id] = cart
+        
+        return JSONResponse(content={"status": "success", "items": cart})
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Ошибка при добавлении товара в корзину: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/cart/items/{model}")
+async def remove_item_from_cart(request: Request, response: Response, model: str):
+    """Удаляет товар из корзины"""
+    try:
+        session_id = get_or_create_session_id(request, response)
+        model = model.strip()
+        
+        with _cart_storage_lock:
+            cart = _cart_storage.get(session_id, [])
+            cart = [item for item in cart if item.get("model", "").strip() != model]
+            _cart_storage[session_id] = cart
+        
+        return JSONResponse(content={"status": "success", "items": cart})
+    except Exception as e:
+        logger.error(f"Ошибка при удалении товара из корзины: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/admin/prices")

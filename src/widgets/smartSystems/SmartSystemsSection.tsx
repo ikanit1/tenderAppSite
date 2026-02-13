@@ -165,14 +165,6 @@ export function SmartSystemsSection({ productLimit, compact = false }: SmartSyst
       aria-labelledby="smart-systems-heading"
       {...sectionMotion}
     >
-      <h2 id="smart-systems-heading" className={styles.title}>
-        {akuvoxSmartSystems.title}
-      </h2>
-      <p className={styles.subtitle}>{akuvoxSmartSystems.subtitle}</p>
-      <p className={styles.rate}>
-        Курс: 1 USD = {akuvoxSmartSystems.usdToKzt.toLocaleString('ru-KZ')} ₸
-      </p>
-
       {!compact && (
         <div className={styles.filters}>
           <input

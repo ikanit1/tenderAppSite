@@ -462,8 +462,8 @@ def main():
             categories.append({"id": re.sub(r"\s+", "-", c.lower()), "title": c, "products": by_category[c]})
 
     out = {
-        "title": "Умная система",
-        "subtitle": "Оборудование Akuvox для умного дома: сенсорные панели и аксессуары. Цены в тенге (₸).",
+        "title": "",
+        "subtitle": "",
         "usdToKzt": USD_TO_KZT,
         "categories": categories,
     }

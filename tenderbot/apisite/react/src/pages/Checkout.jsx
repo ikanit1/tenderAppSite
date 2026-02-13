@@ -18,9 +18,27 @@ export default function Checkout() {
   const [phone, setPhone] = useState('');
   const [comment, setComment] = useState('');
 
-  // Синхронизация корзины из localStorage при монтировании компонента
+  // Синхронизация корзины из localStorage и API при монтировании компонента
   useEffect(() => {
     syncCart();
+  }, [syncCart]);
+
+  // Периодическая синхронизация с API (каждые 3 секунды)
+  useEffect(() => {
+    const syncInterval = setInterval(() => {
+      syncCart();
+    }, 3000); // 3 секунды
+
+    // Синхронизация при фокусе окна
+    const handleFocus = () => {
+      syncCart();
+    };
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      clearInterval(syncInterval);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [syncCart]);
 
   // Чтение корзины из URL параметров (при переходе с основного сайта)

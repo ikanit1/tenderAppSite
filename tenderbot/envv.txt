@@ -25,4 +25,4 @@ WEB_SECRET_KEY=change-me-in-production
 # Домен для веб-приложения и Mini App (HTTPS)
 # Локальный тест: ngrok URL → MINIAPP_BASE_URL=https://xxxx.ngrok-free.app
 # Production: реальный домен → MINIAPP_BASE_URL=https://grgroup.kz
-MINIAPP_BASE_URL=http://localhost:8000
+MINIAPP_BASE_URL=https://ee93-5-76-222-24.ngrok-free.app
