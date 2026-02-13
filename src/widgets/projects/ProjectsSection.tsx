@@ -20,18 +20,18 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring', stiffness: 280, damping: 22 },
+    transition: { type: 'spring' as const, stiffness: 280, damping: 22 },
   },
 };
 
 const springTransition = { type: 'spring' as const, stiffness: 400, damping: 25 };
 
 const expandedVariants = {
-  collapsed: { height: 0, opacity: 0, transition: { type: 'spring', stiffness: 300, damping: 30 } },
+  collapsed: { height: 0, opacity: 0, transition: { type: 'spring' as const, stiffness: 300, damping: 30 } },
   expanded: {
     height: 'auto',
     opacity: 1,
-    transition: { type: 'spring', stiffness: 300, damping: 30 },
+    transition: { type: 'spring' as const, stiffness: 300, damping: 30 },
   },
 };
 

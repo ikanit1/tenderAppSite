@@ -4,7 +4,7 @@ import type { AkuvoxProduct } from '@/shared/content/akuvoxSmartSystems';
 import { useCart } from '@/shared/context/CartContext';
 import styles from './SmartSystemsProductModal.module.css';
 
-const modalTransition = { type: 'tween', duration: 0.25, ease: [0.25, 0.1, 0.25, 1] };
+const modalTransition = { type: 'tween' as const, duration: 0.25, ease: [0.25, 0.1, 0.25, 1] as const };
 const detailVariants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.05 } },

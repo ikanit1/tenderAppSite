@@ -95,6 +95,9 @@ export const digitalEcosystemContent = {
     },
   ],
 
+  conclusion:
+    'Готовы обсудить условия и сроки реализации проекта под ваши задачи. Свяжитесь с нами для расчёта и коммерческого предложения.',
+
   equipmentTitle: 'Оборудование',
   equipment: [
     {

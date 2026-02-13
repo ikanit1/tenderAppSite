@@ -21,7 +21,7 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring', stiffness: 280, damping: 22 },
+    transition: { type: 'spring' as const, stiffness: 280, damping: 22 },
   },
 };
 
@@ -47,7 +47,7 @@ export function PartnersSection() {
             <motion.div
               className={styles.mainPartnerLogo}
               whileHover={reduceMotion ? undefined : { scale: 1.03 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              transition={{ type: 'spring' as const, stiffness: 400, damping: 25 }}
             >
               <img
                 src={partnersContent.mainPartner.logo}
@@ -69,7 +69,7 @@ export function PartnersSection() {
                       onClick={() => setSelectedCert({ label: cert.label, src: cert.src })}
                       whileHover={reduceMotion ? undefined : { scale: 1.05 }}
                       whileTap={reduceMotion ? undefined : { scale: 0.98 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                      transition={{ type: 'spring' as const, stiffness: 400, damping: 25 }}
                     >
                       {cert.label}
                     </motion.button>
@@ -95,7 +95,7 @@ export function PartnersSection() {
               variants={reduceMotion ? undefined : itemVariants}
               whileHover={reduceMotion ? undefined : { scale: 1.04, y: -4 }}
               whileTap={reduceMotion ? undefined : { scale: 0.98 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              transition={{ type: 'spring' as const, stiffness: 400, damping: 25 }}
             >
               <img
                 src={logo.src}

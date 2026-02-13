@@ -3,7 +3,7 @@ import { useCart } from '@/shared/context/CartContext';
 import { getCatalogUrl } from '@/shared/utils/catalogUrl';
 import styles from './CartPanel.module.css';
 
-const panelTransition = { type: 'tween' as const, duration: 0.25, ease: [0.25, 0.1, 0.25, 1] };
+const panelTransition = { type: 'tween' as const, duration: 0.25, ease: [0.25, 0.1, 0.25, 1] as const };
 const listVariants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.04 } },

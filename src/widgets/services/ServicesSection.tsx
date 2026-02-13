@@ -20,7 +20,7 @@ const headerVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring', stiffness: 280, damping: 22 },
+    transition: { type: 'spring' as const, stiffness: 280, damping: 22 },
   },
 };
 
@@ -40,7 +40,7 @@ const cardVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring', stiffness: 260, damping: 22 },
+    transition: { type: 'spring' as const, stiffness: 260, damping: 22 },
   },
 };
 
@@ -60,7 +60,7 @@ const itemVariants = {
   visible: {
     opacity: 1,
     x: 0,
-    transition: { type: 'spring', stiffness: 300, damping: 24 },
+    transition: { type: 'spring' as const, stiffness: 300, damping: 24 },
   },
 };
 
@@ -103,7 +103,7 @@ export function ServicesSection({ fullPage }: ServicesSectionProps) {
                 variants={reduceMotion ? undefined : cardVariants}
                 whileHover={reduceMotion ? undefined : { y: -6, scale: 1.02 }}
                 whileTap={reduceMotion ? undefined : { scale: 0.99 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                transition={{ type: 'spring' as const, stiffness: 400, damping: 25 }}
               >
                 <h3 className={styles.cardTitle}>{service.title}</h3>
                 <motion.ul

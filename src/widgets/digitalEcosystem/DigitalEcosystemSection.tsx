@@ -16,7 +16,7 @@ const itemVariants: Variants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring', stiffness: 280, damping: 24 },
+    transition: { type: 'spring' as const, stiffness: 280, damping: 24 },
   },
 };
 
@@ -36,7 +36,7 @@ const iconVariants: Variants = {
     scale: 1,
     rotate: 0,
     transition: {
-      type: 'spring',
+      type: 'spring' as const,
       stiffness: 300,
       damping: 20,
     },
@@ -46,7 +46,7 @@ const iconVariants: Variants = {
 const iconHoverVariants = {
   scale: 1.1,
   rotate: 5,
-  transition: { type: 'spring', stiffness: 400, damping: 15 },
+  transition: { type: 'spring' as const, stiffness: 400, damping: 15 },
 };
 
 export function DigitalEcosystemSection() {
@@ -168,7 +168,7 @@ export function DigitalEcosystemSection() {
           {c.advantagesTitle}
         </motion.h2>
         <motion.div className={styles.advGrid} variants={reduceMotion ? undefined : gridVariants}>
-          {c.advantages.map((a, idx) => (
+          {c.advantages.map((a) => (
             <motion.article
               key={a.title}
               className={styles.advCard}
@@ -270,7 +270,7 @@ export function DigitalEcosystemSection() {
           {c.equipmentTitle}
         </motion.h2>
         <div className={styles.equipmentGrid}>
-          {c.equipment.map((eq, idx) => (
+          {c.equipment.map((eq) => (
             <motion.article
               key={eq.title}
               className={styles.equipmentCard}
