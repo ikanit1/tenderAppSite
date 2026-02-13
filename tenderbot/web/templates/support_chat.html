@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Чат #{{ ticket.id }} — {{ ticket.user.full_name }}{% endblock %}
+{% block header_title %}Чат #{{ ticket.id }}{% endblock %}
+{% block content %}
+<div class="chat-header">
+    <div>
+        <a href="/support" class="btn btn-ghost btn-sm" style="margin-right: 0.5rem;">← К списку</a>
+        <strong>{{ ticket.user.full_name }}</strong> (Telegram ID: {{ ticket.user.tg_id }})
+        {% if ticket.status == 'new' %}<span class="badge badge-danger">🆕 Новый</span>{% endif %}
+        {% if ticket.status == 'in_progress' %}<span class="badge badge-warning">⏳ В процессе</span>{% endif %}
+        {% if ticket.status == 'closed' %}<span class="badge badge-neutral">📁 Закрыт</span>{% endif %}
+    </div>
+    {% if ticket.status != 'closed' %}
+    <form method="post" action="/support/{{ ticket.id }}/close" style="display: inline;">
+        {{ csrf_hidden_input(request)|safe }}
+        <button type="submit" class="btn btn-secondary">Закрыть тикет</button>
+    </form>
+    {% endif %}
+</div>
+<div class="chat-messages">
+    {% for m in messages %}
+    <div class="msg {{ m.author }}">
+        {% if m.image_url %}
+        <div class="msg-img"><img src="{{ m.image_url }}" alt="Фото" loading="lazy"></div>
+        {% endif %}
+        {% if m.text and m.text != '(изображение)' %}<div class="msg-text">{{ m.text|e }}</div>{% endif %}
+        <div class="msg-meta">{% if m.author == 'user' %}Пользователь{% elif m.author == 'admin' %}Администратор{% else %}{{ m.author }}{% endif %} · {{ m.created_at.strftime('%d.%m.%Y %H:%M') if m.created_at else '' }}</div>
+    </div>
+    {% endfor %}
+    {% if not messages %}
+    <p class="empty-state">Нет сообщений.</p>
+    {% endif %}
+</div>
+{% if ticket.status != 'closed' %}
+<form method="post" action="/support/{{ ticket.id }}/reply" class="chat-form" enctype="multipart/form-data">
+    {{ csrf_hidden_input(request)|safe }}
+    <textarea name="text" placeholder="Введите ответ..."></textarea>
+    <div class="chat-form-file">
+        <label class="btn btn-ghost btn-sm">📷 Приложить изображение <input type="file" name="image" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none"></label>
+    </div>
+    <button type="submit" class="btn btn-success">Отправить</button>
+</form>
+<div class="templates">
+    <span>Шаблоны:</span>
+    <button type="button" onclick="var t=document.querySelector('textarea[name=text]'); t.value='Здравствуйте! Чем могу помочь?'; t.focus();">Здравствуйте!</button>
+    <button type="button" onclick="document.querySelector('textarea[name=text]').value='Ваш вопрос принят в работу.';">Принят в работу</button>
+    <button type="button" onclick="document.querySelector('textarea[name=text]').value='Пожалуйста, приложите скриншот или уточните детали.';">Уточните детали</button>
+    <button type="button" onclick="document.querySelector('textarea[name=text]').value='Спасибо за обращение. Тикет закрыт.';">Закрыть тикет</button>
+</div>
+{% endif %}
+{% endblock %}

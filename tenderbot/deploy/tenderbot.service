@@ -1,0 +1,26 @@
+[Unit]
+Description=TenderBot (Telegram Bot + Web Admin)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=tenderbot
+Group=tenderbot
+WorkingDirectory=/opt/tenderbot
+EnvironmentFile=/opt/tenderbot/.env
+ExecStart=/opt/tenderbot/venv/bin/python run.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/tenderbot/web/static/uploads
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

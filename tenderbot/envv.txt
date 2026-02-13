@@ -1,0 +1,28 @@
+# Скопируйте в .env и заполните (или заполните .envv и переименуйте в .env).
+# .envv коммитится в репозиторий как шаблон.
+
+BOT_TOKEN=your_bot_token_here
+ADMIN_ID=your_telegram_id
+
+# SQLite — быстрый запуск без PostgreSQL
+# Локально: DATABASE_URL=sqlite+aiosqlite:///./test.db
+# VPS (абсолютный путь): DATABASE_URL=sqlite+aiosqlite:////var/www/tenderbot/data/tenderbot.db
+DATABASE_URL=sqlite+aiosqlite:///./test.db
+
+# Вариант PostgreSQL (рекомендуется для VPS):
+# DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/tenderbot
+
+# Веб-админка (единственный учёт — администратор)
+# ОБЯЗАТЕЛЬНО для production: смените дефолтные значения!
+# Генерация WEB_SECRET_KEY: openssl rand -hex 32
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin
+WEB_SECRET_KEY=change-me-in-production
+# WEB_HOST=0.0.0.0
+# WEB_PORT=8000
+# BOT_USERNAME=ИмяБота (без @, для ссылки на лендинге)
+
+# Домен для веб-приложения и Mini App (HTTPS)
+# Локальный тест: ngrok URL → MINIAPP_BASE_URL=https://xxxx.ngrok-free.app
+# Production: реальный домен → MINIAPP_BASE_URL=https://grgroup.kz
+MINIAPP_BASE_URL=http://localhost:8000

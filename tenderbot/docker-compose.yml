@@ -1,0 +1,68 @@
+version: "3.8"
+
+# Root site (маркетинговый сайт) собирается на хосте командой:
+# cd /path/to/tenderAppSite-main && npm run build
+# Собранный dist/ должен быть размещен по пути, указанному в nginx конфиге
+# (по умолчанию /var/www/tenderAppSite/dist)
+# Root site раздается через Nginx напрямую, без Docker контейнера
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tenderbot
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tenderbot_secret}
+      POSTGRES_DB: tenderbot
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tenderbot"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://tenderbot:${POSTGRES_PASSWORD:-tenderbot_secret}@db:5432/tenderbot
+    ports:
+      - "${WEB_PORT:-8000}:8000"
+    volumes:
+      - uploads:/app/web/static/uploads
+
+  apisite:
+    build:
+      context: .
+      dockerfile: apisite/Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: ${APISITE_PORT:-8001}
+      HOST: 0.0.0.0
+      API_KEY: ${APISITE_API_KEY:-}
+      GOOGLE_API_KEY: ${APISITE_GOOGLE_API_KEY:-}
+      GOOGLE_CSE_ID: ${APISITE_GOOGLE_CSE_ID:-}
+      IMAGE_PARSER_ENABLED: ${APISITE_IMAGE_PARSER_ENABLED:-true}
+      IMAGE_PARSER_MAX_PAGES: ${APISITE_IMAGE_PARSER_MAX_PAGES:-0}
+      IMAGE_PARSER_STARTUP_DELAY: ${APISITE_IMAGE_PARSER_STARTUP_DELAY:-30}
+    ports:
+      - "${APISITE_PORT:-8001}:8001"
+    volumes:
+      - apisite_data:/app/data
+      - apisite_images:/app/images
+      - apisite_portal_export:/app/portal_export
+
+volumes:
+  pgdata:
+  uploads:
+  apisite_data:
+  apisite_images:
+  apisite_portal_export:

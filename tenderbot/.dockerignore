@@ -1,0 +1,12 @@
+__pycache__
+*.pyc
+.env
+.git
+.gitignore
+*.db
+test.db
+.cursor
+.vscode
+node_modules
+*.md
+deploy/

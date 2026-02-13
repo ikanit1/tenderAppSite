@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TenderBot — Заказы и исполнители в Telegram</title>
+    <meta name="description" content="Платформа тендеров и заказов. Откройте бота в Telegram для исполнителей и заказчиков.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/landing.css">
+</head>
+<body class="landing">
+    <div class="landing__bg" aria-hidden="true"></div>
+    <header class="landing__header">
+        <div class="landing__container">
+            <a href="/" class="landing__logo">
+                <span class="landing__logo-icon">📋</span>
+                <span class="landing__logo-text">TenderBot</span>
+            </a>
+            <a href="/login" class="landing__admin-link">Вход для администратора</a>
+        </div>
+    </header>
+    <main class="landing__main">
+        <section class="landing__hero">
+            <div class="landing__container">
+                <h1 class="landing__title">Заказы и исполнители в одном месте</h1>
+                <p class="landing__lead">Регистрируйтесь в боте Telegram: смотрите заказы, откликайтесь на тендеры и управляйте откликами. Всё через приложение в Telegram.</p>
+                <div class="landing__cta">
+                    <a href="{{ bot_url or '#' }}" class="landing__btn landing__btn_primary" target="_blank" rel="noopener">
+                        <span class="landing__btn-icon">📱</span>
+                        {{ 'Открыть бота в Telegram' if bot_url else 'Бот — укажите BOT_USERNAME в .env' }}
+                    </a>
+                </div>
+            </div>
+        </section>
+        <section class="landing__section landing__section_users">
+            <div class="landing__container">
+                <h2 class="landing__section-title">Для пользователей</h2>
+                <p class="landing__section-text">Исполнители и заказчики работают через Telegram: регистрация в боте, модерация, заказы и отклики — в одном приложении. Нажмите кнопку выше и перейдите в бота.</p>
+                <ul class="landing__features">
+                    <li class="landing__feature">
+                        <span class="landing__feature-icon">👤</span>
+                        <span>Регистрация и модерация в боте</span>
+                    </li>
+                    <li class="landing__feature">
+                        <span class="landing__feature-icon">📋</span>
+                        <span>Просмотр заказов и откликов в приложении</span>
+                    </li>
+                    <li class="landing__feature">
+                        <span class="landing__feature-icon">📩</span>
+                        <span>Уведомления в чат бота</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+        <section class="landing__section landing__section_how">
+            <div class="landing__container">
+                <h2 class="landing__section-title">Как это работает</h2>
+                <div class="landing__steps">
+                    <div class="landing__step">
+                        <span class="landing__step-num">1</span>
+                        <p class="landing__step-text">Откройте бота в Telegram и нажмите «Пройти регистрацию». Заполните профиль и дождитесь одобрения модератором.</p>
+                    </div>
+                    <div class="landing__step">
+                        <span class="landing__step-num">2</span>
+                        <p class="landing__step-text">После одобрения в меню появится кнопка «Открыть приложение» — там вы сможете просматривать заказы и откликаться на тендеры.</p>
+                    </div>
+                    <div class="landing__step">
+                        <span class="landing__step-num">3</span>
+                        <p class="landing__step-text">Уведомления о статусе откликов приходят в чат с ботом. Всё управление — через Telegram и встроенное приложение.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="landing__section landing__section_admin">
+            <div class="landing__container">
+                <h2 class="landing__section-title">Для администратора</h2>
+                <p class="landing__section-text">Веб-панель доступна только администратору: модерация пользователей, управление тендерами и откликами, поддержка и рейтинги.</p>
+                <a href="/login" class="landing__btn landing__btn_secondary">Войти в админ-панель</a>
+            </div>
+        </section>
+        <section class="landing__section landing__section_unified">
+            <div class="landing__container landing__container_centered">
+                <h2 class="landing__section-title">Один домен — два входа</h2>
+                <p class="landing__section-text">На этом сайте: главная страница для всех (лендинг и ссылка на бота), отдельный вход в админ-панель только для администратора. Пользователи работают через Telegram, администратор — через веб.</p>
+            </div>
+        </section>
+    </main>
+    <footer class="landing__footer">
+        <div class="landing__container">
+            <p class="landing__footer-text">TenderBot — единый веб и приложение в Telegram.</p>
+        </div>
+    </footer>
+</body>
+</html>

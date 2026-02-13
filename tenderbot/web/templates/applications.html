@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Отклики — TenderBot Admin{% endblock %}
+{% block header_title %}Отклики{% endblock %}
+{% block body_attrs %}data-live-updates="1"{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2 class="page-title">Отклики</h2>
+    <p class="page-subtitle">Управление откликами на тендеры</p>
+</div>
+<div class="filters-bar">
+    <a href="/applications" class="{% if not request.query_params.get('status') %}active{% endif %}">Все</a>
+    <a href="/applications?status=applied" class="{% if request.query_params.get('status') == 'applied' %}active{% endif %}">Новые</a>
+    <a href="/applications?status=selected" class="{% if request.query_params.get('status') == 'selected' %}active{% endif %}">Выбранные</a>
+</div>
+<div class="table-wrap">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Тендер</th>
+                <th>Исполнитель</th>
+                <th>Статус</th>
+                <th>Дата</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in applications %}
+            <tr>
+                <td>{{ a.id }}</td>
+                <td><a href="/tenders/{{ a.tender.id }}">{{ a.tender.title }}</a></td>
+                <td><a href="/users/{{ a.user.id }}">{{ a.user.full_name }}</a></td>
+                <td>
+                    <span class="badge {% if a.status == 'applied' %}badge-warning{% elif a.status == 'selected' %}badge-success{% else %}badge-danger{% endif %}">{{ a.status|translate_status }}</span>
+                </td>
+                <td>{{ a.created_at.strftime("%d.%m.%Y %H:%M") if a.created_at else "—" }}</td>
+                <td>
+                    <form method="post" action="/applications/{{ a.id }}/delete" style="display: inline;" onsubmit="return confirm('Удалить отклик?');">
+                        {{ csrf_hidden_input(request)|safe }}
+                        <button type="submit" class="btn btn-danger btn-sm">🗑</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% if not applications %}
+<p class="empty-state">Откликов нет.</p>
+{% endif %}
+{% include "partials/pagination.html" ignore missing %}
+{% endblock %}
