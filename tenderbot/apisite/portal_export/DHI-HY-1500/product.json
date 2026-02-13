@@ -1,0 +1,36 @@
+{
+  "name": "DHI-HY-1500 Dahua Адресуемый датчик оповещения",
+  "price": 104588889,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Working Voltage": "DC24V",
+    "Working Current": "Monitoring current: ≤ 120μA Maximum operating current: ≤ 7mA",
+    "Wiring": "Two-wire, polarity-free",
+    "Addressing Method": "Electrical encoder",
+    "Address Range": "1–254",
+    "Alarm Volume": "75 dB–115 dB @ 3 m (A)",
+    "Modulation Cycle": "4 s–5 s",
+    "Flash Rate": "1.5Hz–2.0Hz",
+    "Communication Distance": "1500 m (4921.26 ft)",
+    "Operating Temperature": "–10°C to +55°C (+14°F to +131°F)",
+    "Storage Temperature": "–20°C to +65°C (–4°F to +149°F)",
+    "Operating Humidity": "≤ 95% RH (no condensation)",
+    "Color": "Shell: Red Lampshade: Clear white",
+    "Dimensions": "125 mm × 80 mm × 40 mm (4.92\" × 3.15\" × 1.57\")",
+    "Weight (with base)": "118 g (0.26 lb)",
+    "Certifications": "GB 26851-2011"
+  },
+  "tabs": {},
+  "images_count": 6,
+  "model": "DHI-HY-1500",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=37383",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg",
+    "image_05.jpg",
+    "image_06.jpg"
+  ]
+}

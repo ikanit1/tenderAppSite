@@ -1,0 +1,28 @@
+{
+  "name": "PFS3409-4GT-96 9-портовый коммутатор",
+  "price": 11623081360,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Ethernet Port": "Port 1-4 : 4 × RJ45 10/100/1000 Mbps (PoE) Port 5-8 : 4 × SFP 1000 Mbps (uplink) Port 9 : 1 × RJ45 10/100/1000 Mbps (uplink)",
+    "PoE Power Consumption": "Port 1 ≤ 90 W, Port 2-4 ≤30 W, Total≤120 W",
+    "Power Consumption": "Idling : 2 W Full load : 96 W",
+    "Standard": "IEEE802.3/IEEE802.3u/IEEE802.3X/IEEE 802.3az/IEEE 802.3ab",
+    "PoE Protocol": "IEEE 802.3af/ IEEE 802.3at/ Hi-PoE/IEEE 802.3bt",
+    "Power Supply Pin": "1,2,4,5 (V+),3,6,7,8 (V-)",
+    "Long Distance": "250 m long distance PoE transmission",
+    "PoE Power Management": "Yes",
+    "PoE Watchdog": "Yes",
+    "Switching Capacity": "33 Gbps"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "PFS3409-4GT-96",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15814",
+  "images": [
+    "image_01.png",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png"
+  ]
+}

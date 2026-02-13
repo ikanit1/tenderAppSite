@@ -1,0 +1,39 @@
+{
+  "name": "PFM802 Приемо-передатчик видео",
+  "price": 54103790,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "PFM802",
+    "Power Supply": "DC12-15V",
+    "Category Type": "UTP CAT5E/6 (conductor material: Cu )",
+    "Transmission Properties": "Input",
+    "Using DC12V0.7A power adapter and CAT5E cable for example": "0-20m",
+    "20-40m": "6.2W",
+    "40-60m": "4.5W",
+    "60-80m": "3.7W",
+    "80-100m": "2.9W",
+    "Coaxial Video Connector": "BNC-M",
+    "Connection Way": "RJ45",
+    "Compatible Format": "HDCVI/TVI/AHD/CVBS",
+    "Resolution": "720P/1080P/4MP",
+    "ESD": "1a contact discharge electricity level 3",
+    "Coaxial Cable Connector": "2KV(common-mode), 1KV (different-mode)",
+    "UTP Cable Connector": "2KV(common-mode), 1KV (different-mode)",
+    "Power Connector": "2KV(common-mode), 1KV (different-mode)",
+    "BNC Male": "75 ohms",
+    "UTP Cable": "100 ohms",
+    "Weight": "85g (0.19lb)",
+    "Dimension(LxWxH)": "61.5mmx33.5mmx20.5mm (2.42”x1.32“x0.81”)",
+    "Shell": "ABS",
+    "Color": "Black"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "PFM802",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15769",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

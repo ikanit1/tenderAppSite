@@ -1,0 +1,28 @@
+{
+  "name": "Ajax DoorProtect Plus черный датчик открытия",
+  "price": 16160,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Бренд": "Ajax",
+    "Артикул": "TD00000011739",
+    "Тип оборудования": "датчик открытия дверей",
+    "Питание": "3V",
+    "Цвет": "черный",
+    "Рабочая влажность": "0…75%",
+    "Комплектация": "Датчик открытия Ajax DoorProtect Plus Крепежная панель SmartBracket - 1 шт Магнит - 2 шт Элемент питания CR123A - 1 шт Выносная клемма - 1 шт Монтажный комплект - 1 шт Документация",
+    "Рабочая температура": "-10…+40 °C",
+    "Размеры (Ш×В×Г)": "2×9×2 cm",
+    "Вес товара": "0.029 kg"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "DoorProtect Plus черный",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15022",
+  "images": [
+    "image_01.jpg",
+    "image_02.png",
+    "image_03.jpg",
+    "image_04.png"
+  ]
+}

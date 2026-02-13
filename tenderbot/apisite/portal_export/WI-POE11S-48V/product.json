@@ -1,0 +1,37 @@
+{
+  "name": "Wi-Tek WI-POE11S-48V Сплиттер PoE",
+  "price": 29001885,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "HARDWARE FEATURES": "WI-POE11S-48V",
+    "Interface": "1 10/1000Mbps PoE RJ45 Port 1 10/1000Mbps Ethernet Port",
+    "Network Media": "10BASE-T: UTP category 3, 4, 5 cable (Max 100m) EIA/TIA-568 100Ω STP (Max 100m) 100BASE-TX: UTP category 5, 5e cable (Max 100m) EIA/TIA-568 100Ω STP (Max 100m)",
+    "Power Supply": "48V PoE IN",
+    "Data In/Out": "1 10/1000Mbps Data Out",
+    "Power In/Out Port": "12V DC Out",
+    "PoE PIN": "4/5(+) 7/8(-) or 1/2(+) 3/6(-)",
+    "PoE Consumption": "48V 24W",
+    "LED Indicator": "Power/Link",
+    "DIP Switch": "N/A",
+    "Background Bandwidth": "2Gbps",
+    "Transmission Method": "Store-And-Forward",
+    "Protection Level": "6kV Lightning protection 6kV ESD Contact discharge",
+    "Advanced Functions": "Mac Address Auto-Learning And Auto-Aging Store and forward IEEE 802.3x flow control for Full-duplex Mode Backpressure for Half-duplex Mode",
+    "Certification": "CE, FCC, RoHS",
+    "DeviceDimension": "209×20×20mm",
+    "Net Weight": "0.05kg",
+    "Package Contents": "1 x PoE Switch 1 x Power Cord 1 x Quick Installation Guide",
+    "Operating Temperature": "-10°C~55°C"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "WI-POE11S-48V",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15180",
+  "images": [
+    "image_01.png",
+    "image_02.jpg",
+    "image_03.png",
+    "image_04.jpg"
+  ]
+}

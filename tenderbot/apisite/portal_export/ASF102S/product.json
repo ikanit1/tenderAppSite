@@ -1,0 +1,24 @@
+{
+  "name": "ASF102S Доводчик",
+  "price": 3367026936,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Door weight": "<60kg",
+    "Door width": "<950mm",
+    "Close dynamics": "EN3",
+    "Open angle": "180°",
+    "Fixed speed": "Support",
+    "Fixed position": "Support",
+    "Working temperature": "-30°C~+60°C",
+    "Working humidity": "≤95%"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "ASF102S",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15580",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

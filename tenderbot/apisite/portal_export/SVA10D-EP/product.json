@@ -1,0 +1,20 @@
+{
+  "name": "SVA10D-EP Электропривод ЭП-32/33 230В IEK",
+  "price": 27319,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Ед. измерения": "шт.",
+    "Вес": "1 кг.",
+    "Габариты (Ш/Г/В)": "11/9/13 см.",
+    "Тип": "Электропривод"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "SVA10D-EP",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=36804",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

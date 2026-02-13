@@ -1,0 +1,35 @@
+{
+  "name": "DH-VTNC130AC Преобразователь видеодомофона-Координатная матрица",
+  "price": 2000016500,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Processor": "Embedded procesor",
+    "Network Protocol": "IPv4, RTSP, RTP, TCP, UDP",
+    "Appearance": "Controller",
+    "Status Indicator Light": "1 green light to indicate power status",
+    "Housing Material": "Metal",
+    "Network Upgrade": "Yes",
+    "Real-time Mornitoring": "Yes",
+    "Network Port": "2 RJ-45 ports, 1 analog signal channel",
+    "Regular": "",
+    "Power Supply": "24V DC 1A",
+    "Power Comsumption": "≤4W (standby), ≤6W (working)",
+    "Product Dimension": "178.0 mm×106.0 mm×25.0 mm (7.01\"×4.17\"×0.98\")",
+    "Packaging Dimension": "240.0 mm×148.0 mm×111.1 mm (9.45\"×5.83\"×4.37\")",
+    "Working Temperature": "-30°C to +60°C (-22°F to 140°F)",
+    "Working Humidity": "10%RH–95%RH (no condensation)",
+    "Working Environment": "Indoors",
+    "Net Weight": "0.5kg (1.10 lb)",
+    "Gross Weight": "0.63kg (1.39lb)",
+    "Installation Method": "Desktop installation Guide rail installation"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DH-VTNC130AC",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=37778",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

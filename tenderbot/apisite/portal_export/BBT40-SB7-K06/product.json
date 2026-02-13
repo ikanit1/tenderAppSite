@@ -1,0 +1,21 @@
+{
+  "name": "BBT40-SB7-K06 IEK Кнопка SВ-7 \"Пуск\" зеленая",
+  "price": 518,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Номинальное рабочее напряжение": "48/120/230/400/660 В",
+    "Тип напряжения": "Переменное/постоянное (AC/DC)",
+    "Цвет": "Зеленый",
+    "Степень защиты - IP": "IP40",
+    "Номинальное напряжение постоянного тока - DC": "24/48/110/220/440 В"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "BBT40-SB7-K06",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=38338",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

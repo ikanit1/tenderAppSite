@@ -1,0 +1,38 @@
+{
+  "name": "NVR-104E2 Uniarch Видеорегистратор",
+  "price": 2200017700,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "NVR-104E2",
+    "IP Video Input": "4-ch",
+    "Incoming Bandwidth": "64Mbps",
+    "Outgoing Bandwidth": "32Mbps",
+    "Remote Users": "128",
+    "Protocols": "P2P, UPnP, DHCP",
+    "HDMI/VGA Output": "HDMI: 3840X2160/30HZ, 1920x1080p/60Hz, 1920x1080p/50Hz, 1600x1200/60Hz, 1280x1024/60Hz, 1440x900/60Hz, 1280x720/60Hz, 1024x768/60Hz VGA: 1920x1080p/60Hz, 1920x1080p/50Hz, 1600x1200/60Hz, 1280x1024/60Hz, 1440x900/60Hz, 1280x720/60Hz, 1024x768/60Hz",
+    "Recording Resolution": "8MP/5MP/4MP/3MP/1080P/960P/720P/960H/D1/2CIF/CIF/QCIF",
+    "Audio Output": "1-ch, 3.5mm",
+    "Synchronous Playback": "4-ch",
+    "Corridor Mode Screen": "3/4",
+    "Decoding format": "Ultra 265/H.265/H.264",
+    "Liveview/Playback": "8MP/5MP/4MP/3MP/1080P/960P/720P/960H/D1/2CIF/CIF/QCIF",
+    "Capability": "1 x 8MP@30, 1 x 5MP@30, 2 x 4MP@30, 4 x 3MP@25, 4 x 1080p@30, 8 x 720p@30, 10 x D1@30",
+    "SATA": "1 SATA interface",
+    "Capacity": "up to 6TB for each disk",
+    "Network Interface": "1 RJ45 10M/100M self-adaptive Ethernet Interface",
+    "USB Interface": "Rear panel: 2 x USB2.0",
+    "Power Supply": "12V DC Power Consumption: ≤3 W (without HDD)",
+    "Working Environment": "-10°C ~ + 55°C (+14°F ~ +131°F), Humidity ≤ 90% RH (non-condensing)",
+    "Dimensions (W×D×H)": "260mm × 243mm × 46mm (10.2\" × 9.6\" × 1.8\")",
+    "Weight (without HDD)": "≤1kg (2.2lb)"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "NVR-104E2",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=38834",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

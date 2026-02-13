@@ -1,0 +1,27 @@
+{
+  "name": "DH-PFA123 Монтажная коробка",
+  "price": 102227973,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "DH-PFA123",
+    "Material": "Aluminum",
+    "Dimension (WxHxD)": "134.0mmx133.5mmx52.0mm (5.28”x5.25”x2.05”)",
+    "Pipe Thread": "G3/4”",
+    "Weight": "0.54kg(1.19lb)",
+    "Load Bearing": "3.0kg(6.61lb)",
+    "Color": "White",
+    "Protection": "IP66",
+    "Operating Temperature": "-40℃~+60℃(-40℉~+140℉)",
+    "Humidity": "0~90% RH",
+    "Applicable Model": "Please see “Accessory Selection”"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DH-PFA123",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15687",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

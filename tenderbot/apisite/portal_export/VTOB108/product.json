@@ -1,0 +1,18 @@
+{
+  "name": "VTOB108 накладная панель для монтажа вызывной панели",
+  "price": 500500,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "МОДЕЛЬ": "VTOB108",
+    "ПРОИЗВОДИТЕЛЬ": "Dahua"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "VTOB108",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15839",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

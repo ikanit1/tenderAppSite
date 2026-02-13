@@ -1,0 +1,32 @@
+{
+  "name": "DHI-HY-1301 Dahua Адресуемый детектор дыма",
+  "price": 83677112,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Working Voltage": "24V DC",
+    "Current": "Monitoring current: ≤ 180μA Maximum operating current: ≤ 280μA",
+    "Indicator": "Red Polling: Flash 6 seconds Alarm: Remain lit Fault: Flash 2 seconds",
+    "Wiring": "Two-wire, polarity-free",
+    "Addressing Method": "Electrical encoder",
+    "Address Range": "1–254",
+    "Communication Distance": "≤ 1500 m (4921.26 ft)",
+    "Operating Temperature": "–10°C to +50°C (+14°F to +122°F)",
+    "Storage Temperature": "–20°C to +65°C (–4°F to +149°F)",
+    "Operating Humidity": "≤ 95% RH (no condensation)",
+    "Color": "White",
+    "Dimensions (with base)": "Φ100 mm × 50 mm (Φ 3.00\" × 1.50\")",
+    "Weight (with base)": "102 g (0.22 lb)",
+    "Certifications": "GB 4715-2005"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "DHI-HY-1301",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=37382",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}

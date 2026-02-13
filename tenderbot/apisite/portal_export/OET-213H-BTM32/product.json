@@ -1,0 +1,41 @@
+{
+  "name": "OET-213H-BTM32 терминал с распознаванием лиц и с измерением температуры",
+  "price": 9999999,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Features Parameter": "Description",
+    "Operation System": "Linux",
+    "Face Recognition Accuracy Rate": ">99%",
+    "Face Recognition Time": "200ms",
+    "Face Capacity": "10,000",
+    "Card Capacity": "100,000",
+    "Storage Capacity": "4GB",
+    "Event Capacity": "8,000(with images); 30,000(without images)",
+    "Authentication Mode": "Face White list∶ (1∶ N)",
+    "Door Opening Method": "Face, Password, Card",
+    "Communication Mode": "10/100Mbps adaptive network port",
+    "Card Type": "Mifare1 Card",
+    "User Management": "Support user library addition, deletion, update",
+    "Record Management": "Support local recording and real-time upload",
+    "Interface": "LAN×1, Wiegand Input×1, Wiegand Output×1, RS485×1, Alarm Input×2, Alarm Output×1, USB2.0×1, Lock×1, Door Contact ×1, Exit Button×1",
+    "Power Supply": "Input 12V±25% DC",
+    "Screen": "Touch Screen, Size:7 inch, Resolution: 600×1024",
+    "Camera": "Dual Lens, 2MP, 1080P",
+    "Supplement Light": "LED soft light and infrared light",
+    "Dimensions (L×W×H)": "For terminal : 134.0mm×33.0mm×305.0mm",
+    "Working Environment": "For terminal: -20℃-65℃, Relative Humidly<95% (non-condensing) For module：15℃-30℃",
+    "Protection Level": "Both terminal and module: IP 54",
+    "Application Situation": "Indoor, No wind"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "OET-213H-BTM32",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=10075",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}

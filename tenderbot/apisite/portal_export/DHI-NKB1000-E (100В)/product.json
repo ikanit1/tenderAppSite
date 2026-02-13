@@ -1,0 +1,28 @@
+{
+  "name": "DHI-NKB1000-E (100В) Пульт PTZ-управления",
+  "price": 172500162000,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "NKB1000-E",
+    "Keyboard Key panel": "Electromechanical",
+    "Joystick": "3-axis, vector-solving, with twisting, return to-center head",
+    "Keyboard Connector": "RJ-45, RS232, RS485, RS422 (reserved), USB",
+    "Keyboard Communication": "Direct Mode, Network Mode",
+    "Direct Mode": "Interface: 1 RS232/2 RS485 DVR Protocol: DH-2 Dome Protocol: DH-SD1/PELCO-D/PELCO-P, etc",
+    "Network Mode": "Interface: RJ45 DVR/Network Dome: IP Address/Port/Protocol",
+    "Display": "LCD, 75.2mm×33.85mm",
+    "Maximum Number of Users": "64 (including \"admin\")",
+    "Max RS485 Addresses (Each User)": "256",
+    "Max Number of PTZ (IPC) That Can be Added over Network (Each User)": "2048",
+    "Power Supply": "Power adapter, input 100V~240V 50Hz/60Hz, output DC12V/2A"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DHI-NKB1000-E (100В)",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=36730",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

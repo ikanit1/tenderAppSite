@@ -1,0 +1,21 @@
+{
+  "name": "ASF905 Кнопка выхода",
+  "price": 106408512,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Material": "Stainless steel",
+    "Weight": "0.2kg",
+    "Dimensions": "91*28*25mm",
+    "Working temperature": "-30°C~+60°C",
+    "Working humidity": "≤95%"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "ASF905",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15578",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

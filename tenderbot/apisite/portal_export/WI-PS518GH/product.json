@@ -1,0 +1,32 @@
+{
+  "name": "WI-PS518GH Wi-Tek Неуправляемый коммутатор с функцией PoE",
+  "price": 6630043095,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Интерфейсы": "16 портов 10/100M PoE 1 порт 1000M 1 комбо порт 1000M/SFP",
+    "Физические среды": "10BASE-T: UTP кабель категорий 3, 4, 5 (макс. 100м) 100BASE-TX/1000Base-T: UTP кабель категорий 5, 5e, 6 или выше (макс. 100м) 1000Base-X",
+    "Охлаждение": "Активное",
+    "Потребляемая мощность": "150Вт макс. (с подключенными POE-устройствами)",
+    "Внутренний блок питания": "AC110-240В 50/60Гц",
+    "PoE порты (RJ45)": "PoE порты с 1 по 16 (стандарт 802.3 af/at) до 30Вт на порт Поддержка передачи PoE до 250м",
+    "Пропускная способность": "7.2Гбит/с",
+    "Таблица mac-адресов": "8K",
+    "Размеры": "280*180*45 мм",
+    "Температура и влажность": "Рабочая температура: -10 +55 Температура хранения: -40 +70 Влажность при эксплуатации: 10%^90% RH без конденсата Влажность при хранении: 5%^90% RH без конденсата",
+    "Метод коммутации": "Store-And-Forward",
+    "Расширенные функции": "Port Isolation(VLAN) Mac Address Auto-Learning And Auto-Aging Store and forward IEEE 802.3x flow control for Full-duplex Mode Backpressure for Half-duplex Mode Watchdog"
+  },
+  "tabs": {},
+  "images_count": 6,
+  "model": "WI-PS518GH",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=16036",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg",
+    "image_05.jpg",
+    "image_06.jpg"
+  ]
+}

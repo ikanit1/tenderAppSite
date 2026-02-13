@@ -1,0 +1,26 @@
+{
+  "name": "LightCore (1-gang) РЕЛЕ ДЛЯ ОДНОКЛАВИШНОГО ВЫКЛЮЧАТЕЛЯ",
+  "price": 17680,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Производитель": "Ajax",
+    "Тип реле": "LightCore (1-gang)",
+    "Совместимость с кнопкой": "SoloButton (1-gang / 2-way), CenterButton (1-gang / 2-way), SideButton (1-gang / 2-way)",
+    "Совместимость": "Hub Plus, Hub 2 (2G), Hub 2 (4G), Hub 2 Plus, Hub Hybrid (2G), Hub Hybrid (4G), ReX, ReX 2",
+    "Диапазон рабочих температур": "-10 °С – +40 °С",
+    "Рабочая влажность": "до 75%",
+    "Класс защиты": "IP20",
+    "Размеры": "LightCore (1-gang) - 76.3 × 72.3 × 29.2 мм",
+    "Вес": "LightCore (1-gang) - 45.95 г",
+    "Цвет": "Серый"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "LightCore (1-gang)",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=37518",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

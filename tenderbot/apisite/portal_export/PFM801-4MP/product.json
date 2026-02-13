@@ -1,0 +1,43 @@
+{
+  "name": "PFM801-4MP Приемопередатчик видеосигнала и питания",
+  "price": 67604740,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "PFM801-4MP",
+    "Transmission Signal": "1 channel",
+    "Transmission Distance": "HDCVI: 720P: max.400m(1312.34ft); 1080P: max. 250m(820.21ft); 4MP: max. 200m(656.17ft)",
+    "Power Supply": "Input Voltage",
+    "DC24": "0-100m",
+    "100-200m": "DC12V 6W",
+    "200-300m": "DC12V 3W",
+    "DC36": "0-300m",
+    "Category Type": "UTP CAT5E/6",
+    "Coaxial Video Connector": "BNC-M",
+    "Connection Way": "RJ45",
+    "Compatible Format": "HDCVI/TVI/AHD/CVBS",
+    "Resolution": "720P/1080P/4MP",
+    "Anti-interference": ">60db",
+    "ESD": "1a contact discharge electricity level 3",
+    "Coaxial Cable Connector": "2KV(common-code)",
+    "UTP Cable Connector": "2KV(different-code), 4KV(common-code)",
+    "BNC Male": "75 ohms",
+    "UTP Cable": "100 ohms",
+    "Dimension(L*W*H)": "72.6mm*42.5mm*24.5mm(2.86”x1.67”x0.96”)",
+    "Shell": "ABS",
+    "Color": "Black",
+    "N.W.": "66.4g(0.15lb)/57.4g(0.13lb)",
+    "MTBF": ">10000H",
+    "Operating Temperature": "-10℃~+55℃(14℉~131℉)",
+    "Storage Temperature": "-20℃~+70℃(-4℉~158℉)",
+    "Humidity": "0~95%(non-condensing)"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "PFM801-4MP",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15767",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

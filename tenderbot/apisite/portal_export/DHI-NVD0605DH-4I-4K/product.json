@@ -1,0 +1,35 @@
+{
+  "name": "DHI-NVD0605DH-4I-4K IP-видеодекодер Ultra HD",
+  "price": 945000630000,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Processor": "Embedded processor",
+    "Operating System": "LINUX",
+    "Video Format": "MPEG2/MPEG4/H.264/H.265/SVAC/MJPEG",
+    "Audio Format": "PCM/G711/AAC",
+    "Decoding Capacity Separately": "Port 1,2,3",
+    "1CH@32MP(25fps)/3CH@12MP(15fps)/4CH@8MP/16CH@1080P/36CH@720P/64CH@D1": "1CH@32MP(25fps)/3CH@12MP(15fps)/4CH@8MP/16CH@1080P/36CH@720P/64CH@D1",
+    "Total Video Decoding": "2CH@32MP(25fps)/6CH@12MP(15fps)/8CH@8MP/32CH@1080P/72CH@720P/128CH@D1",
+    "Decoding Resolution": "32MP/12MP/8MP/6MP/5MP/4MP/3MP/1080P/720P/960H/D1/HD1/2CIF/CIF/QCIF",
+    "Video Output": "6ch HDMI",
+    "Display Resolution": "3840×2160/2048×1152/1920×1200/1920×1080/1280×1024/1280×720/1024×768, only 4 ports support 3840×2160, the remaining 2 ports support 2560×1600",
+    "Video Input": "2 HDMI, 2 DVI-I",
+    "Collection Resolution": "3840×2160(HDMI1)/1920×1080/1600×1200/1680×1050/1440×900/1400×1050/ 1366×768/1280×1024/1280×960/1280×800/1280×720/1152×864/1024×768/800×600, etc",
+    "Audio Output": "6ch HDMI (embedded)",
+    "Communication Interface": "2 RJ45 network port (10M/100M/1000M); 3 RS232(1 DB9, 2 RJ45); 1 RS485",
+    "Bi-directional Talk": "1 Pair 3.5mm jack (reserved) (2.0V Line in/50mV Mic in/10KΩ, 2.0V/16Ω out)",
+    "Alarm Input": "4ch",
+    "Alarm Output": "4ch relay out (30VDC 1A, 125VAC, 0.5A)"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "DHI-NVD0605DH-4I-4K",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=37924",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}

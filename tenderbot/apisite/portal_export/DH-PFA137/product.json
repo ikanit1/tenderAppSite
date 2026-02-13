@@ -1,0 +1,23 @@
+{
+  "name": "DH-PFA137 Монтажная коробка",
+  "price": 59604768,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Модель": "DH-PFA137",
+    "Материал": "Алюминий",
+    "Размеры": "Φ122мм x 34.2мм",
+    "Резьба": "M20(G1/2”)",
+    "Максимальная нагрузка": "1кг",
+    "Вес": "0.24кг",
+    "Цвет": "Белый"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DH-PFA137",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15693",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

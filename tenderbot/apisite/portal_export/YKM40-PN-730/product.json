@@ -1,0 +1,24 @@
+{
+  "name": "YKM40-PN-730 Панель ПН-730 TITAN IEK",
+  "price": 10469,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Модель или исполнение:": "Панель ПН",
+    "Ширина:": "730.0 мм",
+    "Высота:": "142.0 мм",
+    "Глубина:": "1.5 мм",
+    "Материал:": "Сталь",
+    "Вид или марка материала:": "Оцинкованная сталь",
+    "Защитное покрытие поверхности:": "Оцинковка по методу Сендзимира",
+    "Совместимость:": "серия Titan"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "YKM40-PN-730",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=37030",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

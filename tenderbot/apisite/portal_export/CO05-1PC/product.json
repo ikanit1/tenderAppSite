@@ -1,0 +1,22 @@
+{
+  "name": "CO05-1PC пластиковый кабельный органайзер",
+  "price": 53035303,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Модель или исполнение:": "Кабельный органайзер",
+    "Материал:": "Пластик",
+    "Тип поверхности:": "Прочее",
+    "Номер цвета RAL:": "9005",
+    "Цвет:": "Черный",
+    "Материал крышки:": "Пластик"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "CO05-1PC",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=16052",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

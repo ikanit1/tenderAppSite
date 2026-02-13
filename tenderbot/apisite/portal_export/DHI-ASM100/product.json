@@ -1,0 +1,28 @@
+{
+  "name": "DHI-ASM100 Контрольный считыватель карт",
+  "price": 2870022960,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "ASM100",
+    "Type of Issue": "IC card ( Mifare card) issue",
+    "Reading Frequency": "13.56MHz",
+    "Communication": "USB",
+    "Power": "USB",
+    "Working Current": "Working Current<150mA",
+    "Issue Distance": "3cm~8cm",
+    "Working Temperature": "-30℃ ~ +60℃",
+    "Working Humidity": "10% ~ 90%",
+    "Dimension": "105mm*75mm*20mm",
+    "Weight": "0.18kg",
+    "Issue Warning": "When card is successfully issued, there will be LED indicator and beeper sound"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DHI-ASM100",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15558",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

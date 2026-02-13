@@ -1,0 +1,26 @@
+{
+  "name": "DH-IPC-HFW1439TL1-A-IL Уличная IP видеокамера",
+  "price": 4648037184,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Производитель": "Dahua Technology",
+    "Страна производитель": "Китай",
+    "Тип камеры": "IP",
+    "Применение": "Внутренняя",
+    "Тип матрицы": "CMOS",
+    "Физический размер матрицы": "1/3\"",
+    "Разрешающая способность (Мп)": "2",
+    "Режим съемки \"День/ночь\"": "Да",
+    "Дальность ИК-подсветки": "50 м",
+    "Форм-фактор": "Bullet"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DH-IPC-HFW1439TL1-A-IL",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=39180",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

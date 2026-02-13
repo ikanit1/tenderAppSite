@@ -1,0 +1,26 @@
+{
+  "name": "Ajax Socket белый радиоуправляемая розетка",
+  "price": 3234025872,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Бренд": "Ajax",
+    "Артикул": "AJAX-SKT",
+    "Тип оборудования": "электрическая розетка",
+    "Потребляемая мощность (макс)": "1 Watts",
+    "Питание": "230 В ±10%, 50 Гц",
+    "Цвет": "белый",
+    "Рабочая влажность": "до 75%",
+    "Рабочая температура": "от 0 до +64 °C",
+    "Размеры (Ш×В×Г)": "6.55 × 4.5 × 4.5 cm",
+    "Вес товара": "0.058 kg"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "Socket белый",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15057",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "Hikvision DS-K7P01 Кнопка открывания двери",
+  "price": 61943747,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Мощность передачи": "3А, 36 В DC",
+    "Контакт выхода": "NO, NC, COM",
+    "Тест на износ": "500 000 циклов",
+    "Материал": "Алюминиевый сплав",
+    "Рабочие условия": "Температура: –10 °С до 55 °С, Влажность: 0% ~ 95%",
+    "Размер": "86.0 × 86.0 × 28.9 мм",
+    "Вес (нетто)": "0.25 кг"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DS-K7P01",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=38951",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

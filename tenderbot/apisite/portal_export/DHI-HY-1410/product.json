@@ -1,0 +1,36 @@
+{
+  "name": "DHI-HY-1410 Dahua Адресуемый модуль ввода/вывода",
+  "price": 1255010668,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Electrical": "",
+    "Working Voltage": "24V DC",
+    "Current": "Monitoring current: ≤ 150μA Operating current: ≤ 9mA",
+    "Indicator": "•Input indicator: Red LED flashes once every 6 seconds, and flashes once every 2 seconds when malfunctioned •Output indicator: Red LED is constantly off when works normally, and flashes once every 2 seconds when malfunctioned",
+    "Communication": "",
+    "Wiring": "Two-wire, polarity-free",
+    "Addressing Method": "Electrical encoder",
+    "Address Range": "1–254",
+    "CommunicationDistance": "≤ 1500 m",
+    "Environment": "",
+    "Operating Temperature": "–10°C to +55°C (+14°F to +131°F)",
+    "Storage Temperature": "–20°C to +65°C (–4°F to +149°F)",
+    "Operating Humidity": "≤ 95% RH (no condensation)",
+    "Construction": "",
+    "Color": "White",
+    "Dimensions (with base)": "90 mm × 90 mm × 37 mm (3.54\" × 3.54\" × 1.46\")",
+    "Weight (with base)": "120 g (0.26 lb)",
+    "Certifications": "GB16806-2006"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "DHI-HY-1410",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=37376",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}

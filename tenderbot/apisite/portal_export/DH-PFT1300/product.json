@@ -1,0 +1,32 @@
+{
+  "name": "DH-PFT1300 Cетевой конвертер",
+  "price": 1440011520,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Ethernet порты": "1х10/100 Base-T мощность РоЕ принимающего порта 1х10/100 Base-T порт электропитания PoE, электропитание на следующий расширитель 1х10/100 Base-T порт электропитания PoE, блок питания для IPC",
+    "Дополнительные порты": "1 порт RJ-45 IN 10/100 Мбит/с 1 порт RJ-45 OUT 10/100 Мбит/с 1 порт RJ-45 CAMERA для IPC 10/100 Мбит/с",
+    "Расстояние питания PoE": "До 300 метров",
+    "Потребляемая мощность": "3 Вт",
+    "Рабочая температура": "-30ºC ~+65ºC",
+    "Влажность": "10%~90% (без конденсации)",
+    "Размер": "79 x 52 х 23 мм",
+    "Вес": "57 грамм"
+  },
+  "tabs": {},
+  "images_count": 10,
+  "model": "DH-PFT1300",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=39162",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg",
+    "image_05.jpg",
+    "image_06.jpg",
+    "image_07.jpg",
+    "image_08.jpg",
+    "image_09.jpg",
+    "image_10.jpg"
+  ]
+}

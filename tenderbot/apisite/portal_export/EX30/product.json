@@ -1,0 +1,22 @@
+{
+  "name": "EX30 Yeastar плата расширения",
+  "price": 390691,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Порты:": "1 E1/T1/J1",
+    "Сигнализация:": "PRI, MFC R2, SS7, E&M",
+    "PRI switch types:": "Euro ISDN, Q.SIG",
+    "MFC R2:": "Аргентина, Бразилия, Китай, Чехия, Колумбия, Эквадор, Индонезия, ITU, Мексика, Филиппины, Венесуэла",
+    "SS7:": "-ITU, ANSI, Китай",
+    "Совместим с:": "S100, S300, P560, P570"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "EX30",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=16322",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

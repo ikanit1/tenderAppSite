@@ -1,0 +1,24 @@
+{
+  "name": "Hikvision DS-K1802M  Считыватель",
+  "price": 139478437,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Процессор": "8-битный",
+    "Тип карт": "Mifare карты",
+    "Протокол связи": "Wiegand (W26, W34)",
+    "Питание": "12V DC, 0.15A",
+    "Потребление энергии": "≤ 1.6 W",
+    "Рабочая температура": "-20°C до +65°C",
+    "Материал корпуса": "PC+ABS",
+    "Защита": "IP65"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DS-K1802M",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=38903",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

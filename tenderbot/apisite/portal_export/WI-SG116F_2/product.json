@@ -1,0 +1,28 @@
+{
+  "name": "Wi-Tek WI-SG116F PoE коммутатор",
+  "price": 5800037700,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Пропускная способность": "36 Гбит/с",
+    "Исполнение": "классический",
+    "Порты RJ-45 1 Гбит/с": "16",
+    "Оптические порты": "2",
+    "PoE out (раздача питания по витой паре)": "нет",
+    "Размер таблицы MAC адресов": "8K",
+    "Размеры (ШxВxГ)": "440 x 180 x 44 mm",
+    "Скорость передачи пакетов": "26.72 Mpps",
+    "Рабочая температура": "- 0°C + 40°C",
+    "Дополнительная информация": "Port VLAN"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "WI-SG116F",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=23213",
+  "images": [
+    "image_01.png",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png"
+  ]
+}

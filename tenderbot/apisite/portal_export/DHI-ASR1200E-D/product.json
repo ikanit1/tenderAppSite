@@ -1,0 +1,33 @@
+{
+  "name": "DHI-ASR1200E-D Считыватель и контроллер доступа",
+  "price": 95207616,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Mode": "ASR1200E",
+    "Main Processor": "8 Bit",
+    "Read Format": "13.56MHz",
+    "Read Range": "3-6cm (max.)",
+    "Reading time": "<0.1s",
+    "Water-proof": "IP67",
+    "To Controller": "RS485,Wiegand 34(26 optional)",
+    "Beep Tone": "Buzzer",
+    "Ingress protection": "IP67, water resistant",
+    "Power Supply": "9-15VDC/100mA",
+    "Operating Temperature": "-30°C to +60°C",
+    "Working Humidity": "≤95%",
+    "Dimension(W×D×H)": "96mm×43mm×17mm",
+    "Weight": "0.1kg",
+    "Working Environment": "Outdoor",
+    "CE": "Yes",
+    "FCC": "Yes"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DHI-ASR1200E-D",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=16621",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

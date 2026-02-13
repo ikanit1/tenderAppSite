@@ -1,0 +1,37 @@
+{
+  "name": "DH-IPC-HFW1230TC-A Уличная IP видеокамера",
+  "price": 2881022480,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Матрица": "1/2.8\" CMOS",
+    "Разрешение": "1920×1080",
+    "Объектив": "Фикс. 2.8 мм / 3.6 мм, F2.0",
+    "ИК-подсветка": "До 30 м (ИК)",
+    "Видеоаналитика": "Обнаружение человека, умный поиск",
+    "Видео потоки": "2 потока",
+    "Сжатие видео": "H.265, H.264, MJPEG",
+    "PoE": "PoE (802.3af)",
+    "Питание": "12 В DC / PoE",
+    "Размеры": "173.3 × 70 × 70 мм",
+    "Вес": "0.44 кг (нетто)",
+    "Рабочая температура": "-40°C ~ +60°C",
+    "Защита": "IP67",
+    "Аудио": "Встроенный микрофон, G.711/G.726/PCM",
+    "Сеть": "RJ-45 (10/100 Base-T), ONVIF, IPv4/6",
+    "Интерфейс": "Web, Smart PSS, DSS, DMSS, iOS/Android",
+    "Материал": "Металл"
+  },
+  "tabs": {},
+  "images_count": 6,
+  "model": "DH-IPC-HFW1230TC-A",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=39683",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg",
+    "image_05.jpg",
+    "image_06.jpg"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "name": "WI-SG124F Wi-Tek Гигабитный коммутатор",
+  "price": 6830044395,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "HARDWARE FEATURES": "WI-SG124F",
+    "Standards": "IEEE 802.3i, IEEE 802.3u, IEEE 802.3ab, IEEE 802.3x, IEEE 802.1p",
+    "Interface": "24 100/1000Mbps RJ45 Ports 2 100/1000Mbps SFP Slots",
+    "Network Media": "10BASE-T: UTP category 3, 4, 5 cable (maximum 100m) 100BASE-TX/1000Base-T: UTP category 5, 5e, 6 or above cable (maximum 100m) 1000BASE-X: MMF, SMF 1000Base-L X:62.5μm/50μm MM(2m~550m) or 10μm SMF(2m~5000m)",
+    "DIP Switch": "Default / VLAN / CCTV",
+    "Exchange Capacity": "52G",
+    "Packet Forwarding Rate": "38.6Mpps",
+    "Mac Address Table": "8K",
+    "Power Adapter": "AC IN: 110-240V",
+    "Packet Buffer Memory": "12Mb",
+    "Jumbo Frame": "10240 Bytes",
+    "Port VLAN": "No",
+    "Certification": "CE, FCC, RoHS",
+    "Package Dimension": "510×220×90 mm",
+    "Switch Dimension": "440×140×45 mm",
+    "Gross Weight": "2.17kg",
+    "Net Weight": "1.58kg",
+    "Package Contents": "1 × Gigabit Switch 1 × Power Cord 1 × Quick Installation Guide 1 x Rack-mount Kit 1 x Foot Pad",
+    "Working Temperature": "-10℃～55℃",
+    "Storage Temperature": "-40℃～70℃",
+    "Working Humidity": "10%～90% RH non-condensing",
+    "Storage Humidity": "5%～90% RH non-condensing"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "WI-SG124F",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=23214",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}

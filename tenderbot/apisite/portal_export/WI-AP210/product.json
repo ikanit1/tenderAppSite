@@ -1,0 +1,35 @@
+{
+  "name": "Wi-Tek WI-AP210 Wi-Fi точка доступа",
+  "price": 1850011635,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Процессор": "Qualcomm QCA9531",
+    "Память": "128MB SDRAM 16MB Flash",
+    "Интерфейсы": "2X10/100BASE-TX",
+    "Питание": "48В 802.3af PoE",
+    "Потребляемая мощность": "6Вт макс.",
+    "Антенна": "2.4ГГц: OMNI антенна 2*5дБи",
+    "Стандарты беспроводной связи": "802.11b/g/n",
+    "Режимы работы": "FIT AP, маршрутизатор",
+    "Частоты": "2.4 ГГц",
+    "Выходная мощность передатчика": "20дБм(100мВт)*",
+    "Размеры": "188мм*188мм*35мм",
+    "Температура и влажность": "Рабочая температура： 0℃～40℃ Температура хранения： -40℃～70℃ Влажность при эксплуатации: 10%～95% RH без конденсата Влажность при хранении: 5%～95% RH без конденсата",
+    "Функции": "Multiple SSIDs Enable/Disable Wireless Radio Automatic Channel Assignment Transmit Power Control （Adjust Transmit Power on dBm） QoS(WMM) Band Steering Load Balance Schedule Wireless Statistics based on SSID/AP/Client",
+    "Безопасность": "Captive Portal Authentication Access Control Wireless 802.1x Radius Mac Address Filtering Wireless Isolation Between Clients SSID to VLAN Mapping 64/128/152-bit WEP / WPA / WPA2-Enterprise, WPA-PSK / WPA2-PSK",
+    "Управление": "Web, облако, аппаратный контроллер"
+  },
+  "tabs": {},
+  "images_count": 6,
+  "model": "WI-AP210",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=23261",
+  "images": [
+    "image_01.png",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png",
+    "image_05.png",
+    "image_06.png"
+  ]
+}

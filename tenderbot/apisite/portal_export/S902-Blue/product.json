@@ -1,0 +1,25 @@
+{
+  "name": "S902-Blue Бут (Колпачок) для защиты кабеля",
+  "price": 0,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Производитель": "SHIP",
+    "Модель": "S902",
+    "Тип оборудования": "Изолирующий колпачок",
+    "Категория": "5e",
+    "Цвет, используемый в оформлении": "Синий",
+    "Упаковка": "OEM",
+    "Размеры (Ш х В х Г)": "2.5 х 1.4 х 1.4 см",
+    "Вес изделия": "0.002 кг",
+    "Вес с упаковкой": "0.004 кг"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "S902-Blue",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=16029",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

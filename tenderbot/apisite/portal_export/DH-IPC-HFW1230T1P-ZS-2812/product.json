@@ -1,0 +1,42 @@
+{
+  "name": "DH-IPC-HFW1230T1P-ZS-2812 Уличная IP-камера",
+  "price": 4290034320,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Image Sensor": "1/2.8\" CMOS",
+    "Max. Resolution": "1920 (H) × 1080 (V)",
+    "ROM": "16 MB",
+    "RAM": "128 MB",
+    "Scanning System": "Progressive",
+    "Electronic Shutter Speed": "Auto/Manual 1/3 s–1/100,000 s",
+    "Min. Illumination": "0.005 Lux@F1.5 (Color, 30 IRE) 0.0005 Lux@F1.5 (B/W, 30 IRE) 0 Lux (Illuminator on)",
+    "S/N Ratio": "> 56 dB",
+    "Illumination Distance": "40 m (131.23 ft) (IR)",
+    "Illuminator On/Off Control": "Auto; Manual",
+    "Illuminator Number": "2 (IR)",
+    "Pan/Tilt/Rotation Range": "Pan: 0°–355° Tilt: 0°–78° Rotation: 0°–360°",
+    "Lens Type": "Motorized vari-focal",
+    "Lens Mount": "φ14",
+    "Focal Length": "2.8 mm–12 mm",
+    "Max. Aperture": "F1.5",
+    "Field of View": "Horizontal: 101°–33.5°; Vertical: 52.5°–19°; Diagonal: 125°–38.5°",
+    "Iris Control": "Fixed",
+    "Close Focus Distance": "1.2 m (3.94 ft)",
+    "DORI Distance": "Lens",
+    "W": "48 m (157.48 ft)",
+    "T": "131 m (429.79 ft)",
+    "Video Compression": "H.265; H.264; H.264B; MJPEG (Only supported by the sub stream)",
+    "Smart Codec": "Smart H.265+; Smart H.264+",
+    "Video Frame Rate": "Main stream:1920 × 1080@1–25/30 fps Sub stream: 704 × 576@1–25 fps/704 × 480@1–30 fps *The values above are the max. frame rates of each stream; for multiple streams, the values will be subjected to the total encoding capacity.",
+    "Bit Rate Control": "CBR/VBR"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DH-IPC-HFW1230T1P-ZS-2812",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15205",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

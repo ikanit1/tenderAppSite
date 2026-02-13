@@ -1,0 +1,33 @@
+{
+  "name": "OEI-372S-H-W Uniview Монитор домофона",
+  "price": 6540043500,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Parameter": "Description",
+    "Power": "DC12V±25%,IEEE802.3af, Standard PoE",
+    "Screen resolution": "1024×600",
+    "Screen": "7-inch ultra-thin TFT LCD screen",
+    "Operation system": "Linux",
+    "Audio quality": "Noise suppression,echo cancellation and AGC",
+    "Audio input": "1 built-in omnidirectional microphone",
+    "Audio output": "1 built-in speaker",
+    "Audio compression standard": "MP3 G711",
+    "Audio compression rate": "128Kbps",
+    "Protocol": "UNV private protocol",
+    "Power consumption": "＜10W",
+    "Weight": "360g",
+    "Interface": "Power*1, network*1, Wi-Fi*1, RS485*1, IO output*2, IO input*8, TF card slot*1",
+    "Network": "100Mbps network port, supports IEEE802.3af PoE power supply",
+    "Dimensions (L×H×W)": "193mm×143mm×25mm",
+    "Operating environment": "-10°C to +55°C, 10% to 90%, non-condensing, indoor"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "OEI-372S-H-W",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=38632",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "name": "DH-PFA13G Распределительная коробка",
+  "price": 59604768,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Material": "Aluminum alloy",
+    "Dimensions": "Φ111.6 mm × 36.0 mm (Ф4.39\" × 1.42\")",
+    "Pipe Thread": "G1/2\"",
+    "Weight": "0.33 kg (0.73 lb)",
+    "Load Bearing": "2.0 kg (4.4 lb)",
+    "Operating Temperature": "–40°C to +60°C (–40°F to +140°F)",
+    "Operating Humidity": "<90% (RH)",
+    "Color": "White",
+    "Applicable Model": "Please see \"Accessory Selection\""
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DH-PFA13G",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15697",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

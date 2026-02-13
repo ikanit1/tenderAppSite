@@ -1,0 +1,27 @@
+{
+  "name": "S100 Yeastar IP-АТС",
+  "price": 449361,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Бренд": "Yeastar",
+    "Артикул": "S100",
+    "Тип оборудования": "АТС",
+    "Размер оперативной памяти": "1024 MB",
+    "Размер встроенной памяти": "4096 MB",
+    "Порты и интерфейсы": "16 × аналоговых портов (FXO/FXS) 6 × GSM/3G-портов 16 × BRI портов 6 × UMTS портов 2 х порта E1 1 × LAN (10/100/1000 Мб/с) 1 × WAN (10/100/1000 Мб/с) 1 × порт USB 2.0 1 × слот для SD-карты 1 × консольный порт RJ45",
+    "Питание": "100-240V, 1,8A",
+    "Видеокодек": "H.263 H.264 H263p MPEG 4",
+    "Поддержка протоколов": "IAX2 SIP 2.0"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "S100",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=16311",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}

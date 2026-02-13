@@ -1,0 +1,1898 @@
+"""Основной API сервер"""
+from fastapi import FastAPI, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, FileResponse, Response
+from typing import Optional
+from contextlib import asynccontextmanager
+from pathlib import Path
+from pydantic import BaseModel
+from b2b_client import B2BClient
+from models import ProductsResponse, Product, HealthResponse
+from utils import model_to_foldername, get_clean_id, normalize_model_for_fs
+from config import (
+    UPDATE_INTERVAL_MINUTES, IMAGE_PARSER_ENABLED, IMAGE_PARSER_MAX_PAGES, IMAGE_PARSER_STARTUP_DELAY,
+    OPENAI_API_KEY, OPENAI_MODEL, OPENROUTER_API_KEY, OPENROUTER_MODEL,
+    CORS_ORIGINS,
+)
+import json
+import time
+import logging
+import asyncio
+import requests
+import shutil
+import subprocess
+import threading
+import re
+from functools import lru_cache
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# #region agent log
+DEBUG_LOG_PATH = Path(__file__).resolve().parent.parent.parent / ".cursor" / "debug.log"
+def _debug_log(location: str, message: str, data: dict, hypothesis_id: str):
+    try:
+        import json as _json
+        payload = {"id": f"log_{int(time.time())}_{hypothesis_id}", "timestamp": int(time.time() * 1000), "location": location, "message": message, "data": data, "hypothesisId": hypothesis_id}
+        with open(DEBUG_LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(_json.dumps(payload, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+# #endregion
+
+# React build state
+_react_build_lock = threading.Lock()
+_react_build_error: Optional[str] = None
+
+# Портал: категории и картинки из portal_export/items.json
+PORTAL_ITEMS_JSON = Path(__file__).parent / "portal_export" / "items.json"
+PORTAL_EXPORT_DIR = Path(__file__).parent / "portal_export"
+
+# Кэш: clean_id → имя папки в portal_export (для сопоставления без учёта /, -, _ и т.д.)
+_clean_id_to_portal_folder: dict = {}
+
+
+def _build_clean_id_portal_index() -> None:
+    """Строит индекс clean_id → folder_name по содержимому portal_export."""
+    global _clean_id_to_portal_folder
+    _clean_id_to_portal_folder = {}
+    if not PORTAL_EXPORT_DIR.exists():
+        return
+    for child in PORTAL_EXPORT_DIR.iterdir():
+        if child.is_dir():
+            cid = get_clean_id(child.name)
+            if cid and cid not in _clean_id_to_portal_folder:
+                _clean_id_to_portal_folder[cid] = child.name
+
+
+def _folder_candidates_for_model(model: str):
+    """
+    Варианты имени папки для поиска в portal_export.
+    На сайте модель может быть с «/» (напр. DHI-NVR1104HS-S3/H), в Windows папка — с «_» или «-»
+    (DHI-NVR1104HS-S3_H). Поэтому ищем всегда: имя с заменой / → _ и имя с заменой / → -.
+    """
+    if not model or not isinstance(model, str):
+        return []
+    model = model.strip()
+    norm = normalize_model_for_fs(model)
+    # Где в названии идёт «/» — ищем папку с «_» или «-» вместо «/»
+    candidates = [
+        norm.replace("/", "_"),
+        norm.replace("/", "-"),
+        model_to_foldername(model),
+    ]
+    seen = set()
+    out = []
+    for c in candidates:
+        if c and c not in seen:
+            seen.add(c)
+            out.append(c)
+    return out
+
+
+def _portal_folder_for_model(model: str):
+    """
+    Возвращает Path папки в portal_export для модели или None.
+    Модель с «/» (напр. DHI-NVR1104HS-S3/H) считывается: ищется папка с «_» или «-» вместо «/».
+    """
+    if not model or not isinstance(model, str):
+        return None
+    model = model.strip()
+    # 1) Оба формата: _ и -
+    for folder_name in _folder_candidates_for_model(model):
+        portal_dir = PORTAL_EXPORT_DIR / folder_name
+        if portal_dir.exists() and portal_dir.is_dir():
+            return portal_dir
+    # 2) «Слепое» сопоставление по clean_id
+    if not _clean_id_to_portal_folder:
+        _build_clean_id_portal_index()
+    cid = get_clean_id(normalize_model_for_fs(model))
+    folder_name = _clean_id_to_portal_folder.get(cid) if cid else None
+    if folder_name:
+        portal_dir = PORTAL_EXPORT_DIR / folder_name
+        if portal_dir.exists() and portal_dir.is_dir():
+            return portal_dir
+    return None
+
+
+def _find_product_by_model(products: list, model: str) -> Optional[dict]:
+    """
+    Поиск товара по модели: точное совпадение или по clean_id
+    (URL с _ или - вместо / в модели всё равно находит товар с /).
+    """
+    if not model or not products:
+        return None
+    model = model.strip()
+    for p in products:
+        m = (p.get("model") or "").strip()
+        if not m:
+            continue
+        if m.lower() == model.lower():
+            return p
+    cid = get_clean_id(normalize_model_for_fs(model))
+    if not cid:
+        return None
+    for p in products:
+        m = (p.get("model") or "").strip()
+        if m and get_clean_id(normalize_model_for_fs(m)) == cid:
+            return p
+    return None
+
+
+def _load_portal_items_map() -> dict:
+    """Загружает items.json, возвращает dict: model -> item (category, image[])."""
+    if not PORTAL_ITEMS_JSON.exists():
+        return {}
+    try:
+        data = json.loads(PORTAL_ITEMS_JSON.read_text(encoding="utf-8"))
+        items = data.get("items", [])
+        by_model = {}
+        by_name = {}
+        for it in items:
+            model = (it.get("model") or "").strip()
+            name = (it.get("name") or "").strip()
+            if model:
+                by_model[model.upper()] = it
+            if name:
+                by_name[name.lower()] = it
+        return {"by_model": by_model, "by_name": by_name}
+    except Exception as e:
+        logger.debug("Не удалось загрузить portal items.json: %s", e)
+        return {}
+
+
+# Глобальное состояние
+cache_state = {
+    "data": None,
+    "last_update": 0,
+    "lock": None
+}
+
+# Состояние парсера изображений
+image_parser_state = {
+    "running": False,
+    "last_run": None,
+    "task": None
+}
+
+# Инициализируем lock при первом использовании
+def get_lock():
+    """Получает или создает lock для кэша"""
+    if cache_state["lock"] is None:
+        cache_state["lock"] = asyncio.Lock()
+    return cache_state["lock"]
+
+
+@lru_cache()
+def get_b2b_client() -> B2BClient:
+    """Dependency для получения B2B клиента"""
+    return B2BClient()
+
+
+def should_update() -> bool:
+    """Проверяет, нужно ли обновлять данные"""
+    current_time = time.time()
+    interval_seconds = UPDATE_INTERVAL_MINUTES * 60
+    return (current_time - cache_state["last_update"]) >= interval_seconds
+
+
+async def get_cached_data(client: B2BClient = Depends(get_b2b_client)) -> dict:
+    """Получает кэшированные данные, обновляя при необходимости"""
+    lock = get_lock()
+    async with lock:
+        if should_update() or cache_state["data"] is None:
+            try:
+                # Запускаем синхронный запрос в executor
+                loop = asyncio.get_running_loop()
+                data = await loop.run_in_executor(None, client.update_products)
+                cache_state["data"] = data
+                cache_state["last_update"] = time.time()
+                logger.info(f"Данные обновлены: {data.get('updated')}")
+                    
+            except Exception as e:
+                logger.error(f"Ошибка обновления данных: {e}")
+                if cache_state["data"] is None:
+                    raise HTTPException(status_code=503, detail="Сервис временно недоступен")
+        
+        return cache_state["data"]
+
+
+async def run_image_parser_background():
+    """Запускает парсер изображений в фоновом режиме"""
+    if not IMAGE_PARSER_ENABLED:
+        logger.info("Парсер изображений отключен (IMAGE_PARSER_ENABLED=false)")
+        return
+    
+    try:
+        # Ждем указанное время перед запуском (чтобы API успел запуститься)
+        await asyncio.sleep(IMAGE_PARSER_STARTUP_DELAY)
+        
+        logger.info(f"Запуск парсера изображений в фоновом режиме (max_pages={IMAGE_PARSER_MAX_PAGES if IMAGE_PARSER_MAX_PAGES > 0 else 'все'})")
+        image_parser_state["running"] = True
+        
+        from product_image_parser import parse_catalog, download_images_for_products, load_parser_cache
+        
+        # Загружаем кэш обработанных товаров и изображений
+        load_parser_cache()
+        
+        # Определяем количество страниц
+        max_pages = None if IMAGE_PARSER_MAX_PAGES == 0 else IMAGE_PARSER_MAX_PAGES
+        
+        # Парсим каталог
+        loop = asyncio.get_running_loop()
+        products_images = await loop.run_in_executor(
+            None,
+            parse_catalog,
+            max_pages
+        )
+        
+        if not products_images:
+            logger.warning("Парсер изображений: не найдено товаров с изображениями")
+            image_parser_state["running"] = False
+            return
+        
+        logger.info(f"Парсер изображений: найдено {len(products_images)} товаров с изображениями")
+        
+        # Скачиваем изображения сразу после парсинга всех страниц
+        # Изображения сохраняются в images/{model}/ и сразу доступны через API
+        downloaded = await loop.run_in_executor(
+            None,
+            lambda: download_images_for_products(products_images, download_immediately=True)
+        )
+        
+        total_downloaded = sum(downloaded.values())
+        image_parser_state["last_run"] = time.time()
+        image_parser_state["running"] = False
+        
+        logger.info(f"✅ Парсер изображений завершен: скачано {total_downloaded} изображений для {len(downloaded)} товаров")
+        logger.info(f"📁 Изображения сохранены в: {Path(__file__).parent / 'images'}")
+        logger.info(f"🌐 Изображения доступны через API: /api/products/{{model}}/image")
+        
+    except Exception as e:
+        logger.error(f"Ошибка при работе парсера изображений: {e}", exc_info=True)
+        image_parser_state["running"] = False
+
+
+# Фоновые задачи парсера портала (чтобы не терять ссылку)
+_portal_parser_tasks: set = set()
+_portal_parser_started_at: Optional[float] = None  # time.time() при старте
+_portal_parser_log_buffer: list = []  # последние сообщения (max 500)
+_PORTAL_PARSER_LOG_MAX = 500
+
+
+class _PortalParserLogHandler(logging.Handler):
+    """Пишет логи парсера в буфер для просмотра в админке."""
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            _portal_parser_log_buffer.append(msg)
+            while len(_portal_parser_log_buffer) > _PORTAL_PARSER_LOG_MAX:
+                _portal_parser_log_buffer.pop(0)
+        except Exception:
+            pass
+
+
+def _run_portal_parser_subprocess(start_page: int, end_page: int) -> bool:
+    """Запуск portal_parser_cannon.py через subprocess (fallback)."""
+    import subprocess
+    import sys
+    base = Path(__file__).resolve().parent
+    parser_script = base / "portal_parser_cannon.py"
+    if not parser_script.exists():
+        logger.error(f"Файл {parser_script} не найден")
+        return False
+    process = subprocess.Popen(
+        [sys.executable, str(parser_script), "--start", str(start_page), "--end", str(end_page)],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        cwd=str(base),
+    )
+    logger.info(f"Парсер запущен через subprocess (PID: {process.pid})")
+    return True
+
+
+def _portal_parser_done_callback(task):
+    global _portal_parser_started_at
+    _portal_parser_tasks.discard(task)
+    if not _portal_parser_tasks:
+        _portal_parser_started_at = None
+        cannon_logger = logging.getLogger("portal_parser_cannon")
+        for h in cannon_logger.handlers[:]:
+            if isinstance(h, _PortalParserLogHandler):
+                cannon_logger.removeHandler(h)
+                break
+
+
+async def run_portal_parser_cannon(
+    start_page: int = 1,
+    end_page: int = 116,
+    only_expected_folders: Optional[set] = None,
+):
+    """
+    Запускает парсер портала (portal_parser_cannon).
+    Если задан only_expected_folders, парсер обрабатывает только товары с этими именами папок (режим «недостающие»).
+    """
+    global _portal_parser_started_at
+    try:
+        from portal_parser_cannon import run_cannon
+        _portal_parser_started_at = time.time()
+        cannon_logger = logging.getLogger("portal_parser_cannon")
+        handler = _PortalParserLogHandler()
+        handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+        cannon_logger.addHandler(handler)
+        task = asyncio.create_task(run_cannon(start_page, end_page, only_expected_folders))
+        _portal_parser_tasks.add(task)
+        task.add_done_callback(_portal_parser_done_callback)
+        mode = f"только недостающие ({len(only_expected_folders)} шт.)" if only_expected_folders else f"страницы {start_page}-{end_page}"
+        logger.info(f"Запуск portal_parser_cannon в процессе: {mode}")
+        return True
+    except ImportError as e:
+        if only_expected_folders:
+            logger.error("Режим «недостающие» требует запуска в процессе: %s", e)
+            return False
+        logger.warning(f"Импорт portal_parser_cannon не удался: {e}, запуск через subprocess")
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, _run_portal_parser_subprocess, start_page, end_page)
+    except Exception as e:
+        logger.error(f"Ошибка запуска portal_parser_cannon: {e}")
+        return False
+
+
+# Глобальная переменная для отслеживания последнего запуска парсера
+_portal_parser_last_run_date = None
+
+async def schedule_nightly_parser():
+    """Планировщик автозапуска парсера каждую ночь 00:00-02:00"""
+    import datetime
+    global _portal_parser_last_run_date
+    
+    while True:
+        try:
+            now = datetime.datetime.now()
+            today = now.date()
+            
+            # Проверяем, находимся ли мы в окне 00:00-02:00
+            if now.hour >= 0 and now.hour < 2:
+                # Запускаем парсер только если он еще не запущен сегодня
+                if _portal_parser_last_run_date != today:
+                    logger.info(f"Автозапуск portal_parser_cannon (ночной режим, {now.strftime('%Y-%m-%d %H:%M')})")
+                    await run_portal_parser_cannon(1, 116)
+                    _portal_parser_last_run_date = today
+            else:
+                # Если вышли из окна 00:00-02:00, сбрасываем флаг для следующей ночи
+                if _portal_parser_last_run_date == today and now.hour >= 2:
+                    _portal_parser_last_run_date = None
+            
+            # Ждём 30 минут перед следующей проверкой (более точное отслеживание времени)
+            await asyncio.sleep(1800)
+        except asyncio.CancelledError:
+            logger.info("Планировщик автозапуска парсера остановлен")
+            break
+        except Exception as e:
+            logger.error(f"Ошибка в планировщике автозапуска: {e}")
+            await asyncio.sleep(1800)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifecycle events для приложения"""
+    # Пытаемся собрать React frontend автоматически, если build отсутствует.
+    try:
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, _ensure_react_build_sync)
+    except Exception as e:
+        logger.error("Ошибка автосборки React frontend: %s", e)
+
+    # Startup
+    client = get_b2b_client()
+    try:
+        loop = asyncio.get_running_loop()
+        data = await loop.run_in_executor(None, client.update_products)
+        cache_state["data"] = data
+        cache_state["last_update"] = time.time()
+        logger.info("Приложение запущено, данные загружены")
+            
+    except Exception as e:
+        logger.error(f"Ошибка при загрузке данных при старте: {e}")
+
+    # Запускаем планировщик автозапуска парсера
+    parser_scheduler_task = asyncio.create_task(schedule_nightly_parser())
+    
+    yield
+    
+    # Shutdown
+    # Останавливаем планировщик парсера
+    parser_scheduler_task.cancel()
+    try:
+        await parser_scheduler_task
+    except asyncio.CancelledError:
+        pass
+    
+    # Отменяем задачу парсера если она еще выполняется
+    if image_parser_state.get("task") and not image_parser_state["task"].done():
+        logger.info("Остановка парсера изображений...")
+        image_parser_state["task"].cancel()
+        try:
+            await image_parser_state["task"]
+        except asyncio.CancelledError:
+            pass
+    
+    logger.info("Приложение остановлено")
+
+
+app = FastAPI(
+    title="B2B Products API",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+# CORS middleware
+# CORS_ORIGINS может быть "*" или конкретный домен (например, "https://grgroup.kz")
+# Если указано несколько доменов через запятую, они будут разделены
+cors_origins_list = ["*"] if CORS_ORIGINS == "*" else [origin.strip() for origin in CORS_ORIGINS.split(",")]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# React build (SPA)
+react_dist_dir = Path(__file__).parent / "react" / "dist"
+react_index_file = react_dist_dir / "index.html"
+react_root_dir = Path(__file__).parent / "react"
+
+
+def _run_cmd(cmd: list[str], cwd: Path) -> str:
+    result = subprocess.run(
+        cmd,
+        cwd=str(cwd),
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=900,
+    )
+    output = ((result.stdout or "") + "\n" + (result.stderr or "")).strip()
+    if result.returncode != 0:
+        raise RuntimeError(f"Команда {' '.join(cmd)} завершилась с кодом {result.returncode}.\n{output}")
+    return output
+
+
+def _ensure_react_build_sync() -> bool:
+    """
+    Гарантирует наличие react/dist/index.html.
+    Если сборка отсутствует, пытается выполнить npm install (при необходимости) и npm run build.
+    """
+    global _react_build_error
+
+    if react_index_file.exists():
+        _react_build_error = None
+        return True
+
+    with _react_build_lock:
+        # Проверяем повторно внутри lock, чтобы не запускать параллельную сборку.
+        if react_index_file.exists():
+            _react_build_error = None
+            return True
+
+        if not react_root_dir.exists():
+            _react_build_error = f"Папка frontend не найдена: {react_root_dir}"
+            return False
+
+        npm_cmd = shutil.which("npm") or shutil.which("npm.cmd")
+        if not npm_cmd:
+            _react_build_error = "Команда npm не найдена в PATH"
+            return False
+
+        try:
+            node_modules_dir = react_root_dir / "node_modules"
+            if not node_modules_dir.exists():
+                logger.info("React build отсутствует: выполняю npm install...")
+                _run_cmd([npm_cmd, "install"], react_root_dir)
+
+            logger.info("Выполняю npm run build для React frontend...")
+            _run_cmd([npm_cmd, "run", "build"], react_root_dir)
+        except Exception as e:
+            _react_build_error = str(e)
+            logger.error("Не удалось собрать React frontend: %s", _react_build_error)
+            return False
+
+        if react_index_file.exists():
+            logger.info("React frontend успешно собран: %s", react_index_file)
+            _react_build_error = None
+            return True
+
+        _react_build_error = f"Сборка завершилась, но файл не найден: {react_index_file}"
+        return False
+
+
+async def _ensure_react_build_async() -> bool:
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, _ensure_react_build_sync)
+
+
+def _react_build_missing_response() -> HTMLResponse:
+    details = f"\nError details:\n{_react_build_error}" if _react_build_error else ""
+    return HTMLResponse(
+        content="""
+<html>
+  <head><title>React build not found</title></head>
+  <body>
+    <h1>React build not found</h1>
+    <p>Frontend build is missing and auto-build failed. Build it before starting the API:</p>
+    <pre>cd e:/tenderbot/apisite/react
+npm install
+npm run build{details}</pre>
+  </body>
+</html>
+""".strip().format(details=details),
+        status_code=503,
+    )
+
+
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    """Главная SPA-страница"""
+    if react_index_file.exists() or await _ensure_react_build_async():
+        return FileResponse(react_index_file)
+    return _react_build_missing_response()
+
+
+@app.get("/checkout", response_class=HTMLResponse)
+async def checkout_page():
+    """SPA маршрут оформления заказа"""
+    if react_index_file.exists() or await _ensure_react_build_async():
+        return FileResponse(react_index_file)
+    return _react_build_missing_response()
+
+
+@app.get("/admin", response_class=HTMLResponse)
+async def admin_page():
+    """SPA маршрут админки"""
+    if react_index_file.exists() or await _ensure_react_build_async():
+        return FileResponse(react_index_file)
+    return _react_build_missing_response()
+
+
+@app.get("/products", response_model=ProductsResponse)
+async def get_products(
+    brand: Optional[str] = None,
+    search: Optional[str] = None,
+    min_quantity: Optional[int] = None,
+    limit: Optional[int] = None,
+    offset: int = 0,
+    cached_data: dict = Depends(get_cached_data)
+):
+    """
+    Получает список товаров
+
+    Query параметры:
+    - brand: Фильтр по производителю
+    - search: Поиск по названию/модели
+    - min_quantity: Минимальный остаток
+    - limit: Лимит записей (пагинация)
+    - offset: Смещение (пагинация)
+    """
+    products = cached_data.get("products", [])
+    logger.info(f"Получено товаров из кэша: {len(products)}")
+
+    # Применяем фильтры
+    if brand:
+        products = [p for p in products if p.get("brand", "").lower() == brand.lower()]
+
+    if search:
+        search_lower = search.lower()
+        products = [
+            p for p in products
+            if search_lower in p.get("name", "").lower()
+            or search_lower in p.get("model", "").lower()
+        ]
+
+    if min_quantity is not None:
+        products = [p for p in products if p.get("quantity", 0) >= min_quantity]
+
+    total = len(products)
+    if limit is not None:
+        offset = max(0, offset)
+        products = products[offset : offset + limit]
+    logger.info(f"Товаров после фильтров: {total}" + (f", срез: {len(products)}" if limit is not None else ""))
+
+    # Категории и картинки из portal_export/items.json
+    portal_map = _load_portal_items_map()
+    by_model = portal_map.get("by_model", {})
+    by_name = portal_map.get("by_name", {})
+
+    from urllib.parse import quote
+    for p in products:
+        try:
+            model_encoded = quote(p.get("model", ""), safe="")
+            p["image"] = f"/api/products/{model_encoded}/image"
+            p["category"] = None
+            p["images"] = None
+            model_key = (p.get("model") or "").upper()
+            name_key = (p.get("name") or "").lower()
+            item = by_model.get(model_key) or by_name.get(name_key)
+            if item:
+                p["category"] = item.get("category") or ""
+                imgs = item.get("image")
+                if imgs and isinstance(imgs, list):
+                    p["images"] = imgs
+            # Папка в portal_export: по model_to_foldername и по clean_id (KIT/XVR301 ↔ KIT_XVR301)
+            raw_model = p.get("model") or ""
+            portal_dir = _portal_folder_for_model(raw_model)
+            if portal_dir:
+                portal_images = sorted(portal_dir.glob("image_*.*"))
+                if portal_images:
+                    base = f"/api/products/{model_encoded}/image"
+                    p["images"] = [f"{base}?index={i}" for i in range(len(portal_images))]
+        except Exception as e:
+            logger.warning("Ошибка обработки изображения для товара %s: %s", p.get("model", "unknown"), e)
+
+    logger.info(f"Обработано изображений для {len(products)} товаров")
+    
+    # Применяем расчет цен и скидок
+    from price_manager import calculate_final_price
+    
+    for p in products:
+        try:
+            # Получаем и нормализуем price_rrc (розничная цена)
+            # В кэше B2B часто приходит price_rrc=0, а актуальная цена — в price_client
+            price_rrc_raw = p.get("price_rrc")
+            price_client_raw = p.get("price_client")
+            
+            # Если price_rrc отсутствует или равен 0 — берём price_client как базу
+            if price_rrc_raw is None or price_rrc_raw == "" or float(price_rrc_raw or 0) == 0:
+                if price_client_raw is not None and price_client_raw != "" and float(price_client_raw or 0) > 0:
+                    price_rrc_raw = price_client_raw
+                elif price_rrc_raw is None or price_rrc_raw == "":
+                    price_rrc_raw = p.get("price") or p.get("cost") or p.get("retail_price")
+            
+            # Если все еще нет, пробуем другие возможные поля
+            if price_rrc_raw is None or price_rrc_raw == "":
+                price_rrc_raw = p.get("price") or p.get("cost") or p.get("retail_price")
+            
+            # Если цена все еще отсутствует, устанавливаем 0 и логируем
+            if price_rrc_raw is None or price_rrc_raw == "":
+                logger.warning(f"Товар {p.get('model', 'unknown')} не имеет price_rrc, устанавливаем 0")
+                price_rrc_raw = 0
+            
+            # Преобразуем в число, если это строка
+            if isinstance(price_rrc_raw, str):
+                try:
+                    price_rrc = float(price_rrc_raw.replace(',', '.'))
+                except (ValueError, AttributeError):
+                    price_rrc = 0.0
+            elif price_rrc_raw is None:
+                price_rrc = 0.0
+            else:
+                try:
+                    price_rrc = float(price_rrc_raw)
+                except (ValueError, TypeError):
+                    price_rrc = 0.0
+            
+            # Проверяем валидность цены
+            if price_rrc < 0 or not isinstance(price_rrc, (int, float)):
+                price_rrc = 0.0
+            
+            model = p.get("model", "") or ""
+            brand = p.get("brand", "") or ""
+            
+            # Рассчитываем итоговую цену со скидкой
+            price_info = calculate_final_price(price_rrc, model, brand)
+            
+            # Обновляем данные товара
+            p["final_price"] = float(price_info["final_price"])
+            p["discount"] = float(price_info["discount"])
+            p["discount_amount"] = float(price_info["discount_amount"])
+            
+            # Убеждаемся, что price_rrc тоже число
+            p["price_rrc"] = float(price_rrc)
+            
+            # Удаляем старое поле price_client если оно есть
+            p.pop("price_client", None)
+        except Exception as e:
+            logger.warning(f"Ошибка расчета цены для товара {p.get('model', 'unknown')}: {e}")
+            logger.debug(f"Данные товара: {p}")
+            # Устанавливаем значения по умолчанию
+            try:
+                price_rrc_default = float(p.get("price_rrc", 0) or 0)
+                if price_rrc_default < 0:
+                    price_rrc_default = 0.0
+            except (ValueError, TypeError):
+                price_rrc_default = 0.0
+            
+            p["price_rrc"] = price_rrc_default
+            p["final_price"] = price_rrc_default
+            p["discount"] = 0.0
+            p["discount_amount"] = 0.0
+    
+    # Валидация через Pydantic с обработкой ошибок
+    validated_products = []
+    for p in products:
+        try:
+            # Дополнительная проверка: если price_rrc так и остался 0, пробуем price_client
+            if "price_rrc" not in p or p["price_rrc"] is None or float(p.get("price_rrc") or 0) == 0:
+                fallback_price = p.get("price_client") or p.get("price") or p.get("cost") or p.get("retail_price") or 0
+                try:
+                    val = float(fallback_price)
+                    if val > 0:
+                        p["price_rrc"] = val
+                        if p.get("final_price") is None or float(p.get("final_price") or 0) == 0:
+                            from price_manager import calculate_final_price
+                            info = calculate_final_price(val, p.get("model", ""), p.get("brand", ""))
+                            p["final_price"] = info["final_price"]
+                            p["discount"] = info["discount"]
+                            p["discount_amount"] = info["discount_amount"]
+                except (ValueError, TypeError):
+                    pass
+                if float(p.get("price_rrc") or 0) == 0:
+                    p["price_rrc"] = 0.0
+            
+            if "final_price" not in p or p["final_price"] is None:
+                logger.warning(f"Товар {p.get('model', 'unknown')} не имеет final_price, используем price_rrc")
+                p["final_price"] = float(p.get("price_rrc", 0))
+            
+            # Убеждаемся, что все числовые поля - числа
+            p["price_rrc"] = float(p["price_rrc"])
+            p["final_price"] = float(p["final_price"])
+            p["discount"] = float(p.get("discount", 0))
+            p["discount_amount"] = float(p.get("discount_amount", 0))
+            
+            validated_products.append(Product(**p))
+        except Exception as e:
+            logger.warning(f"Ошибка валидации товара {p.get('model', 'unknown')}: {e}")
+            logger.debug(f"Данные товара: {p}")
+            # Пропускаем товары с ошибками валидации, но продолжаем обработку остальных
+            continue
+    
+    logger.info(f"Валидировано товаров: {len(validated_products)}")
+    
+    return ProductsResponse(
+        updated=cached_data.get("updated"),
+        count=len(validated_products),
+        products=validated_products,
+        total=total if limit is not None else None,
+        limit=limit,
+        offset=offset if limit is not None else None,
+    )
+
+
+@app.get("/products/{model:path}", response_model=Product)
+async def get_product_by_model(
+    model: str,
+    cached_data: dict = Depends(get_cached_data)
+):
+    """Получает товар по модели"""
+    from price_manager import calculate_final_price
+    
+    products = cached_data.get("products", [])
+    product_data = next(
+        (p for p in products if p.get("model", "").lower() == model.lower()),
+        None
+    )
+    
+    if not product_data:
+        raise HTTPException(status_code=404, detail="Товар не найден")
+    
+    # Применяем расчет цен
+    # В кэше часто price_rrc=0, актуальная цена в price_client
+    price_rrc_raw = product_data.get("price_rrc")
+    price_client_raw = product_data.get("price_client")
+    
+    if price_rrc_raw is None or price_rrc_raw == "" or float(price_rrc_raw or 0) == 0:
+        if price_client_raw is not None and price_client_raw != "" and float(price_client_raw or 0) > 0:
+            price_rrc_raw = price_client_raw
+        elif price_rrc_raw is None or price_rrc_raw == "":
+            price_rrc_raw = product_data.get("price") or product_data.get("cost") or product_data.get("retail_price")
+    
+    if price_rrc_raw is None or price_rrc_raw == "":
+        logger.warning(f"Товар {model} не имеет price_rrc, устанавливаем 0")
+        price_rrc_raw = 0
+    
+    # Преобразуем в число, если это строка
+    if isinstance(price_rrc_raw, str):
+        try:
+            price_rrc = float(price_rrc_raw.replace(',', '.'))
+        except (ValueError, AttributeError):
+            price_rrc = 0.0
+    elif price_rrc_raw is None:
+        price_rrc = 0.0
+    else:
+        try:
+            price_rrc = float(price_rrc_raw)
+        except (ValueError, TypeError):
+            price_rrc = 0.0
+    
+    if price_rrc < 0:
+        price_rrc = 0.0
+    
+    brand = product_data.get("brand", "") or ""
+    price_info = calculate_final_price(price_rrc, model, brand)
+    
+    product_data["price_rrc"] = float(price_rrc)
+    product_data["final_price"] = float(price_info["final_price"])
+    product_data["discount"] = float(price_info["discount"])
+    product_data["discount_amount"] = float(price_info["discount_amount"])
+    product_data.pop("price_client", None)
+    
+    return Product(**product_data)
+
+
+@app.get("/health", response_model=HealthResponse)
+async def health(cached_data: dict = Depends(get_cached_data)):
+    """Проверка здоровья сервиса"""
+    return HealthResponse(
+        status="ok",
+        last_update=cached_data.get("updated") if cached_data else None,
+        products_count=len(cached_data.get("products", [])) if cached_data else 0
+    )
+
+
+@app.get("/api/test/image/{model}")
+async def test_image_url(model: str, cached_data: dict = Depends(get_cached_data)):
+    """Тестовый эндпоинт для проверки URL изображения"""
+    try:
+        products = cached_data.get("products", [])
+        product = next(
+            (p for p in products if p.get("model", "").lower() == model.lower()),
+            None
+        )
+        
+        if not product:
+            return {
+                "status": "error",
+                "message": "Товар не найден"
+            }
+        
+        brand = product.get('brand', '')
+        name = product.get('name', '')
+        
+        from product_image_parser import normalize_image_url
+        from config import B2B_API_BASE_URL
+        
+        # Проверяем локальные изображения
+        images_dir = Path(__file__).parent / "images" / model
+        local_images = []
+        if images_dir.exists() and images_dir.is_dir():
+            local_images = [str(f.name) for f in images_dir.glob("*.*")]
+        
+        # Генерируем варианты URL из кэша
+        cache_urls = [
+            f"{B2B_API_BASE_URL}/image/cache/catalog/{model}_1-360x360.jpg",
+            f"{B2B_API_BASE_URL}/image/cache/catalog/{model}_1.jpg",
+            f"{B2B_API_BASE_URL}/image/cache/catalog/{model}-360x360.jpg",
+            f"{B2B_API_BASE_URL}/image/cache/catalog/{model}.jpg",
+        ]
+        
+        # Нормализуем к оригиналу
+        original_urls = []
+        for cache_url in cache_urls:
+            original = normalize_image_url(cache_url)
+            if original:
+                original_urls.append(original)
+        
+        # Проверяем доступность оригинальных URL
+        available_images = []
+        for url in original_urls[:2]:  # Проверяем первые 2
+            try:
+                loop = asyncio.get_running_loop()
+                response = await loop.run_in_executor(
+                    None,
+                    lambda u=url: requests.head(u, timeout=3, allow_redirects=True)
+                )
+                if response.status_code == 200:
+                    available_images.append(url)
+            except:
+                pass
+        
+        return {
+            "model": model,
+            "brand": brand,
+            "name": name,
+            "local_images": local_images,
+            "cache_urls": cache_urls,
+            "original_urls": original_urls,
+            "available_images": available_images,
+            "primary_image": local_images[0] if local_images else (available_images[0] if available_images else None)
+        }
+    except Exception as e:
+        logger.error(f"Ошибка при проверке изображения: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.post("/api/parse-images/start")
+async def start_image_parsing(max_pages: Optional[int] = 5):
+    """
+    Запускает парсинг изображений товаров с сайта
+    
+    Args:
+        max_pages: Максимальное количество страниц каталога для парсинга
+    """
+    try:
+        from product_image_parser import parse_catalog, download_images_for_products, load_parser_cache
+        
+        # Загружаем кэш обработанных товаров и изображений
+        load_parser_cache()
+        
+        logger.info(f"Запуск парсинга изображений (max_pages={max_pages})")
+        
+        # Парсим каталог
+        loop = asyncio.get_running_loop()
+        products_images = await loop.run_in_executor(
+            None,
+            parse_catalog,
+            max_pages
+        )
+        
+        if not products_images:
+            return {
+                "status": "warning",
+                "message": "Не найдено товаров с изображениями",
+                "products_count": 0
+            }
+        
+        # Скачиваем изображения сразу после парсинга всех страниц
+        # Изображения сохраняются в images/{model}/ и сразу доступны через API
+        downloaded = await loop.run_in_executor(
+            None,
+            lambda: download_images_for_products(products_images, download_immediately=True)
+        )
+        
+        total_downloaded = sum(downloaded.values())
+        
+        return {
+            "status": "success",
+            "message": "Парсинг завершен",
+            "products_count": len(products_images),
+            "images_downloaded": total_downloaded,
+            "details": downloaded
+        }
+    except Exception as e:
+        logger.error(f"Ошибка при парсинге изображений: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.get("/api/parse-images/cache")
+async def get_parse_images_cache():
+    """Получает информацию о кэше парсера (обработанные товары и изображения)"""
+    try:
+        from product_image_parser import PARSER_CACHE_FILE
+        import json
+        
+        # Загружаем кэш из файла
+        cache_data = {
+            "processed_models": [],
+            "processed_images": [],
+            "processed_pages": []
+        }
+        
+        if PARSER_CACHE_FILE.exists():
+            try:
+                with open(PARSER_CACHE_FILE, 'r', encoding='utf-8') as f:
+                    cache_data = json.load(f)
+            except Exception as e:
+                logger.warning(f"Не удалось загрузить кэш: {e}")
+        
+        # Подсчитываем статистику по локальным изображениям
+        images_dir = Path(__file__).parent / "images"
+        local_models = []
+        total_local_images = 0
+        
+        if images_dir.exists():
+            for model_dir in images_dir.iterdir():
+                if model_dir.is_dir():
+                    images = list(model_dir.glob("*.*"))
+                    if images:
+                        local_models.append({
+                            "model": model_dir.name,
+                            "images_count": len(images)
+                        })
+                        total_local_images += len(images)
+        
+        return {
+            "cache_file": str(PARSER_CACHE_FILE),
+            "processed_models_count": len(cache_data.get("processed_models", [])),
+            "processed_images_count": len(cache_data.get("processed_images", [])),
+            "processed_pages_count": len(cache_data.get("processed_pages", [])),
+            "local_models_count": len(local_models),
+            "total_local_images": total_local_images,
+            "sample_processed_models": cache_data.get("processed_models", [])[:20],
+            "local_models_sample": local_models[:20]
+        }
+    except Exception as e:
+        logger.error(f"Ошибка при получении кэша парсера: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.post("/api/parse-images/clear-cache")
+async def clear_parse_images_cache():
+    """Очищает кэш парсера (обработанные товары и изображения)"""
+    try:
+        from product_image_parser import PARSER_CACHE_FILE
+        
+        # Удаляем файл кэша
+        if PARSER_CACHE_FILE.exists():
+            PARSER_CACHE_FILE.unlink()
+            logger.info("Кэш парсера очищен")
+            return {
+                "status": "success",
+                "message": "Кэш парсера очищен. При следующем запуске парсер начнет с начала."
+            }
+        else:
+            return {
+                "status": "info",
+                "message": "Кэш парсера уже пуст"
+            }
+    except Exception as e:
+        logger.error(f"Ошибка при очистке кэша парсера: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.get("/api/parse-images/stats")
+async def get_parsed_images_stats():
+    """Возвращает статистику по спарсенным изображениям"""
+    try:
+        images_dir = Path(__file__).parent / "images"
+        
+        if not images_dir.exists():
+            return {
+                "total_products": 0,
+                "total_images": 0,
+                "products": {},
+                "parser_status": {
+                    "enabled": IMAGE_PARSER_ENABLED,
+                    "running": image_parser_state.get("running", False),
+                    "last_run": image_parser_state.get("last_run")
+                }
+            }
+        
+        products = {}
+        total_images = 0
+        
+        for product_dir in images_dir.iterdir():
+            if product_dir.is_dir():
+                image_files = list(product_dir.glob("*.*"))
+                image_count = len(image_files)
+                products[product_dir.name] = {
+                    "images_count": image_count,
+                    "images": [f.name for f in image_files]
+                }
+                total_images += image_count
+        
+        return {
+            "total_products": len(products),
+            "total_images": total_images,
+            "products": products,
+            "parser_status": {
+                "enabled": IMAGE_PARSER_ENABLED,
+                "running": image_parser_state.get("running", False),
+                "last_run": image_parser_state.get("last_run")
+            }
+        }
+    except Exception as e:
+        logger.error(f"Ошибка при получении статистики: {e}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+# ==================== API для управления ценами и скидками ====================
+
+class DiscountRequest(BaseModel):
+    discount: float
+
+class ModelDiscountRequest(BaseModel):
+    model: str
+    discount: float
+
+class BrandDiscountRequest(BaseModel):
+    brand: str
+    discount: float
+
+class CustomPriceRequest(BaseModel):
+    model: str
+    price: float
+
+
+class AssistantChatRequest(BaseModel):
+    message: str
+    budget: Optional[float] = None
+    brands: Optional[list[str]] = None
+    cart: Optional[list[str]] = None
+
+
+class AssistantChatResponse(BaseModel):
+    text: str
+    product_models: list[str] = []
+
+
+@app.get("/api/admin/prices")
+async def get_prices():
+    """Получает все настройки цен и скидок"""
+    try:
+        from price_manager import get_all_discounts
+        return get_all_discounts()
+    except Exception as e:
+        logger.error(f"Ошибка при получении настроек цен: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/admin/prices/global-discount")
+async def set_global_discount(request: DiscountRequest):
+    """Устанавливает глобальную скидку (0-100%)"""
+    try:
+        from price_manager import set_global_discount
+        if set_global_discount(request.discount):
+            return {"status": "success", "message": f"Глобальная скидка установлена: {request.discount}%"}
+        else:
+            raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Ошибка при установке глобальной скидки: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/admin/prices/model-discount")
+async def set_model_discount(request: ModelDiscountRequest):
+    """Устанавливает скидку для конкретной модели"""
+    try:
+        from price_manager import set_model_discount
+        if set_model_discount(request.model, request.discount):
+            return {"status": "success", "message": f"Скидка для модели {request.model} установлена: {request.discount}%"}
+        else:
+            raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Ошибка при установке скидки для модели: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/admin/prices/model-discount/{model}")
+async def remove_model_discount(model: str):
+    """Удаляет скидку для конкретной модели"""
+    try:
+        from price_manager import remove_model_discount
+        if remove_model_discount(model):
+            return {"status": "success", "message": f"Скидка для модели {model} удалена"}
+        else:
+            raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
+    except Exception as e:
+        logger.error(f"Ошибка при удалении скидки для модели: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/admin/prices/brand-discount")
+async def set_brand_discount(request: BrandDiscountRequest):
+    """Устанавливает скидку для бренда"""
+    try:
+        from price_manager import set_brand_discount
+        if set_brand_discount(request.brand, request.discount):
+            return {"status": "success", "message": f"Скидка для бренда {request.brand} установлена: {request.discount}%"}
+        else:
+            raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Ошибка при установке скидки для бренда: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/admin/prices/brand-discount/{brand}")
+async def remove_brand_discount(brand: str):
+    """Удаляет скидку для бренда"""
+    try:
+        from price_manager import remove_brand_discount
+        if remove_brand_discount(brand):
+            return {"status": "success", "message": f"Скидка для бренда {brand} удалена"}
+        else:
+            raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
+    except Exception as e:
+        logger.error(f"Ошибка при удалении скидки для бренда: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/admin/prices/custom-price")
+async def set_custom_price(request: CustomPriceRequest):
+    """Устанавливает кастомную цену для модели"""
+    try:
+        from price_manager import set_custom_price
+        if set_custom_price(request.model, request.price):
+            return {"status": "success", "message": f"Кастомная цена для модели {request.model} установлена: {request.price} ₸"}
+        else:
+            raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Ошибка при установке кастомной цены: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/admin/prices/custom-price/{model}")
+async def remove_custom_price(model: str):
+    """Удаляет кастомную цену для модели"""
+    try:
+        from price_manager import remove_custom_price
+        if remove_custom_price(model):
+            return {"status": "success", "message": f"Кастомная цена для модели {model} удалена"}
+        else:
+            raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
+    except Exception as e:
+        logger.error(f"Ошибка при удалении кастомной цены: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/admin/portal-mismatch")
+async def get_portal_mismatch(cached_data: dict = Depends(get_cached_data)):
+    """
+    Проверка битых/недостающих позиций: товары из B2B, для которых нет папки в portal_export.
+    Возвращает список позиций без папки и ожидаемое имя папки (model_to_foldername).
+    """
+    missing = []
+    products = cached_data.get("products", [])
+    for p in products:
+        model = (p.get("model") or "").strip()
+        if not model:
+            continue
+        folder = _portal_folder_for_model(model)
+        if folder is None:
+            missing.append({
+                "model": model,
+                "name": (p.get("name") or "").strip() or "—",
+                "brand": (p.get("brand") or "").strip() or "—",
+                "expected_folder": model_to_foldername(model),
+                "clean_id": get_clean_id(model),
+            })
+    return {
+        "total_products": len(products),
+        "missing_count": len(missing),
+        "missing": missing,
+    }
+
+
+@app.get("/api/parse-images/status")
+async def get_image_parser_status():
+    """Возвращает статус парсера изображений"""
+    return {
+        "enabled": IMAGE_PARSER_ENABLED,
+        "running": image_parser_state.get("running", False),
+        "last_run": image_parser_state.get("last_run"),
+        "max_pages": IMAGE_PARSER_MAX_PAGES if IMAGE_PARSER_MAX_PAGES > 0 else "все",
+        "startup_delay": IMAGE_PARSER_STARTUP_DELAY
+    }
+
+
+@app.get("/api/portal-parser/status")
+async def get_portal_parser_status():
+    """Статус парсера портала: работает ли, время старта."""
+    running = len(_portal_parser_tasks) > 0
+    started_at = None
+    if _portal_parser_started_at:
+        from datetime import datetime
+        started_at = datetime.fromtimestamp(_portal_parser_started_at).isoformat()
+    return {
+        "running": running,
+        "tasks_count": len(_portal_parser_tasks),
+        "started_at": started_at,
+    }
+
+
+@app.get("/api/portal-parser/logs")
+async def get_portal_parser_logs(limit: int = 300):
+    """Последние строки лога парсера портала."""
+    n = min(max(1, limit), 500)
+    lines = list(_portal_parser_log_buffer[-n:])
+    return {"lines": lines, "total": len(_portal_parser_log_buffer)}
+
+
+@app.post("/api/portal-parser/stop")
+async def stop_portal_parser():
+    """Останавливает все запущенные задачи парсера портала."""
+    tasks = list(_portal_parser_tasks)
+    if not tasks:
+        return {"status": "ok", "message": "Парсер не запущен"}
+    for task in tasks:
+        task.cancel()
+    return {"status": "success", "message": f"Остановка {len(tasks)} задач парсера"}
+
+
+@app.post("/api/portal-parser/start-missing")
+async def start_portal_parser_missing(cached_data: dict = Depends(get_cached_data)):
+    """
+    Запускает парсер только для товаров без папки в portal_export.
+    Парсер ищет эти наименования в каталоге портала и создаёт папки.
+    """
+    missing = []
+    for p in cached_data.get("products", []):
+        model = (p.get("model") or "").strip()
+        if not model:
+            continue
+        if _portal_folder_for_model(model) is None:
+            missing.append({"expected_folder": model_to_foldername(model)})
+    if not missing:
+        return {"status": "ok", "message": "Нет недостающих папок", "count": 0}
+    try:
+        from portal_full_parser_browser import sanitize_foldername
+        only_folders = {sanitize_foldername(m["expected_folder"]) for m in missing}
+        success = await run_portal_parser_cannon(1, 116, only_expected_folders=only_folders)
+        if success:
+            return {
+                "status": "success",
+                "message": f"Парсер запущен для {len(only_folders)} недостающих папок",
+                "count": len(only_folders),
+            }
+        raise HTTPException(status_code=500, detail="Не удалось запустить парсер")
+    except ImportError as e:
+        raise HTTPException(status_code=500, detail=f"Ошибка импорта: {e}")
+
+
+@app.post("/api/portal-parser/start")
+async def start_portal_parser(start_page: Optional[int] = 1, end_page: Optional[int] = 116):
+    """Запускает portal_parser_cannon.py"""
+    try:
+        success = await run_portal_parser_cannon(start_page or 1, end_page or 116)
+        if success:
+            return {
+                "status": "success",
+                "message": f"Парсер portal_parser_cannon запущен (страницы {start_page or 1}-{end_page or 116})"
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Не удалось запустить парсер")
+    except Exception as e:
+        logger.error(f"Ошибка запуска portal_parser_cannon: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+
+def _build_assistant_system_prompt(products: list, budget: Optional[float] = None, preferred_brands: Optional[list[str]] = None) -> str:
+    """Строит системный промпт для ИИ-помощника с контекстом каталога"""
+    # #region agent log
+    _debug_log("main.py:_build_assistant_system_prompt", "entry", {"products_count": len(products)}, "C")
+    # #endregion
+    # Ограничиваем количество товаров для промпта (первые 500 или по категориям)
+    products_sample = products[:500] if len(products) > 500 else products
+    
+    # Формируем краткий список товаров
+    products_list = []
+    for p in products_sample:
+        model = (p.get("model") or "").strip()
+        name = (p.get("name") or "").strip()
+        brand = (p.get("brand") or "").strip()
+        raw_price = p.get("final_price", p.get("price_rrc", 0))
+        try:
+            price_val = float(raw_price) if raw_price is not None else 0.0
+        except (TypeError, ValueError):
+            price_val = 0.0
+        category = (p.get("category") or "").strip()
+        if model:
+            products_list.append(f"- {model} | {name} | {brand} | {price_val:.0f} ₸ | {category}")
+    
+    products_text = "\n".join(products_list[:300])  # Максимум 300 товаров в промпте
+    
+    try:
+        budget_val = float(budget) if budget is not None else None
+    except (TypeError, ValueError):
+        budget_val = None
+    budget_text = f"\n\nБюджет пользователя: {budget_val:.0f} ₸" if budget_val is not None else ""
+    brands_text = f"\nПредпочтительные бренды: {', '.join(preferred_brands)}" if preferred_brands else ""
+    
+    prompt = f"""Ты умный помощник сайта G&R Group. Твои задачи:
+
+1. **Навигатор по сайту**: помогай пользователям находить разделы:
+   - Услуги (/services) — описание услуг компании
+   - Проекты (/projects) — реализованные проекты
+   - Контакты (/contacts) — контактная информация
+
+2. **Консультант по каталогу комплектующих**: используй актуальный каталог товаров ниже для подбора решений.
+
+**Каталог товаров** (модель | название | бренд | цена | категория):
+{products_text}
+
+**Правила подбора**:
+- Подбирай товары по задаче пользователя (что нужно сделать)
+{budget_text}
+{brands_text}
+- Если пользователь не знает, что нужно — уточни задачу и предложи типовые решения из каталога
+- Если пользователь просит конкретную модель или тип товара — найди подходящие товары из каталога
+- Если пользователь просит "добавить в корзину" или "собрать комплект" — перечисли модели для добавления
+
+**Формат ответа**:
+- Отвечай на русском языке, дружелюбно и профессионально
+- В конце ответа, если рекомендуешь конкретные товары, добавь строку: PRODUCTS: model1, model2, model3
+- Если товары не требуются, не добавляй PRODUCTS
+
+**Примеры**:
+- "Нужна камера для улицы" → предложи подходящие модели из каталога + PRODUCTS: DH-IPC-HFW..., IPC-...
+- "Где услуги?" → "Раздел «Услуги» содержит информацию о наших услугах. Перейдите: /services"
+- "Бюджет 50000, нужна система видеонаблюдения" → подбери товары в рамках бюджета + PRODUCTS: ..."""
+    
+    return prompt
+
+
+async def _call_openai_api(prompt: str, user_message: str) -> str:
+    """Вызывает OpenAI API (api.openai.com) для получения ответа от LLM"""
+    if not OPENAI_API_KEY:
+        raise HTTPException(status_code=500, detail="OpenAI API ключ не настроен (OPENAI_API_KEY)")
+    url = "https://api.openai.com/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": OPENAI_MODEL,
+        "messages": [
+            {"role": "system", "content": prompt},
+            {"role": "user", "content": user_message},
+        ],
+        "temperature": 0.7,
+        "max_tokens": 1000,
+    }
+    try:
+        loop = asyncio.get_running_loop()
+        response = await loop.run_in_executor(
+            None,
+            lambda: requests.post(url, json=payload, headers=headers, timeout=30),
+        )
+        response.raise_for_status()
+        data = response.json()
+        return data.get("choices", [{}])[0].get("message", {}).get("content", "") or ""
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Ошибка вызова OpenAI API: {e}")
+        raise HTTPException(status_code=500, detail=f"Ошибка OpenAI API: {str(e)}")
+    except Exception as e:
+        logger.error(f"Ошибка обработки ответа OpenAI: {e}")
+        raise HTTPException(status_code=500, detail="Ошибка обработки ответа LLM")
+
+
+async def _call_openrouter_api(prompt: str, user_message: str) -> str:
+    """Вызывает OpenRouter API для получения ответа от LLM"""
+    if not OPENROUTER_API_KEY:
+        raise HTTPException(status_code=500, detail="LLM API ключ не настроен (OPENROUTER_API_KEY)")
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://grgroup.kz",
+        "X-Title": "G&R Group Assistant",
+    }
+    payload = {
+        "model": OPENROUTER_MODEL,
+        "messages": [
+            {"role": "system", "content": prompt},
+            {"role": "user", "content": user_message},
+        ],
+        "temperature": 0.7,
+        "max_tokens": 1000,
+    }
+    try:
+        loop = asyncio.get_running_loop()
+        response = await loop.run_in_executor(
+            None,
+            lambda: requests.post(url, json=payload, headers=headers, timeout=30),
+        )
+        response.raise_for_status()
+        data = response.json()
+        return data.get("choices", [{}])[0].get("message", {}).get("content", "") or ""
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Ошибка вызова OpenRouter API: {e}")
+        raise HTTPException(status_code=500, detail=f"Ошибка LLM API: {str(e)}")
+    except Exception as e:
+        logger.error(f"Ошибка обработки ответа OpenRouter: {e}")
+        raise HTTPException(status_code=500, detail="Ошибка обработки ответа LLM")
+
+
+async def _call_llm(prompt: str, user_message: str) -> str:
+    """Вызов LLM: приоритет у OpenAI, иначе OpenRouter."""
+    if OPENAI_API_KEY:
+        return await _call_openai_api(prompt, user_message)
+    if OPENROUTER_API_KEY:
+        return await _call_openrouter_api(prompt, user_message)
+    raise HTTPException(status_code=500, detail="Не задан ни OPENAI_API_KEY, ни OPENROUTER_API_KEY в .env")
+
+
+def _extract_product_models(text: str) -> list[str]:
+    """Извлекает модели товаров из ответа ИИ (формат PRODUCTS: model1, model2, ...)"""
+    products_match = re.search(r'PRODUCTS:\s*([^\n]+)', text, re.IGNORECASE)
+    if not products_match:
+        return []
+    
+    models_str = products_match.group(1).strip()
+    models = [m.strip() for m in models_str.split(',') if m.strip()]
+    return models
+
+
+@app.post("/api/assistant/chat", response_model=AssistantChatResponse)
+async def assistant_chat(
+    request: AssistantChatRequest,
+    cached_data: dict = Depends(get_cached_data)
+):
+    """
+    Эндпоинт для общения с ИИ-помощником.
+    Подбирает товары по задаче, бюджету и брендам из каталога.
+    """
+    # #region agent log
+    _debug_log("main.py:assistant_chat", "entry", {"message_len": len(request.message or "")}, "B")
+    # #endregion
+    try:
+        products = cached_data.get("products", [])
+        # #region agent log
+        _debug_log("main.py:assistant_chat", "after cached_data", {"products_count": len(products)}, "B")
+        # #endregion
+        
+        # Фильтруем товары по предпочтительным брендам, если указаны
+        filtered_products = products
+        if request.brands:
+            filtered_products = [
+                p for p in products
+                if (p.get("brand") or "").strip().lower() in [b.lower() for b in request.brands]
+            ]
+            # Если ничего не найдено по брендам, используем все товары
+            if not filtered_products:
+                filtered_products = products
+        
+        # Строим системный промпт с каталогом
+        system_prompt = _build_assistant_system_prompt(
+            filtered_products,
+            budget=request.budget,
+            preferred_brands=request.brands
+        )
+        # #region agent log
+        _debug_log("main.py:assistant_chat", "after build_prompt", {"prompt_len": len(system_prompt)}, "C")
+        # #endregion
+        
+        # Формируем сообщение пользователя с контекстом корзины
+        user_message = request.message
+        if request.cart:
+            user_message += f"\n\nТекущая корзина: {', '.join(request.cart)}"
+        
+        # Вызываем LLM
+        # #region agent log
+        _debug_log("main.py:assistant_chat", "before _call_llm", {}, "D")
+        # #endregion
+        llm_response = await _call_llm(system_prompt, user_message)
+        # #region agent log
+        _debug_log("main.py:assistant_chat", "after _call_llm", {"response_len": len(llm_response or "")}, "E")
+        # #endregion
+        
+        # Извлекаем модели товаров из ответа
+        llm_text = llm_response if isinstance(llm_response, str) else (llm_response or "")
+        product_models = _extract_product_models(llm_text)
+        
+        # Убираем маркер PRODUCTS из текста ответа
+        text = re.sub(r'\n?PRODUCTS:\s*[^\n]+', '', llm_text, flags=re.IGNORECASE).strip()
+        
+        return AssistantChatResponse(
+            text=text,
+            product_models=product_models
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        # #region agent log
+        _debug_log("main.py:assistant_chat", "Exception", {"error": str(e), "type": type(e).__name__}, "F")
+        # #endregion
+        logger.error(f"Ошибка в assistant_chat: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Ошибка обработки запроса: {str(e)}")
+
+
+@app.get("/api/products/{model:path}/detail")
+async def get_product_detail(
+    model: str,
+    cached_data: dict = Depends(get_cached_data),
+):
+    """
+    Детальная карточка товара: данные B2B + описание, характеристики и фото из portal_export.
+    """
+    from urllib.parse import unquote, quote
+    model_decoded = unquote(model)
+    product_data = _find_product_by_model(cached_data.get("products", []), model_decoded)
+    if not product_data:
+        raise HTTPException(status_code=404, detail="Товар не найден")
+    canonical_model = product_data.get("model", model_decoded)
+    model_enc = quote(canonical_model, safe="")
+    base_url = f"/api/products/{model_enc}"
+    result = {
+        "name": product_data.get("name", ""),
+        "model": product_data.get("model", ""),
+        "brand": product_data.get("brand", ""),
+        "quantity": product_data.get("quantity", 0),
+        "description": "",
+        "attributes": {},
+        "images": [],
+        "price_rrc": product_data.get("price_rrc") or product_data.get("price_client") or 0,
+        "product_url": None,
+    }
+    from price_manager import calculate_final_price
+    try:
+        price_rrc = float(result["price_rrc"] or 0)
+        info = calculate_final_price(price_rrc, result["model"], result["brand"])
+        result["final_price"] = info["final_price"]
+        result["discount"] = info["discount"]
+        result["discount_amount"] = info["discount_amount"]
+    except Exception:
+        result["final_price"] = result["price_rrc"]
+        result["discount"] = 0
+        result["discount_amount"] = 0
+    # Поиск папки: оба формата (_ и -) и clean_id
+    portal_dir = _portal_folder_for_model(canonical_model)
+    if portal_dir:
+        product_json = portal_dir / "product.json"
+        if product_json.exists():
+            try:
+                data = json.loads(product_json.read_text(encoding="utf-8"))
+                result["description"] = data.get("description", "") or ""
+                result["attributes"] = data.get("attributes") or {}
+                result["product_url"] = data.get("product_url")
+            except Exception:
+                pass
+        image_files = sorted(portal_dir.glob("image_*.*"))
+        if image_files:
+            result["images"] = [f"{base_url}/image?index={i}" for i in range(len(image_files))]
+    if not result["images"]:
+        result["images"] = [f"{base_url}/image"]
+    return result
+
+
+@app.get("/api/products/{model:path}/image")
+async def get_product_image(
+    model: str,
+    index: Optional[int] = None,
+    cached_data: dict = Depends(get_cached_data)
+):
+    """
+    Получает изображение товара (index=0,1,2... — номер картинки из portal_export).
+    Приоритет: portal_export/{model}/ → images/{model}/ → сайт → placeholder.
+    """
+    from urllib.parse import unquote
+
+    model_decoded = unquote(model)
+    image_index = index if index is not None and index >= 0 else 0
+    products = cached_data.get("products", [])
+    product = _find_product_by_model(products, model_decoded)
+    if not product:
+        raise HTTPException(status_code=404, detail="Товар не найден")
+    model = product.get("model", model_decoded)
+    brand = product.get('brand', '')
+    
+    # 1. portal_export: по model_to_foldername и по clean_id
+    portal_dir = _portal_folder_for_model(model)
+    if portal_dir:
+        image_files = sorted(portal_dir.glob("image_*.*"))
+        if image_files and image_index < len(image_files):
+            image_file = image_files[image_index]
+            try:
+                content_type_map = {
+                    ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+                    ".png": "image/png", ".webp": "image/webp", ".gif": "image/gif",
+                }
+                content_type = content_type_map.get(image_file.suffix.lower(), "image/jpeg")
+                safe = model_decoded.encode("ascii", "ignore").decode("ascii") or "product"
+                logger.info("Используется изображение из portal_export для %s: %s", model, image_file.name)
+                return FileResponse(
+                    path=str(image_file),
+                    media_type=content_type,
+                    headers={
+                        "Cache-Control": "public, max-age=3600",
+                        "Content-Disposition": f'inline; filename="{safe}{image_file.suffix}"',
+                    },
+                )
+            except Exception as e:
+                logger.warning("Ошибка чтения portal_export изображения %s: %s", image_file, e)
+
+    # 2. Локальные изображения из парсера (images/{model}/)
+    model_variants = [model_to_foldername(model), model.replace("/", "_"), model.replace("/", "-"), model]
+    images_dir = None
+    for model_variant in model_variants:
+        test_dir = Path(__file__).parent / "images" / model_variant
+        if test_dir.exists() and test_dir.is_dir():
+            images_dir = test_dir
+            model = model_variant
+            break
+    if images_dir is None:
+        images_dir = Path(__file__).parent / "images" / model
+
+    if images_dir.exists() and images_dir.is_dir():
+        # Ищем первое доступное изображение
+        image_files = list(images_dir.glob("*.*"))
+        if image_files:
+            image_file = image_files[0]  # Берем первое изображение
+            try:
+                content_type_map = {
+                    '.jpg': 'image/jpeg',
+                    '.jpeg': 'image/jpeg',
+                    '.png': 'image/png',
+                    '.webp': 'image/webp',
+                    '.gif': 'image/gif'
+                }
+                ext = image_file.suffix.lower()
+                content_type = content_type_map.get(ext, 'image/jpeg')
+                
+                safe_filename = model_decoded.encode('ascii', 'ignore').decode('ascii') or 'product'
+                if not safe_filename or len(safe_filename) < 2:
+                    safe_filename = 'product'
+                
+                logger.info(f"✓ Используется локальное изображение для {model}: {image_file.name}")
+                return FileResponse(
+                    path=str(image_file),
+                    media_type=content_type,
+                    headers={
+                        "Cache-Control": "public, max-age=3600",
+                        "Content-Disposition": f'inline; filename="{safe_filename}{ext}"'
+                    }
+                )
+            except Exception as e:
+                logger.warning(f"Ошибка чтения локального изображения {image_file}: {e}")
+    
+    # 2. Пробуем получить оригинальное изображение с сайта через парсер
+    from product_image_parser import normalize_image_url
+    from config import B2B_API_BASE_URL
+    
+    # Генерируем варианты URL из кэша и нормализуем их к оригиналу
+    cache_urls = [
+        f"{B2B_API_BASE_URL}/image/cache/catalog/{model}_1-360x360.jpg",
+        f"{B2B_API_BASE_URL}/image/cache/catalog/{model}_1.jpg",
+        f"{B2B_API_BASE_URL}/image/cache/catalog/{model}-360x360.jpg",
+        f"{B2B_API_BASE_URL}/image/cache/catalog/{model}.jpg",
+    ]
+    
+    # Нормализуем URL к оригиналу и пробуем загрузить
+    for cache_url in cache_urls:
+        original_url = normalize_image_url(cache_url)
+        if not original_url:
+            continue
+        
+        try:
+            loop = asyncio.get_running_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda url=original_url: requests.head(url, timeout=5, allow_redirects=True)
+            )
+            
+            if response.status_code == 200:
+                # Загружаем полное изображение
+                response = await loop.run_in_executor(
+                    None,
+                    lambda url=original_url: requests.get(url, timeout=10, stream=True, allow_redirects=True)
+                )
+                
+                if response.status_code == 200:
+                    content_type = response.headers.get('Content-Type', 'image/jpeg')
+                    safe_filename = model_decoded.encode('ascii', 'ignore').decode('ascii') or 'product'
+                    if not safe_filename or len(safe_filename) < 2:
+                        safe_filename = 'product'
+                    ext = content_type.split("/")[-1].split(';')[0]
+                    
+                    logger.info(f"✓ Найдено оригинальное изображение для {model}: {original_url}")
+                    return Response(
+                        content=response.content,
+                        media_type=content_type,
+                        headers={
+                            "Cache-Control": "public, max-age=3600",
+                            "Content-Disposition": f'inline; filename="{safe_filename}.{ext}"'
+                        }
+                    )
+        except Exception as e:
+            logger.debug(f"Не удалось загрузить оригинальное изображение {original_url}: {e}")
+            continue
+    
+    # 3. Fallback: генерируем placeholder изображение локально
+    logger.debug(f"Генерируется placeholder изображение для {model}")
+    from placeholder_generator import generate_placeholder_image
+    placeholder_text = f"{brand} {model}"[:40]
+    placeholder_image = generate_placeholder_image(placeholder_text)
+    
+    safe_filename = model_decoded.encode('ascii', 'ignore').decode('ascii') or 'product'
+    if not safe_filename or len(safe_filename) < 2:
+        safe_filename = 'product'
+    
+    return Response(
+        content=placeholder_image,
+        media_type='image/png',
+        headers={
+            "Cache-Control": "public, max-age=3600",
+            "Content-Disposition": f'inline; filename="{safe_filename}.png"'
+        }
+    )
+
+
+@app.get("/{full_path:path}")
+async def spa_fallback(full_path: str):
+    """
+    SPA fallback для React Router:
+    - legacy HTML пути не обслуживаются;
+    - существующие файлы из react/dist отдаются как есть;
+    - остальное отдаётся index.html.
+    - Поддерживает запросы с префиксом /catalog/ (для production через Nginx)
+    """
+    if full_path in {"index.html", "checkout.html", "admin.html"}:
+        raise HTTPException(status_code=404, detail="Legacy HTML route is removed")
+
+    # Если запрос начинается с /catalog/, убираем этот префикс
+    # Это позволяет работать как с dev сборкой (без префикса), так и с production (с префиксом через Nginx)
+    if full_path.startswith("catalog/"):
+        full_path = full_path[8:]  # Убираем "catalog/" (8 символов)
+    elif full_path.startswith("/catalog/"):
+        full_path = full_path[9:]  # Убираем "/catalog/" (9 символов)
+
+    requested_path = (react_dist_dir / full_path).resolve()
+    dist_root = react_dist_dir.resolve()
+
+    # Защита от выхода за пределы dist через path traversal.
+    if not str(requested_path).startswith(str(dist_root)):
+        raise HTTPException(status_code=404, detail="Not found")
+
+    if requested_path.exists() and requested_path.is_file():
+        return FileResponse(requested_path)
+
+    # Если запрошен файл с расширением (например .js/.css), но его нет — 404.
+    if "." in Path(full_path).name:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    if react_index_file.exists() or await _ensure_react_build_async():
+        return FileResponse(react_index_file)
+    return _react_build_missing_response()
+
+
+if __name__ == "__main__":
+    import uvicorn
+    from config import HOST, PORT, UVICORN_WORKERS
+
+    workers = UVICORN_WORKERS if UVICORN_WORKERS > 1 else 1
+    use_reload = workers <= 1
+
+    if use_reload:
+        # reload требует строку "module:app", не объект
+        uvicorn.run(
+            "main:app",
+            host=HOST,
+            port=PORT,
+            reload=True,
+        )
+    else:
+        uvicorn.run(
+            app,
+            host=HOST,
+            port=PORT,
+            workers=workers,
+        )

@@ -1,0 +1,30 @@
+{
+  "name": "Ajax MotionProtect Plus черный датчик движения",
+  "price": 25040,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Бренд": "Ajax",
+    "Артикул": "TD00000011721",
+    "Тип оборудования": "датчик движения",
+    "Питание": "3V",
+    "Цвет": "черный",
+    "Рабочая влажность": "0…75%",
+    "Комплектация": "Датчик движения с микроволновым сенсором и иммунитетом к животным Ajax MotionProtect Plus Крепежная панель SmartBracket - 1 шт Элемент питания CR123А - 1 шт Монтажный комплект - 1 шт Документация",
+    "Рабочая температура": "-10…+40 °C",
+    "Размеры (Ш×В×Г)": "6.5×11×5 cm",
+    "Вес товара": "0.096 kg"
+  },
+  "tabs": {},
+  "images_count": 6,
+  "model": "MotionProtect Plus черный",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15028",
+  "images": [
+    "image_01.png",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png",
+    "image_05.png",
+    "image_06.png"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Карта памяти ST2-64-S1 Imou",
+  "price": 49903600,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Производитель": "Imou",
+    "Модель": "ST2-64-S1",
+    "Объем карты памяти": "64 ГБ",
+    "Формат": "microSDXC",
+    "Скорость чтения": "38 Мбит/с",
+    "Скорость записи": "95 Мбит/с"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "ST2-64-S1",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=38483",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

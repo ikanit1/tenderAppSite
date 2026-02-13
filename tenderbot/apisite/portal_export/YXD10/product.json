@@ -1,0 +1,22 @@
+{
+  "name": "YXD10 Ограничитель на DIN-рейку (металл) IEK",
+  "price": 73,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Цвет": "Прочее",
+    "Тип монтажа": "DIN-рейка (стандарт) 35 мм",
+    "Тип зажима": "Винтовое",
+    "Материал": "Металл",
+    "Ширина или размер ячейки": "10 мм",
+    "Длина": "45 мм"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "YXD10",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=37050",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

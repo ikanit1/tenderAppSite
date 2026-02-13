@@ -1,0 +1,36 @@
+{
+  "name": "DHI-HY-1431 Dahua Модуль изолятор",
+  "price": 83677112,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Electrical": "",
+    "Working Voltage": "24V DC",
+    "Current": "Monitoring current: ≤ 150μA Alarm current: ≤ 8mA",
+    "Short Circuit Current": "450mA",
+    "Indicator": "Red LED flashes once every 6 seconds during polling, flashes once every 2 seconds during malfunctioned, and remains lit during short circuit",
+    "Wiring": "Two-wire, polarity-free",
+    "CommunicationDistance": "≤ 1500 m",
+    "Environment": "",
+    "Operating Temperature": "–10°C to +55°C (+14°F to +131°F)",
+    "Storage Temperature": "–20°C to +65°C (–4°F to +149°F)",
+    "Operating Humidity": "≤ 95% RH (no condensation)",
+    "Construction": "",
+    "Color": "White",
+    "Dimensions (with base)": "90 mm × 90 mm × 37 mm (3.54\" × 3.54\" × 1.46\")",
+    "Weight (with base)": "107 g (0.24 lb)",
+    "General": "",
+    "Certification": "GB16806-2006",
+    "Certifications": "GB16806-2005"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "DHI-HY-1431",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=37380",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}

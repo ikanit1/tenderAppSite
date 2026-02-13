@@ -1,0 +1,41 @@
+{
+  "name": "WI-PS526GH Wi-Tek 24 портовый неуправляемый коммутатор с функцией PoE",
+  "price": 9020058630,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "HARDWARE FEATURES": "WI-PS526GH",
+    "Hardware Version": "V1",
+    "Interface": "24 100Mbps RJ45 PoE Ports 1 1000Mbps RJ45 Port 1 1000Mbps Combo",
+    "Network Media": "10Base-T: Pair 2 Category 3 (cat 3 ) and above UTP/ STP(≤100m) 100Base-TX: Pair 2 Category 5 (cat 5 ) and above UTP/ STP(≤100m) 1000BASE-TX: 6 Category and above UTP(≤150m)",
+    "Power Supply": "AC 100~240V 50/60HZ",
+    "PoE Standard": "802.3 af/at compliant PoE",
+    "PoE Ports": "Port 1-24",
+    "PoE Power Budget": "200W",
+    "Mac Address Table": "8k",
+    "Packet Forwarding Rate": "38.69Mpps",
+    "umbo Frame": "10kB",
+    "Protection Level": "6kV Lightning protection 6kV ESD Contact discharge",
+    "Transmission Method": "Store-And-Forward",
+    "LED Indicator": "PoE/Link/Power",
+    "DIP Switch": "Default/VLAN/Extend",
+    "250m": "Yes",
+    "Port VLAN": "Yes",
+    "PoE Watchdog": "Yes",
+    "Advanced Functions": "Mac Address Auto- Learning Auto-Aging Store and forward IEEE 802.3x ﬂow control for Full-duplex Mode Backpressure for Half-duplex Mode",
+    "Certiﬁcation": "CE, FCC, RoHS",
+    "Package Dimension": "370×230×80mm",
+    "Switch Dimension": "280×180×45mm",
+    "Gross Weight": "2.45kg",
+    "Net Weight": "1.85kg",
+    "Package Contents": "1 × PoE Switch 1 × Power Cord 1 × Rackmount Kit 1 × Quick Installation Guide"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "WI-PS526GH",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15158",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

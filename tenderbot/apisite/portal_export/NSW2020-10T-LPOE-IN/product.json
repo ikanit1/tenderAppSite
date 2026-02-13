@@ -1,0 +1,38 @@
+{
+  "name": "NSW2020-10T-LPOE-IN PoE коммутатор",
+  "price": 2210014800,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Ports Type": "10×100Mbps network ports (RJ45), including 8 PoE ports",
+    "Standards": "IEEE802.3, IEEE802.3u, IEEE802.3az, IEEE802.3x, IEEE802.3af, IEEE802.3at",
+    "Switching capacity": "2 Gbps",
+    "Forwarding performance": "1.49Mpps",
+    "Packet Buffer": "448K bit",
+    "MAC": "1K",
+    "Dimensions (W×D×H)": "171*103*25mm",
+    "Weight": "0.29KG",
+    "Power Supply": "DC：48/51V",
+    "Max.Power": "65W",
+    "PoE": "802.3at/af (4/5+, 7/8-)",
+    "Max. PoE Power": "Max capacity: 60W, Max capacity for single port: 30W",
+    "Prior Ports": "1~2",
+    "Cooling Fans": "0",
+    "Operating temperature": "0 °C ~ 40 °C (32 °F ~ 104 °F)",
+    "Operating humidity": "10%～90% (noncondensing)",
+    "Indicator": "POWER Steady on: AC input is normal, POWER Off: No AC input, PoE-MAX off: The POE power supply power of the whole machine is less than 80% of the specification, PoE-MAX Steady on :  The POE power supply power of the whole machine is greater than 85% of the specification, LINK/ACT Off: No link, LINK/ACT Steady on: Linked, LINK/ACT Flashing: Transmitting data, No PoE Indicator",
+    "Working Mode": "Default(Normal mode) : All ports can communicate with each other., EXTEND(Surveillance mode): Transmission distance up to 250 meters."
+  },
+  "tabs": {},
+  "images_count": 6,
+  "model": "NSW2020-10T-LPOE-IN",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=39121",
+  "images": [
+    "image_01.png",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png",
+    "image_05.png",
+    "image_06.png"
+  ]
+}

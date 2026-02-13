@@ -1,0 +1,26 @@
+{
+  "name": "TA410 Yeastar Шлюз",
+  "price": 125307,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Бренд": "Yeastar",
+    "Артикул": "TA410",
+    "Тип оборудования": "VoIP шлюз",
+    "Порты и интерфейсы": "4 × FXO Port 1 × RJ-45 10/100 Mbps",
+    "Питание": "12V, 1A",
+    "Службы": "Cтатический IP-адрес DDNS DHCP NAT PPPoE",
+    "Поддержка протоколов": "FTP HTTP HTTPS IAX2 SIP 2.0 SRTP SSH TLS",
+    "Аудиокодеки": "ADPCM"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "TA410",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=16303",
+  "images": [
+    "image_01.png",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png"
+  ]
+}

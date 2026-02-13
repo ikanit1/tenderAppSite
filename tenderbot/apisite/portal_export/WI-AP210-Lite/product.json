@@ -1,0 +1,41 @@
+{
+  "name": "WI-AP210-Lite Wi-Tek Точка доступа 300Мбит/с",
+  "price": 1690010900,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Wireless Standards": "802.11n/b/g/a",
+    "Operating Bands": "2.4GHz",
+    "Antenna": "2.4GHz: 4dBi",
+    "Spatial Steams": "2.4GHz: 2x2 MIMO",
+    "Signal Rate": "Up to 300Mbps at 2.4G",
+    "Receiver Sensitivity": "2.4GHz: 802.11n: -70dbm@MCS7 -88dbm@MCS0. 802.11g: -72dbm@54Mbps -90dbm@6Mbps. 802.11b: -85dbm@11Mbps -94dbm@1Mbps.",
+    "Maximum Transmit Power": "<21dbm",
+    "Interface": "(2)10/100M Base-T Ethernet ports",
+    "Power Supply": "DC 12V/0.5A (Not Included) 802.3af PoE Supported",
+    "Power Consumption": "< 5W",
+    "Installation": "Wall/Ceiling Mounting",
+    "External buttons": "reset button (long press for 8 seconds to restore the factory default configuration)",
+    "Dimensions": "188mm * 188mm * 33mm",
+    "Environment": "Operating Temperature: -20°C～55°C Storage Temperature: -30°C～70°C Operating Humidity: 5% ～ 95% (non-condensing) Storage Humidity: 5% ～ 95% (non-condensing)",
+    "Operating Mode": "Fit AP, Fat AP",
+    "Wireless Function": "Up to 8 SSIDs",
+    "Roaming": "Support Layer 2 roaming",
+    "Wireless Security": "Captive Portal Authentication Static blacklist and whitelist Wireless Isolation Between Clients SSID to VLAN Mapping Support 802.1X WPA/WPA2/PSK/WPA/WPA2-Enterprise",
+    "Routing": "Support static IP, DHCP, PPPoE Dial Up",
+    "Management": "Support local management with web Support remote management with Wi-Tek Cloud platform",
+    "Platform managementfeatures": "Automatic RF adjustment via the platform Unified configuration via the platform Unified monitoring via the platform"
+  },
+  "tabs": {},
+  "images_count": 6,
+  "model": "WI-AP210-Lite",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=23262",
+  "images": [
+    "image_01.png",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png",
+    "image_05.png",
+    "image_06.png"
+  ]
+}

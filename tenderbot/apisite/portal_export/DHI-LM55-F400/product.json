@@ -1,0 +1,30 @@
+{
+  "name": "DHI-LM55-F400 Монитор",
+  "price": 399900280000,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "DHI-LM55-F400",
+    "Screen Size": "55\"",
+    "Aspect Ratio": "16:9",
+    "Resolution": "3840×2160 (UHD)",
+    "Backlight": "LED",
+    "Brightness/Luminance": "380cd/㎡",
+    "Contrast Ratio": "5000:1",
+    "Display Color": "1.07G(8Bit+FRC)",
+    "Viewing Angle(H/V)": "178°(H)/178°(V）",
+    "Response Time": "9.5ms",
+    "Refresh Rate": "60Hz",
+    "Input": "HDMI ×3, USB ×1,",
+    "Output": "Speaker×2 6W ,Audio out×1",
+    "Power Supply": "AC100~240V , 2.5A,50/60 Hz"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DHI-LM55-F400",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=37728",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

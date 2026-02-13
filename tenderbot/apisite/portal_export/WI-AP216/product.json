@@ -1,0 +1,40 @@
+{
+  "name": "Wi-Tek WI-AP216 Точка доступа 1200Мбит/с",
+  "price": 2520016380,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "WI-AP216",
+    "Wireless Standards": "802.11ac Wave2 802.11n/b/g/a",
+    "Operating Bands": "2.4GHz & 5GHz",
+    "Antenna": "2.4GHz:4.6dBi, 5GHz: 4dBi",
+    "Spatial Steams": "2.4GHz：2x2 MIMO 5GHz：2x2 MIMO",
+    "Signal Rate": "Up to 300Mbps at 2.4G Up to 867Mbps at 5G",
+    "Receiver Sensitivity": "2.4GHz 802.11b: -85dBm@11Mbps -94dBm@1Mbps 802.11g: -72dBm@54Mbps -90dBm@6Mbps 802.11n HT20: -70dBm@MCS7 -88dBm@MCS0 802.11n HT40: -68dBmMCS7 -86dBm@MCS0 5GHz 802.11a: -72dBm@54Mbps -90dBm@6Mbps 802.11n HT20: -70dBm@MCS7 -88dBm@MCS0 802.11n HT40: -68dBm@MCS7 -86dBm@MCS0 802.11ac HT80: -58dBm@MCS9 -80dBm@MCS0",
+    "Maximum Transmit Power": "<23dbm",
+    "Interface": "(2)10/100MBase-T Ethernet ports",
+    "Power Supply": "DC 12V/1A (Not Included) 802.3af PoE Supported",
+    "Power Consumption": "< 10W",
+    "Installation": "Wall/Ceiling Mounting",
+    "External buttons": "reset button (long press for 6-10 seconds to restore the factory default configuration)",
+    "Dimensions": "188mm * 188mm * 33mm",
+    "Environment": "Normal operating temperature: -20°C to 55°C; Extreme operating temperature -30°C to 70°C; Storage temperature: -40°C to 70°C; Humidity: 5%～95% (non-condensing)",
+    "Operating Mode": "Fit AP, Fat AP",
+    "Wireless Function": "Up to 16 SSIDs",
+    "Roaming": "Support Layer 2 roaming",
+    "Wireless Security": "Captive Portal Authentication Static blacklist and whitelist Wireless Isolation Between Clients SSID to VLAN Mapping 802.1X Support WPA/WPA2/PSK/WPA/WPA2-Enterprise",
+    "Routing": "Support static IP, DHCP, PPPoE Dial Up"
+  },
+  "tabs": {},
+  "images_count": 6,
+  "model": "WI-AP216",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=23263",
+  "images": [
+    "image_01.png",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png",
+    "image_05.png",
+    "image_06.png"
+  ]
+}

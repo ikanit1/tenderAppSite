@@ -1,0 +1,20 @@
+{
+  "name": "SVA10D-RN Расцепитель независимый РН-125/160 ( РН-32/33 ) IEK",
+  "price": 2406,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Совместимость:": "ВА88-32/33",
+    "Номин раб напряжение:": "230 В",
+    "Частота сети:": "50 Гц",
+    "Диапазон раб напряжений:": "161...253 В"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "SVA10D-RN",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=36800",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

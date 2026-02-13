@@ -1,0 +1,38 @@
+{
+  "name": "NSW2010-5GT-POE-IN Коммутатор POE",
+  "price": 1900012700,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "NSW2010-5GT-POE-IN-UCB",
+    "Ports": "4×1000Mbps PoE ports (RJ45)+1×1000Mbps ports(RJ45)",
+    "Standards": "IEEE802.3,IEEE802.3u,IEEE802.3az,IEEE802.3x,IEEE802.3af,IEEE802.3at",
+    "Switching capacity": "10Gbps",
+    "Forwarding performance": "7.44Mpps",
+    "Packet Buffer": "1M bit",
+    "MAC": "2K",
+    "Dimensions (W×D×H)": "140mm x 76.7mm x 27.7mm (5.5\"×3\"×1.1\")",
+    "Weight": "<1kg",
+    "Input Voltage": "AC: 100-240V, 50/60Hz",
+    "MAX. Power": "65W",
+    "PoE": "802.3at/af",
+    "Max. PoE Power": "Max capacity: 60W Max capacity for single port: 30W",
+    "Cooling Fans": "0",
+    "Operating Temperature": "0°C ~ 40 °C",
+    "Storage Temperature": "-40 °C ~ 70 °C",
+    "Operating Humidity": "10% ~ 90% non-condensing",
+    "Storage Humidity": "5% ~ 90% non-condensing",
+    "EMC": "FCC (47 CFR Part 15, Support B); CE-EMC (EN 55032: 2015, EN 61000-3-2, 2014, EN 61000-3-3: 2013, EN 55024: 2010 +A1: 2015); RCM (AS/NZS CISPR 32; 2015); IC (ICES-003: Issue 6, 2016)",
+    "Safety": "CB (IEC 60950-1:2005 + Am 1:2009 + Am 2:2013); CE-LVD (EN 60950-1:2005 + Am 1:2009 + Am 2:2013)",
+    "Indicator": "PWR(Green), LNK/ACT(Green), PoE(Orange)",
+    "Working Mode": "No"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "NSW2010-5GT-POE-IN",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=37567",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

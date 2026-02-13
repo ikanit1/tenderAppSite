@@ -1,0 +1,32 @@
+{
+  "name": "DHI-HY-1310 Dahua Адресуемый детектор тепла",
+  "price": 62755334,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Power": "24V DC",
+    "Current": "Monitoring current: ≤ 120μA Maximum operating current: ≤ 170μA",
+    "Indicator": "Red Polling: Flash 6 seconds Alarm: Remain lit Fault: Flash 2 seconds",
+    "Product Type": "A2R",
+    "Alarm Threshold": "54°C to 62°C (129°F to 144°F)",
+    "Wiring": "Two-wire, polarity-free",
+    "Addressing Method": "Electrical encoder",
+    "Address Range": "1–254",
+    "Communication Distance": "≤ 1500 m (4921.26 ft)",
+    "Operating Temperature": "–10°C to +50°C (+14°F to +122°F)",
+    "Storage Temperature": "–20°C to +65°C (–4°F to +149°F)",
+    "Operating Humidity": "≤ 95% RH (no condensation)",
+    "Color": "White",
+    "Dimensions (with base)": "Φ 100 mm × 50 mm (Φ 3.00\" × 1.50\")",
+    "Weight (with base)": "81 g (0.18 lb)",
+    "Certifications": "GB 4716-2005"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DHI-HY-1310",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=37381",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

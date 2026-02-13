@@ -1,0 +1,24 @@
+{
+  "name": "Кронштейн PFB203W",
+  "price": 61004270,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Материал": "Алюминий и SECC",
+    "Размер": "160 мм x 122 мм x 76 мм",
+    "Вес": "0,5 кг",
+    "Максимальная нагрузка": "1 кг",
+    "Цвет": "Белый",
+    "Рабочая температура": "-40ºC~+60ºC",
+    "Влажность": "<90%",
+    "Применимая модель": "См. раздел ”Аксессуары”"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "PFB203W",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=23419",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "name": "DHI-HY-1330 Dahua Адресуемая панель ретранслятора",
+  "price": 2719123112,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Electrical": "",
+    "Working Voltage": "DC24V",
+    "Current": "Monitoring current: ≤ 2mA Maximum operating current: ≤ 10mA",
+    "Indicator": "Working: Green indicator flashes every 6 s during polling, flashes quickly during malfunctioned Alarm: Red indicator remains lit during alarm Self-test: Yellow indicator remains lit during self-testMute: Yellow indicator remains lit when Test/Mute Button is pressed",
+    "Display Capacity": "999 pieces of alarm information",
+    "Display": "64×128 LCD screen",
+    "Communication": "",
+    "Wiring": "Two-wire, polarity-free",
+    "Addressing Method": "Electrical encoder",
+    "Address Range": "1–254",
+    "Communication Distance": "1500 m (4921.26 ft)",
+    "Alarm Sound Pressure": "65dB–115dB (A) @ 1m",
+    "Environment": "",
+    "Operating Temperature": "–10°C to +40°C (+14°F to +104°F)",
+    "Storage Temperature": "–20°C to +65°C (–4°F to +149°F)",
+    "Operating Humidity": "≤ 95% RH (no condensation)",
+    "Construction": "",
+    "Color": "White",
+    "Dimensions (with base)": "180.0 mm × 110.0 mm × 32.0 mm (7.09\" × 4.33\" × 1.26\")",
+    "Weight (with base)": "270 g (0.60 lb)",
+    "Certifications": "GB 17429-2011"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DHI-HY-1330",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=37373",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

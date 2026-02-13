@@ -1,0 +1,25 @@
+{
+  "name": "MK-H вандалостойкий автономный терминал контроля доступа",
+  "price": 2750026250,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Идентификация": "Карта, пароль",
+    "Память RFID карт": "1000",
+    "Защита": "IP66",
+    "Тип RFID карт": "Em-Marine 125 кГц",
+    "Тип установки": "Наружный, внутренний",
+    "Питание": "DC 9В - 18 В",
+    "Рабочая температура": "-40°C - +60°C",
+    "Вес нетто, кг": "0,4",
+    "Размеры, мм": "120 x 76 x 25"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "MK-H",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=39571",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

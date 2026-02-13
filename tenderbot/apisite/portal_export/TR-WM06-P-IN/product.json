@@ -1,0 +1,24 @@
+{
+  "name": "TR-WM06-P-IN Uniview Кронштейн",
+  "price": 0,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Name": "TR-WM06-P-IN",
+    "Type": "Wall Mount Bracket",
+    "Material": "Aluminum Alloy",
+    "Dimensions": "140 mm x 88 mm x 374 mm",
+    "Weight": "0.8 kg",
+    "Horizontal Adjustment": "360°",
+    "Vertical Adjustment": "-45° to 0°",
+    "Application": "Indoor/Outdoor"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "TR-WM06-P-IN",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=39107",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

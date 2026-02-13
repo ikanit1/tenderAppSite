@@ -1,0 +1,24 @@
+{
+  "name": "SO Yeastar Модуль с 1-м портом FXO",
+  "price": 52326,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Порты:": "1 RJ11 FXS, 1 RJ11 FXO",
+    "Обнаружение частоты вызова FXO:": "15~50 Гц",
+    "Частота вызова FXS:": "25 Гц",
+    "Вызывное напряжение:": "85 В",
+    "Оконечное сопротивление:": "600 Ом",
+    "Совместим с:": "S412, S20, S50, S100, S300, P550, P560, P570"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "SO",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=16317",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}

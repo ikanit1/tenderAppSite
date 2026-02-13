@@ -1,0 +1,27 @@
+{
+  "name": "S300 Yeastar IP-АТС",
+  "price": 884952,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Бренд": "Yeastar",
+    "Артикул": "S300",
+    "Тип оборудования": "АТС",
+    "Размер оперативной памяти": "2048 MB",
+    "Размер встроенной памяти": "8192 MB",
+    "Порты и интерфейсы": "24 × аналоговых портов (FXO/FXS) 6 × GSM/3G-портов 24 × BRI портов 6 × UMTS портов 3 х порта E1 1 × LAN (10/100/1000 Мб/с) 1 × WAN (10/100/1000 Мб/с) 1 × порт USB 2.0 1 × слот для SD-карты 1 × консольный порт RJ45",
+    "Питание": "100-240V, 1,8A",
+    "Видеокодек": "H.263 H.264 H263p MPEG 4",
+    "Поддержка протоколов": "IAX2 SIP 2.0"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "S300",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=16312",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}

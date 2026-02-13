@@ -1,0 +1,24 @@
+{
+  "name": "EX08 Yeastar плата расширения",
+  "price": 44523,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Бренд": "Yeastar",
+    "Артикул": "EX08",
+    "Тип оборудования": "модуль расширения",
+    "Порты и интерфейсы": "8 × RJ11",
+    "Цвет": "черный",
+    "Комплектация": "Модуль расширения Yeastar EX08",
+    "Дополнительные возможности": "добавляет ресурсы к основным IP-АТС до 4-х модулей Yeastar S2 (8-FXS) до 4-х модулей Yeastar O2 (8-FXO) до 4-х модулей Yeastar B2 (8-BRI) до 4-х модулей Yeastar GSM (4-GSM канала) до 4-х модулей Yeastar SO (4-FXS и 4-FXO) до 4-х модулей Yeastar UMTS (4-UMTS канала)",
+    "Срок гарантии производителя": "12 m"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "EX08",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=16321",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

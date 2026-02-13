@@ -1,0 +1,35 @@
+{
+  "name": "DH-IPC-HDBW2841RP-ZAS-27135 IP видеокамера",
+  "price": 201990161592,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Image Sensor": "1/2.7\" CMOS",
+    "Max. Resolution": "3840 (H) × 2160 (V)",
+    "ROM": "128 MB",
+    "RAM": "256 MB",
+    "Scanning System": "Progressive",
+    "Electronic Shutter Speed": "Auto/Manual 1/3 s–1/100,000 s",
+    "Min. Illumination": "0.008 lux@F1.5 (Color, 30 IRE) 0.0008 lux@F1.5 (B/W, 30 IRE) 0 lux (Illuminator on)",
+    "S/N Ratio": "> 56 dB",
+    "Illumination Distance": "40 m (131.23 ft) (IR)",
+    "Illuminator On/Off Control": "Auto; Manual",
+    "Illuminator Number": "2 (IR LED)",
+    "Pan/Tilt/Rotation Range": "Pan: 0°–355° Tilt: 0°–67° Rotation: 0°–355°",
+    "Lens Type": "Motorized vari-focal",
+    "Lens Mount": "φ14",
+    "Focal Length": "2.7 mm–13.5 mm",
+    "Max. Aperture": "F1.5",
+    "Field of View": "H: 113°–31°; V: 58°–18°; D: 138°–36°"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "DH-IPC-HDBW2841RP-ZAS-27135",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=37864",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}
