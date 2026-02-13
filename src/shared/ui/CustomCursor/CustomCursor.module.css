@@ -1,0 +1,42 @@
+.cursor {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  pointer-events: none;
+  position: fixed;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  transition:
+    transform 0.15s ease-out,
+    border-color 0.15s ease-out,
+    opacity 0.05s ease,
+    width 0.15s ease-out,
+    height 0.15s ease-out;
+  z-index: 9999;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+.cursorHover {
+  width: 30px;
+  height: 30px;
+  border-color: var(--color-primary);
+  transform: translate(-50%, -50%) scale(1.6);
+  box-shadow: 0 0 24px rgba(139, 92, 246, 0.4);
+}
+
+.cursorActive {
+  transform: translate(-50%, -50%) scale(0.9);
+  opacity: 0.8;
+  transition-duration: 0.05s;
+}
+
+.cursorHover.cursorActive {
+  transform: translate(-50%, -50%) scale(0.9);
+}
+
+.cursorInput {
+  border-color: var(--color-primary);
+  transition: border-color 0.2s ease;
+}

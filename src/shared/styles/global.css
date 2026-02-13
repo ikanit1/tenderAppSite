@@ -1,0 +1,155 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: var(--gradient-body), var(--gradient-body-overlay);
+  pointer-events: none;
+  z-index: 0;
+}
+
+body[data-custom-cursor] {
+  cursor: none;
+}
+
+body[data-custom-cursor] button,
+body[data-custom-cursor] a,
+body[data-custom-cursor] input,
+body[data-custom-cursor] textarea,
+body[data-custom-cursor] select {
+  cursor: none;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 2;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--container-padding);
+  padding-right: var(--container-padding);
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding-left: var(--container-padding-md);
+    padding-right: var(--container-padding-md);
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding-left: var(--container-padding-lg);
+    padding-right: var(--container-padding-lg);
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.bgLayer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.bgStar {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  animation: twinkle 2.8s ease-in-out infinite;
+}
+
+.bgGlowLine {
+  position: fixed;
+  left: 50%;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, transparent 0%, rgba(157, 78, 221, 0.9) 20%, rgba(157, 78, 221, 0.9) 80%, transparent 100%);
+  box-shadow: 0 0 18px rgba(157, 78, 221, 0.4), 0 0 38px rgba(157, 78, 221, 0.35);
+  opacity: 0.58;
+  animation: glowPulse 3.2s ease-in-out infinite;
+}
+
+.bgMatrix {
+  position: fixed;
+  inset: 0;
+  opacity: 0.08;
+  overflow: hidden;
+  font-family: "Courier New", Consolas, monospace;
+  font-size: 13px;
+  color: var(--color-primary);
+}
+
+.bgMatrixColumn {
+  position: absolute;
+  top: -100%;
+  white-space: nowrap;
+  animation: matrixFall linear infinite;
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.45);
+  }
+}
+
+@keyframes glowPulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes matrixFall {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}

@@ -1,0 +1,24 @@
+.logo3d {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  margin-left: 1.5rem;
+  position: relative;
+  background: rgba(157, 78, 221, 0.1);
+  border-radius: 12px;
+  padding: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.logo3d canvas {
+  border-radius: 8px;
+}
+
+@media (max-width: 767px) {
+  .logo3d {
+    width: 60px;
+    height: 60px;
+    margin-left: 1rem;
+    padding: 6px;
+  }
+}
