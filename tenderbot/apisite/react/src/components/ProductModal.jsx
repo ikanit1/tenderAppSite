@@ -20,6 +20,7 @@ export default function ProductModal({ isOpen, model, onClose }) {
   const [error, setError] = useState(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [added, setAdded] = useState(false);
+  const [qty, setQty] = useState(1);
   const [imageError, setImageError] = useState(false);
   const [fallbackAttempts, setFallbackAttempts] = useState(0);
 
@@ -32,6 +33,13 @@ export default function ProductModal({ isOpen, model, onClose }) {
       setSelectedImageIndex(0);
     }
   }, [isOpen, model]);
+
+  useEffect(() => {
+    if (product) {
+      setQty(1);
+      setAdded(false);
+    }
+  }, [product?.model]);
 
   const loadProductDetail = async () => {
     if (!model) return;
@@ -51,7 +59,7 @@ export default function ProductModal({ isOpen, model, onClose }) {
 
   const handleAddToCart = () => {
     if (!product) return;
-    addToCart(product, 1);
+    addToCart(product, qty);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
@@ -170,13 +178,21 @@ export default function ProductModal({ isOpen, model, onClose }) {
                 <div className="product-detail-qty">
                   В наличии: {product.quantity != null ? `${product.quantity} шт.` : '—'}
                 </div>
+                <div className="qty-row product-qty-row">
+                  <span className="qty-label">Кол-во:</span>
+                  <div className="qty-control">
+                    <button type="button" aria-label="Меньше" onClick={() => setQty((n) => Math.max(1, n - 1))}>−</button>
+                    <span className="qty-num">{qty}</span>
+                    <button type="button" aria-label="Больше" onClick={() => setQty((n) => Math.min(99, n + 1))}>+</button>
+                  </div>
+                </div>
                 <button
                   type="button"
                   className={`btn-add-cart-modal ${added ? 'added' : ''}`}
                   onClick={handleAddToCart}
                   disabled={added}
                 >
-                  {added ? '✓ Добавлено' : '🛒 В корзину'}
+                  {added ? '✓ Добавлено' : `🛒 В корзину (${qty})`}
                 </button>
                 {product.description && (
                   <div className="product-detail-desc">

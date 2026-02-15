@@ -60,7 +60,7 @@ export function DigitalEcosystemSection() {
       variants={reduceMotion ? undefined : sectionVariants}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, margin: '-80px', amount: 0.1 }}
+      viewport={{ once: true, margin: '0px', amount: 0.05 }}
     >
       {/* Hero */}
       <motion.div
@@ -119,7 +119,7 @@ export function DigitalEcosystemSection() {
                   className={styles.scopeImage}
                   initial={{ opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
+                  viewport={{ once: true, amount: 0.05 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 25 }}
                   whileHover={reduceMotion ? undefined : { scale: 1.05 }}
                 >
@@ -131,7 +131,7 @@ export function DigitalEcosystemSection() {
                 variants={reduceMotion ? undefined : iconVariants}
                 initial="hidden"
                 whileInView="visible"
-                viewport={{ once: true }}
+                viewport={{ once: true, amount: 0.05 }}
                 whileHover={reduceMotion ? undefined : iconHoverVariants}
               >
                 <motion.div
@@ -181,7 +181,7 @@ export function DigitalEcosystemSection() {
                 variants={reduceMotion ? undefined : iconVariants}
                 initial="hidden"
                 whileInView="visible"
-                viewport={{ once: true }}
+                viewport={{ once: true, amount: 0.05 }}
                 whileHover={reduceMotion ? undefined : iconHoverVariants}
               >
                 <motion.div

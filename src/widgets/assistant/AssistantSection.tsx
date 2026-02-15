@@ -41,7 +41,7 @@ export function AssistantSection() {
       variants={reduceMotion ? undefined : sectionVariants}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, margin: '-60px', amount: 0.2 }}
+      viewport={{ once: true, margin: '0px', amount: 0.05 }}
     >
       <div className={styles.container}>
         <motion.h2 id="assistant-heading" className={styles.heading} variants={reduceMotion ? undefined : itemVariants}>

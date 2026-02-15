@@ -37,7 +37,7 @@ export function AboutSection() {
       variants={reduceMotion ? undefined : sectionVariants}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, margin: '-60px', amount: 0.2 }}
+      viewport={{ once: true, margin: '0px', amount: 0.05 }}
     >
       <div className={styles.container}>
         <motion.div className={styles.headerWrapper} variants={reduceMotion ? undefined : itemVariants}>
@@ -51,7 +51,7 @@ export function AboutSection() {
             variants={reduceMotion ? undefined : itemVariants}
             initial={{ opacity: 0, scale: 0.8 }}
             whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.05 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
             whileHover={{ scale: 1.05 }}
           />

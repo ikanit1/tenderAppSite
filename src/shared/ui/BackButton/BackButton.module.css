@@ -3,23 +3,9 @@
   max-width: var(--container-max);
   margin-left: auto;
   margin-right: auto;
-  padding-left: var(--container-padding);
-  padding-right: var(--container-padding);
+  padding-left: var(--container-padding-lg);
+  padding-right: var(--container-padding-lg);
   padding-top: 0.5rem;
-}
-
-@media (min-width: 768px) {
-  .wrapper {
-    padding-left: var(--container-padding-md);
-    padding-right: var(--container-padding-md);
-  }
-}
-
-@media (min-width: 1024px) {
-  .wrapper {
-    padding-left: var(--container-padding-lg);
-    padding-right: var(--container-padding-lg);
-  }
 }
 
 .button {
@@ -55,4 +41,15 @@
 
 .icon {
   font-size: 1em;
+}
+
+@media (max-width: 767px) {
+  .wrapper {
+    padding-left: var(--container-padding);
+    padding-right: var(--container-padding);
+  }
+  .button {
+    padding: 0.4rem 0.75rem;
+    font-size: var(--text-xs);
+  }
 }

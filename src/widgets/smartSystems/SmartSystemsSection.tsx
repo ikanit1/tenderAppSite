@@ -15,22 +15,18 @@ const spring = { type: 'spring' as const, stiffness: 400, damping: 25 };
 
 function ProductCard({
   product,
-  showFullDesc,
   onCardClick,
   reduceMotion,
 }: {
   product: AkuvoxProduct;
-  showFullDesc: boolean;
   onCardClick: (product: AkuvoxProduct) => void;
   reduceMotion: boolean | null;
 }) {
   const { addToCart } = useCart();
   const [imageError, setImageError] = useState(false);
   const [added, setAdded] = useState(false);
+  const [qty, setQty] = useState(1);
   const hasImage = product.image && !imageError;
-  const desc = product.descriptionRu || '';
-  const shortDesc = desc.split('\n')[0]?.slice(0, 120) + (desc.length > 120 ? '…' : '');
-  const fullDesc = desc.replace(/\n/g, ' • ').trim();
 
   const handleClick = () => onCardClick(product);
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -47,7 +43,7 @@ function ProductCard({
       name: product.model,
       brand: 'Akuvox',
       price: product.priceKzt,
-    }, 1);
+    }, qty);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
@@ -63,29 +59,38 @@ function ProductCard({
       whileHover={reduceMotion ? undefined : { y: -4, transition: spring }}
       whileTap={reduceMotion ? undefined : { scale: 0.98 }}
     >
-      {hasImage ? (
-        <div className={styles.cardImageWrapper}>
+      <div className={styles.cardImageWrapper}>
+        {hasImage ? (
           <img
             src={product.image}
             alt={product.model}
             className={styles.cardImage}
             onError={() => setImageError(true)}
           />
-        </div>
-      ) : (
-        <div className={styles.cardImagePlaceholder}>
-          <span>📦</span>
-        </div>
-      )}
+        ) : (
+          <div className={styles.cardImagePlaceholder}>
+            <span>📦</span>
+          </div>
+        )}
+        <div className={styles.brandBadge}>Akuvox</div>
+      </div>
       <div className={styles.cardInfo}>
         <div className={styles.cardDescriptionBlock}>
           <div className={styles.cardModel}>{product.model}</div>
-          <p className={styles.cardDesc} title={fullDesc}>
-            {showFullDesc ? fullDesc : shortDesc}
-          </p>
+          <div className={styles.cardModelSecondary}>{product.model}</div>
         </div>
-        <div className={styles.cardPrice}>
-          {Number(product.priceKzt).toLocaleString('ru-KZ')} ₸
+        <div className={styles.productDetails}>
+          <div className={styles.cardPrice}>
+            {Number(product.priceKzt).toLocaleString('ru-KZ')} ₸
+          </div>
+        </div>
+        <div className={styles.qtyRow} onClick={(e) => e.stopPropagation()}>
+          <span className={styles.qtyLabel}>Кол-во:</span>
+          <div className={styles.qtyControl}>
+            <button type="button" aria-label="Меньше" onClick={() => setQty((n) => Math.max(1, n - 1))}>−</button>
+            <span className={styles.qtyNum}>{qty}</span>
+            <button type="button" aria-label="Больше" onClick={() => setQty((n) => Math.min(99, n + 1))}>+</button>
+          </div>
         </div>
         <button
           className={`${styles.addButton} ${added ? styles.addButtonAdded : ''}`}
@@ -93,7 +98,7 @@ function ProductCard({
           type="button"
           aria-label="Добавить в корзину"
         >
-          {added ? '✓ Добавлено' : '🛒 В корзину'}
+          {added ? '✓ Добавлено' : `🛒 В корзину (${qty})`}
         </button>
       </div>
     </motion.div>
@@ -121,10 +126,15 @@ export function SmartSystemsSection({ productLimit, compact = false }: SmartSyst
   }, [selectedProduct, handleCloseModal]);
 
   const categories = useMemo(() => akuvoxSmartSystems.categories, []);
+
+  /** Опции фильтра: «Все товары» + каждая категория из данных */
   const categoryOptions = useMemo(
     () => [
-      { id: '', title: 'Все категории' },
-      ...categories.map((c) => ({ id: c.id, title: CATEGORY_DISPLAY_NAMES[c.id] ?? c.title })),
+      { id: '', title: 'Все товары' },
+      ...categories.map((cat) => ({
+        id: cat.id,
+        title: CATEGORY_DISPLAY_NAMES[cat.id] ?? cat.title,
+      })),
     ],
     [categories]
   );
@@ -134,9 +144,11 @@ export function SmartSystemsSection({ productLimit, compact = false }: SmartSyst
     const hasSearch = q.length > 0;
     const hasCategory = categoryId.length > 0;
     const applyLimit = productLimit && !hasSearch && !hasCategory;
-    return categories
+
+    const catsToShow = hasCategory ? categories.filter((c) => c.id === categoryId) : categories;
+
+    return catsToShow
       .map((cat) => {
-        if (hasCategory && cat.id !== categoryId) return { ...cat, products: [] };
         let products = cat.products;
         if (hasSearch) {
           products = products.filter(
@@ -165,28 +177,70 @@ export function SmartSystemsSection({ productLimit, compact = false }: SmartSyst
       aria-labelledby="smart-systems-heading"
       {...sectionMotion}
     >
+      <div className={styles.sectionContent}>
       {!compact && (
-        <div className={styles.filters}>
-          <input
-            type="search"
-            className={styles.filterSearch}
-            placeholder="Поиск по модели или описанию..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            aria-label="Поиск товаров"
-          />
-          <select
-            className={styles.filterCategory}
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-            aria-label="Категория"
-          >
-            {categoryOptions.map((opt) => (
-              <option key={opt.id || 'all'} value={opt.id}>
-                {opt.title}
-              </option>
-            ))}
-          </select>
+        <div className={styles.filtersBlock}>
+          <div className={styles.filterRow}>
+            <div className={styles.filterGroup}>
+              <label htmlFor="smart-category-select">Категории</label>
+              <select
+                id="smart-category-select"
+                className={styles.filterSelect}
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+                aria-label="Категория"
+              >
+                {categoryOptions.map((opt) => (
+                  <option key={opt.id || 'all'} value={opt.id}>
+                    {opt.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className={styles.filterGroup}>
+              <label htmlFor="smart-brand-select">Бренды</label>
+              <select
+                id="smart-brand-select"
+                className={styles.filterSelect}
+                aria-label="Бренд"
+                defaultValue=""
+              >
+                <option value="">Все бренды</option>
+                <option value="Akuvox">Akuvox</option>
+              </select>
+            </div>
+            <div className={`${styles.filterGroup} ${styles.filterSearch}`}>
+              <label htmlFor="smart-search-input">Поиск</label>
+              <div className={styles.searchWrapper}>
+                <input
+                  type="search"
+                  id="smart-search-input"
+                  className={styles.filterInput}
+                  placeholder="Поиск..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  aria-label="Поиск товаров"
+                />
+                <button type="button" className={styles.btnSearch} aria-label="Искать">
+                  <span aria-hidden>🔍</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className={styles.categoryTags}>
+            {categoryOptions
+              .filter((opt) => opt.id)
+              .map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  className={`${styles.categoryTag} ${categoryId === opt.id ? styles.categoryTagActive : ''}`}
+                  onClick={() => setCategoryId(categoryId === opt.id ? '' : opt.id)}
+                >
+                  {opt.title}
+                </button>
+              ))}
+          </div>
         </div>
       )}
 
@@ -203,7 +257,6 @@ export function SmartSystemsSection({ productLimit, compact = false }: SmartSyst
                   <ProductCard
                     key={`${cat.id}-${product.model}-${idx}`}
                     product={product}
-                    showFullDesc={!compact}
                     onCardClick={handleCardClick}
                     reduceMotion={!!shouldReduceMotion}
                   />
@@ -221,6 +274,7 @@ export function SmartSystemsSection({ productLimit, compact = false }: SmartSyst
       {!compact && filteredCategories.length === 0 && (
         <p className={styles.filterEmpty}>По вашему запросу ничего не найдено.</p>
       )}
+      </div>
 
       <SmartSystemsProductModal product={selectedProduct} onClose={handleCloseModal} />
     </motion.section>

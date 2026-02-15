@@ -1,6 +1,6 @@
 .hero {
   position: relative;
-  padding: 4rem var(--container-padding) 5rem;
+  padding: 5rem var(--container-padding-lg) 6rem;
   overflow: hidden;
   min-height: 100vh;
   display: flex;
@@ -67,7 +67,7 @@
   position: relative;
   max-width: var(--container-max);
   margin: 0 auto;
-  padding: 4rem 2rem 5rem;
+  padding: 6rem 4rem 7rem;
   background: var(--content-block-bg);
   background-size: 200% 200%;
   border-radius: var(--radius-block);
@@ -130,7 +130,7 @@
 .title {
   font-size: clamp(var(--text-3xl), 5vw, var(--text-5xl));
   font-weight: 800;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
   line-height: 1.1;
   letter-spacing: -0.04em;
   background: linear-gradient(135deg, #f4ecff 0%, #c8b5e8 50%, #9d4edd 100%);
@@ -146,7 +146,7 @@
   font-size: clamp(var(--text-lg), 2.5vw, var(--text-2xl));
   font-weight: 600;
   color: var(--color-text);
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
   opacity: 0.95;
   letter-spacing: -0.01em;
   line-height: 1.4;
@@ -224,11 +224,6 @@
   gap: 1.5rem;
 }
 
-@media (max-width: 768px) {
-  .filters {
-    grid-template-columns: 1fr;
-  }
-}
 
 .budgetGroup,
 .brandsGroup {
@@ -337,12 +332,6 @@
   margin-bottom: 2rem;
 }
 
-@media (max-width: 768px) {
-  .productsGrid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 1rem;
-  }
-}
 
 .continueButton {
   padding: 0.875rem 1.75rem;
@@ -365,7 +354,7 @@
 .badges {
   font-size: var(--text-base);
   color: var(--color-text-muted);
-  margin-bottom: 2.5rem;
+  margin-bottom: 3rem;
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
@@ -376,9 +365,9 @@
 .cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
+  gap: 2rem;
   margin-bottom: 2.5rem;
-  max-width: 600px;
+  max-width: 100%;
   margin-left: auto;
   margin-right: auto;
 }
@@ -391,9 +380,9 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--color-border);
   color: var(--color-text);
-  padding: 1.5rem 1.25rem;
+  padding: 1.75rem 1.5rem;
   border-radius: var(--radius-card);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   font-weight: 500;
   transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
   position: relative;
@@ -428,15 +417,15 @@
 .blocks {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
+  gap: 2rem;
   margin-bottom: 2.5rem;
-  max-width: 600px;
+  max-width: 100%;
   margin-left: auto;
   margin-right: auto;
 }
 
 .block {
-  padding: 1.75rem 1.5rem;
+  padding: 2rem 1.75rem;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
@@ -500,7 +489,7 @@
 }
 
 .blockTitle {
-  font-size: var(--text-lg);
+  font-size: var(--text-xl);
   font-weight: 700;
   margin-bottom: 0.4rem;
   color: var(--color-text);
@@ -609,97 +598,73 @@
   border-color: var(--color-text-muted);
 }
 
-@media (max-width: 479px) {
+@media (max-width: 768px) {
+  .hero {
+    padding: 3rem var(--container-padding) 4rem;
+  }
+  .gradientBlock {
+    padding: 3rem var(--container-padding) 4rem;
+  }
+  .filters {
+    grid-template-columns: 1fr;
+  }
+  .productsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1rem;
+  }
   .cards {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
-
   .blocks {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
-
   .title {
-    font-size: var(--text-3xl);
+    font-size: var(--text-2xl);
+    margin-bottom: 1rem;
   }
-
   .subtitle {
     font-size: var(--text-lg);
+    margin-bottom: 1rem;
   }
-
+  .badges {
+    margin-bottom: 2rem;
+  }
   .card {
     padding: 1.25rem 1rem;
+    font-size: var(--text-sm);
   }
-
   .block {
     padding: 1.5rem 1.25rem;
   }
-
+  .blockTitle {
+    font-size: var(--text-lg);
+  }
   .ctaPrimary {
     padding: 0.875rem 1.5rem;
     font-size: var(--text-sm);
   }
 }
 
-@media (min-width: 768px) {
+@media (max-width: 479px) {
   .hero {
-    padding: 5rem var(--container-padding-md) 6rem;
+    padding: 2rem var(--container-padding) 3rem;
   }
-
   .gradientBlock {
-    padding: 5rem 3rem 6rem;
+    padding: 2rem var(--container-padding) 3rem;
   }
-
-  .cards {
-    max-width: 100%;
-    gap: 1.5rem;
-  }
-
-  .blocks {
-    max-width: 100%;
-    gap: 1.5rem;
-  }
-
   .title {
-    margin-bottom: 1.5rem;
-  }
-
-  .subtitle {
-    margin-bottom: 1.25rem;
-  }
-
-  .badges {
-    margin-bottom: 3rem;
-  }
-
-  .card {
-    padding: 1.75rem 1.5rem;
-    font-size: var(--text-base);
-  }
-
-  .block {
-    padding: 2rem 1.75rem;
-  }
-
-  .blockTitle {
     font-size: var(--text-xl);
   }
-}
-
-@media (min-width: 1024px) {
-  .hero {
-    padding-left: var(--container-padding-lg);
-    padding-right: var(--container-padding-lg);
+  .subtitle {
+    font-size: var(--text-base);
   }
-
-  .gradientBlock {
-    padding: 6rem 4rem 7rem;
+  .card {
+    padding: 1rem 0.875rem;
   }
-
-  .cards {
-    gap: 2rem;
-  }
-
-  .blocks {
-    gap: 2rem;
+  .block {
+    padding: 1.25rem 1rem;
   }
 }
+

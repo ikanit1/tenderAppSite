@@ -1,15 +1,22 @@
-# Деплой на grgroup.kz (Docker Compose + Nginx)
+# Деплой на grgroup.kz
 
-Пошаговая инструкция по деплою всех сервисов на одном домене `grgroup.kz`.
+Пошаговая инструкция по деплою всех сервисов на одном домене `grgroup.kz`. **Для выкладки на сервер рекомендуется Часть A (с Docker)**; Часть B — вариант без контейнеров.
 
-## Архитектура
+- **Часть A: С Docker** — Docker Compose (PostgreSQL, TenderBot, APISite в контейнерах), Nginx на хосте.
+- **Часть B: Без Docker** — Python-приложения (TenderBot, APISite) и Nginx на сервере, TenderBot на SQLite (PostgreSQL не нужен).
+
+---
+
+## Часть A: Деплой с Docker
+
+## Архитектура (A)
 
 - `https://grgroup.kz/` → Root site (маркетинговый сайт)
 - `https://grgroup.kz/catalog/` → APISite (каталог B2B)
 - `https://grgroup.kz/miniapp/` → TenderBot Mini App
 - `https://grgroup.kz/login`, `/dashboard`, `/tenders` и т.д. → TenderBot веб-админка
 
-## Предварительные требования
+### Предварительные требования (A)
 
 - Ubuntu/Debian VPS с root доступом
 - Docker и Docker Compose установлены
@@ -63,10 +70,10 @@ cp .env.example .env
 nano .env
 ```
 
-Установить:
+Установить (относительные пути — запросы на тот же хост, в интернете будет grgroup.kz, на VPS Nginx проксирует /catalog/ локально):
 ```
-VITE_CATALOG_URL=https://grgroup.kz/catalog
-VITE_PRODUCT_API_ORIGIN=https://grgroup.kz/catalog
+VITE_CATALOG_URL=/catalog
+VITE_PRODUCT_API_ORIGIN=/catalog
 ```
 
 ### 3.2 TenderBot
@@ -157,11 +164,13 @@ ls -la dist/
 
 ## Шаг 5: Размещение Root Site
 
+Файлы маркетингового сайта должны лежать в `/var/www/tenderAppSite/` (содержимое `dist/`). Nginx использует `root /var/www/tenderAppSite;`.
+
 ```bash
 # Создать директорию для root site
 sudo mkdir -p /var/www/tenderAppSite
 
-# Скопировать собранный dist
+# Скопировать содержимое dist в /var/www/tenderAppSite/
 sudo cp -r /opt/tenderAppSite-main/dist/* /var/www/tenderAppSite/
 
 # Установить права
@@ -177,7 +186,7 @@ sudo cp /opt/tenderAppSite-main/tenderbot/deploy/nginx-grgroup.kz.conf /etc/ngin
 
 # Проверить конфигурацию (убедиться, что путь к root site правильный)
 sudo nano /etc/nginx/sites-available/grgroup.kz.conf
-# Проверить строку: root /var/www/tenderAppSite/dist;
+# Должна быть строка: root /var/www/tenderAppSite; (без dist — содержимое dist копируется в эту папку)
 
 # Активировать сайт
 sudo ln -s /etc/nginx/sites-available/grgroup.kz.conf /etc/nginx/sites-enabled/
@@ -251,6 +260,159 @@ sudo systemctl enable docker
 sudo systemctl enable nginx
 ```
 
+---
+
+## Часть B: Деплой без Docker (и без PostgreSQL)
+
+Сервисы TenderBot и APISite работают напрямую на сервере. **БД для TenderBot — SQLite** (файл в каталоге проекта), PostgreSQL не используется. Root site раздаётся Nginx из `/var/www/tenderAppSite/`. Nginx проксирует `/catalog/` на APISite (порт 8001) и админку/Mini App на TenderBot (порт 8000).
+
+### Требования (B)
+
+- Ubuntu/Debian VPS
+- Nginx, Node.js (для сборки), Python 3.10+
+- Домен `grgroup.kz` → IP сервера
+
+### B.1 Подготовка сервера (без Docker)
+
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y nginx python3.10-venv python3-pip
+
+# Node.js для сборки фронтендов
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+```
+
+### B.2 База данных TenderBot: SQLite
+
+PostgreSQL не нужен. В `tenderbot/.env` укажите SQLite (абсолютный путь — надёжнее при запуске из systemd):
+
+```
+DATABASE_URL=sqlite+aiosqlite:////opt/tenderAppSite-main/tenderbot/data.db
+```
+
+Либо относительный путь (файл создаётся в `WorkingDirectory` сервиса):
+```
+DATABASE_URL=sqlite+aiosqlite:///./data.db
+```
+
+Остальные переменные — как в разделе «Шаг 3: Настройка переменных окружения» (3.2, 3.3, 3.4).
+
+### B.3 Клонирование, .env и сборка фронтов
+
+Аналогично **Шагам 2–5** части A: клонировать в `/opt/tenderAppSite-main`, настроить все `.env` (корень, tenderbot, apisite, apisite/react), собрать root site и APISite React, скопировать содержимое `dist/` в `/var/www/tenderAppSite/`.
+
+### B.4 Nginx и SSL
+
+Как в **Шагах 6–7**: скопировать `nginx-grgroup.kz.conf`, включить сайт, получить сертификат Certbot для grgroup.kz и www.grgroup.kz.
+
+### B.5 Виртуальные окружения Python
+
+```bash
+# TenderBot
+cd /opt/tenderAppSite-main/tenderbot
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+# Миграции (из корня репо или из tenderbot с PYTHONPATH)
+cd /opt/tenderAppSite-main/tenderbot && source venv/bin/activate && alembic upgrade head
+
+# APISite (отдельное venv из-за разных версий зависимостей)
+cd /opt/tenderAppSite-main/tenderbot/apisite
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+deactivate
+```
+
+### B.6 Systemd: TenderBot и APISite
+
+Создайте два юнита (или скопируйте готовые из репозитория: [tenderbot.service](tenderbot.service), [apisite.service](apisite.service)).
+
+**`/etc/systemd/system/tenderbot.service`:**
+
+```ini
+[Unit]
+Description=TenderBot (Telegram bot + Web admin)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/tenderAppSite-main/tenderbot
+Environment="PATH=/opt/tenderAppSite-main/tenderbot/venv/bin"
+ExecStart=/opt/tenderAppSite-main/tenderbot/venv/bin/python run.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+**`/etc/systemd/system/apisite.service`:**
+
+```ini
+[Unit]
+Description=APISite (B2B catalog)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/tenderAppSite-main/tenderbot/apisite
+Environment="PATH=/opt/tenderAppSite-main/tenderbot/apisite/venv/bin"
+ExecStart=/opt/tenderAppSite-main/tenderbot/apisite/venv/bin/python main.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Права на каталог проекта (чтобы `www-data` читал файлы и писал в `apisite/data`, `web/static/uploads` и т.д.):
+
+```bash
+sudo chown -R www-data:www-data /opt/tenderAppSite-main/tenderbot
+```
+
+Запуск и автозапуск:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable tenderbot apisite
+sudo systemctl start tenderbot apisite
+sudo systemctl status tenderbot apisite
+```
+
+### B.7 Проверка
+
+Как в **Шаге 9**: главная `https://grgroup.kz/`, каталог `https://grgroup.kz/catalog/`, админка `https://grgroup.kz/login`, API `https://grgroup.kz/catalog/api/health`.
+
+### Обновление (без Docker)
+
+```bash
+cd /opt/tenderAppSite-main
+git pull
+
+# Root site
+npm run build && sudo cp -r dist/* /var/www/tenderAppSite/
+
+# APISite React
+cd tenderbot/apisite/react && npm run build
+
+# Перезапуск сервисов при изменении бэкенда
+sudo systemctl restart tenderbot apisite
+```
+
+### Устранение неполадок (B)
+
+- **TenderBot/APISite не стартуют:** `sudo journalctl -u tenderbot -n 50`, `sudo journalctl -u apisite -n 50`. Для TenderBot проверить `DATABASE_URL` (путь к `data.db`), права на каталог `tenderbot/` (www-data должен писать в него).
+- **Каталог не открывается:** убедиться, что собран `tenderbot/apisite/react/dist/` и запущен `apisite.service`; логи: `journalctl -u apisite -f`.
+
+---
+
 ## Обновление проекта
 
 ### Обновление кода
@@ -323,6 +485,77 @@ sudo netstat -tlnp | grep -E '8000|8001|443|80'
 
 ## Устранение неполадок
 
+### На сервере всё ломается — пошаговая диагностика
+
+Выполняй по порядку на VPS (подставь свой путь, если не `/opt/tenderAppSite-main`).
+
+**1. Что вообще слушает порты**
+
+```bash
+sudo ss -tlnp | grep -E ':80|:443|:8000|:8001'
+# или: sudo netstat -tlnp | grep -E '8000|8001|443|80'
+```
+
+Ожидаемо: `:80` и `:443` — nginx; `:8000` — TenderBot; `:8001` — APISite. Если 8000/8001 пусто — бэкенды не запущены.
+
+**2. Nginx**
+
+```bash
+sudo nginx -t
+sudo systemctl status nginx
+# Ошибки: sudo tail -50 /var/log/nginx/error.log
+```
+
+Если `nginx -t` падает — правь конфиг (часто опечатка в `root` или в `proxy_pass`).
+
+**3. Файлы главного сайта**
+
+```bash
+sudo ls -la /var/www/tenderAppSite/
+# Должны быть index.html и папка assets/
+```
+
+Если пусто — заново: `npm run build` в корне проекта и `sudo cp -r dist/* /var/www/tenderAppSite/`.
+
+**4. Бэкенды (выбери свой вариант)**
+
+- **С Docker:**  
+  `cd /opt/tenderAppSite-main/tenderbot && docker compose ps`  
+  Все сервисы (app, apisite) в статусе Up? Логи: `docker compose logs -f app`, `docker compose logs -f apisite`. Если контейнеры падают — смотри логи и `.env` (DATABASE_URL, порты).
+- **Без Docker:**  
+  `sudo systemctl status tenderbot apisite`  
+  Оба active (running)? Логи: `sudo journalctl -u tenderbot -n 100 --no-pager`, `sudo journalctl -u apisite -n 100 --no-pager`. Частые причины: нет `.env`, неверный путь к `data.db` (SQLite), нет прав у `www-data` на каталог.
+
+**5. Проверка с самого сервера (localhost)**
+
+```bash
+curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/health
+curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8001/api/health
+```
+
+Должны быть 200. Если 000 — сервис не слушает или упал; смотри логи из п.4.
+
+**6. Переменные окружения**
+
+- В корне проекта: лучше использовать относительные пути `VITE_CATALOG_URL=/catalog` и `VITE_PRODUCT_API_ORIGIN=/catalog` — тогда запросы идут на тот же хост (в интернете grgroup.kz), а Nginx на VPS проксирует их локально. Пересобери фронт после смены: `npm run build`.
+- В `tenderbot/apisite/.env`: `CORS_ORIGINS` должен содержать твой домен, например `https://grgroup.kz`.
+- В `tenderbot/apisite/react/.env`: `VITE_BASE_PATH=/catalog`, `VITE_MAIN_SITE_URL` — твой домен. После смены — пересборка: `cd tenderbot/apisite/react && npm run build`.
+
+**7. Права (без Docker)**
+
+```bash
+sudo chown -R www-data:www-data /opt/tenderAppSite-main/tenderbot
+# TenderBot должен иметь право писать data.db и web/static/uploads
+```
+
+**8. Каталог открывается, но API/запросы падают**
+
+Проверь в браузере (F12 → Network): на какой URL уходят запросы. Должны идти на `https://grgroup.kz/catalog/...`, а не на localhost. Если идут на localhost — пересобери root site с правильным `.env` (п.6) и залей заново в `/var/www/tenderAppSite/`.
+
+После каждого исправления: перезапуск сервисов (Docker: `docker compose restart app apisite`; без Docker: `sudo systemctl restart tenderbot apisite`), при смене конфига Nginx — `sudo nginx -t && sudo systemctl reload nginx`.
+
+---
+
 ### Проблема: Root site не открывается
 
 1. Проверить, что `dist/` скопирован в `/var/www/tenderAppSite/`
@@ -340,7 +573,7 @@ sudo netstat -tlnp | grep -E '8000|8001|443|80'
 ### Проблема: API запросы не работают
 
 1. Проверить CORS настройки в `tenderbot/apisite/.env`: `CORS_ORIGINS=https://grgroup.kz`
-2. Проверить переменные окружения root site: `VITE_PRODUCT_API_ORIGIN=https://grgroup.kz/catalog`
+2. Проверить переменные окружения root site: лучше `VITE_PRODUCT_API_ORIGIN=/catalog` (относительный путь)
 3. Проверить логи APISite на ошибки CORS
 
 ### Проблема: SSL не работает

@@ -1,3 +1,11 @@
+/* Обёртка как .container на 8001: та же ширина и отступы, что у products-grid и панели фильтров */
+.sectionContent {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+  width: 100%;
+}
+
 .section {
   padding: 2rem 0 3rem;
 }
@@ -32,50 +40,132 @@
   margin: 0 0 1rem;
 }
 
-.filters {
+/* Блок фильтров в стиле каталога 8001: тёмный фон, скругление 20px, границы */
+.filtersBlock {
+  background: rgba(10, 0, 31, 0.9);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(157, 78, 221, 0.2);
+  padding: 1.5rem;
+  border-radius: 20px;
+  margin-bottom: 2rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.filterRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-  align-items: center;
+  gap: 1rem;
+  align-items: flex-end;
 }
 
-.filterSearch {
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
   flex: 1;
   min-width: 200px;
-  max-width: 400px;
-  padding: 0.625rem 1rem;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(157, 78, 221, 0.3);
-  border-radius: var(--radius-button);
-  color: var(--color-text);
-  font-size: var(--text-sm);
-  font-family: inherit;
 }
 
-.filterSearch::placeholder {
+.filterGroup label {
+  font-weight: 600;
+  font-size: 0.875rem;
   color: var(--color-text-muted);
 }
 
-.filterSearch:focus {
-  outline: none;
-  border-color: var(--color-primary);
-}
-
-.filterCategory {
-  padding: 0.625rem 1rem;
-  background: rgba(255, 255, 255, 0.06);
+.filterSelect,
+.filterInput {
+  padding: 0.75rem 1rem;
+  background: rgba(10, 0, 31, 0.8);
   border: 1px solid rgba(157, 78, 221, 0.3);
-  border-radius: var(--radius-button);
+  border-radius: 12px;
+  font-size: 1rem;
   color: var(--color-text);
-  font-size: var(--text-sm);
   font-family: inherit;
-  min-width: 180px;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.filterCategory:focus {
+.filterSelect:focus,
+.filterInput:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: var(--color-primary, #9D4EDD);
+  box-shadow: 0 0 0 3px rgba(157, 78, 221, 0.2);
+}
+
+.filterInput::placeholder {
+  color: var(--color-text-muted);
+}
+
+.filterGroup.filterSearch {
+  flex: 2;
+  min-width: 250px;
+}
+
+.searchWrapper {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.searchWrapper .filterInput {
+  flex: 1;
+  margin: 0;
+}
+
+.btnSearch {
+  padding: 0.75rem 1rem;
+  background: var(--color-primary, #9D4EDD);
+  border: 1px solid var(--color-primary, #9D4EDD);
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px;
+  font-size: 1.1rem;
+}
+
+.btnSearch:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(157, 78, 221, 0.4);
+}
+
+/* Теги категорий: неактивный — тёмный с границей, активный — фиолетовый */
+.categoryTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(157, 78, 221, 0.2);
+}
+
+.categoryTag {
+  padding: 0.5rem 1rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(157, 78, 221, 0.3);
+  border-radius: 20px;
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.categoryTag:hover {
+  background: rgba(157, 78, 221, 0.2);
+  border-color: var(--color-primary, #9D4EDD);
+  transform: translateY(-2px);
+}
+
+.categoryTagActive {
+  background: rgba(157, 78, 221, 0.35);
+  border-color: var(--color-primary, #9D4EDD);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(157, 78, 221, 0.3);
 }
 
 .filterEmpty {
@@ -85,16 +175,18 @@
   padding: 2rem;
 }
 
+/* Блок категорий — та же ширина, что и products-grid на 8001 (внутри sectionContent) */
 .categories {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  width: 100%;
 }
 
 .category {
   background: var(--gradient-block);
-  border: 1px solid rgba(157, 78, 221, 0.25);
-  border-radius: var(--radius-card);
+  border: 1px solid rgba(157, 78, 221, 0.2);
+  border-radius: 20px;
   padding: 1rem 1.25rem;
 }
 
@@ -105,9 +197,10 @@
   margin: 0 0 0.75rem;
 }
 
+/* Сетка как в каталоге 8001: одинаковые отступы между карточками */
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
   align-items: stretch;
@@ -149,13 +242,14 @@
   }
 }
 
+/* Форма и размер карточки как в localhost:8001: скруглённый прямоугольник, два блока (светлый — картинка, тёмный — инфо) */
 .card {
   background: rgba(10, 0, 31, 0.9);
   backdrop-filter: blur(20px);
-  border: 1px solid var(--color-border, rgba(139, 92, 246, 0.2));
-  border-radius: var(--radius-card, 12px);
+  border: 1px solid rgba(157, 78, 221, 0.2);
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 10px 20px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   display: flex;
   flex-direction: column;
@@ -182,17 +276,19 @@
 
 .card:hover {
   transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.5), 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-  border-color: var(--color-primary, #8b5cf6);
+  box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.5), 0 20px 40px rgba(0, 0, 0, 0.4), 0 10px 20px rgba(0, 0, 0, 0.3);
+  border-color: var(--color-primary, #9D4EDD);
 }
 
 .card:hover::before {
   opacity: 1;
 }
 
+/* Верхняя зона карточки: светлый фон, фиксированная высота (как в 8001) */
 .cardImageWrapper {
   width: 100%;
   height: 280px;
+  min-height: 280px;
   background: #f1f5f9;
   display: flex;
   align-items: center;
@@ -242,7 +338,8 @@
 
 .cardImagePlaceholder {
   width: 100%;
-  height: 280px;
+  height: 100%;
+  min-height: 280px;
   background: #f1f5f9;
   display: flex;
   align-items: center;
@@ -250,8 +347,31 @@
   font-size: 4rem;
   color: rgba(139, 92, 246, 0.5);
   animation: float 3s ease-in-out infinite;
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 0;
+}
+
+/* Бейдж бренда поверх картинки, правый верхний угол (как в 8001) */
+.brandBadge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  color: var(--color-text, #D3D3D3);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1px solid rgba(157, 78, 221, 0.2);
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.card:hover .brandBadge {
+  background: rgba(157, 78, 221, 0.3);
+  border-color: var(--color-primary, #9D4EDD);
 }
 
 @keyframes float {
@@ -259,27 +379,29 @@
   50% { transform: translateY(-10px); }
 }
 
+/* Нижняя зона: тёмный фон, как в 8001 */
 .cardInfo {
   padding: 1.5rem;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  min-height: 260px; /* Выравнивание карточек по высоте (как в 8001) */
 }
 
 .cardDescriptionBlock {
   min-height: 6.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
 }
 
+/* Название товара — крупный белый текст */
 .cardModel {
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 0.75rem;
-  color: var(--color-text);
+  color: var(--color-text, #D3D3D3);
   line-height: 1.5;
   transition: color 0.3s ease;
   display: -webkit-box;
@@ -291,26 +413,102 @@
 }
 
 .card:hover .cardModel {
-  color: var(--color-primary, #8b5cf6);
+  color: var(--color-primary, #9D4EDD);
 }
 
-.cardDesc {
-  font-size: var(--text-sm, 0.875rem);
-  color: var(--color-text-muted, rgba(255, 255, 255, 0.6));
-  line-height: 1.5;
-  margin: 0;
-  flex: 1;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
+/* Модель/артикул — мелкий, моно, светлый блок (как в 8001) */
+.cardModelSecondary {
+  color: var(--color-text, #D3D3D3);
+  font-size: 0.9rem;
+  font-family: 'Courier New', monospace;
+  opacity: 0.95;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  background: rgba(157, 78, 221, 0.1);
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid rgba(157, 78, 221, 0.2);
+  display: inline-block;
+  width: fit-content;
+  margin-bottom: 0;
+  transition: all 0.3s ease;
+}
+
+.card:hover .cardModelSecondary {
+  background: rgba(157, 78, 221, 0.15);
+  border-color: rgba(157, 78, 221, 0.3);
+  color: var(--color-primary, #9D4EDD);
+}
+
+/* Строка «цена» с разделителем сверху (как в 8001) */
+.productDetails {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(157, 78, 221, 0.15);
+  min-height: 3.25rem;
+}
+
+/* Цена — крупно и жирно, градиент (как в 8001) */
+.cardPrice {
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--color-primary, #9D4EDD) 0%, #6366f1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: transform 0.3s ease;
+}
+
+.card:hover .cardPrice {
+  transform: scale(1.05);
+}
+
+.qtyRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.qtyLabel {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.qtyControl {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid rgba(157, 78, 221, 0.3);
+  border-radius: var(--radius-button);
   overflow: hidden;
 }
 
-.cardPrice {
+.qtyControl button {
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: rgba(157, 78, 221, 0.2);
+  color: var(--color-text);
   font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--color-primary, #8b5cf6);
-  margin-bottom: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.qtyControl button:hover {
+  background: rgba(157, 78, 221, 0.4);
+}
+
+.qtyNum {
+  min-width: 2rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: var(--text-sm);
 }
 
 .addButton {
@@ -365,23 +563,97 @@
   margin: 0.75rem 0 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
+  .sectionContent {
+    padding: 0 var(--container-padding);
+  }
+  .section {
+    padding: 1.5rem 0 2rem;
+  }
+  .filtersBlock {
+    padding: 1rem;
+  }
+  .filterRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filterGroup,
+  .filterGroup.filterSearch {
+    min-width: 0;
+    flex: none;
+  }
+  .categoryTags {
+    gap: 0.5rem;
+  }
   .cards {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1rem;
   }
-  
+  .card {
+    border-radius: 12px;
+  }
+  .cardImageWrapper,
+  .cardImagePlaceholder {
+    height: 90px;
+    min-height: 90px;
+  }
+  .cardInfo {
+    padding: 0.5rem 0.5rem 0.6rem;
+    min-height: auto;
+  }
   .cardDescriptionBlock {
-    min-height: 5.5rem;
+    min-height: 2.5rem;
+    margin-bottom: 0.25rem;
   }
-  
   .cardModel {
-    min-height: 3rem;
-    font-size: 1.1rem;
+    font-size: 0.7rem;
+    line-height: 1.25;
+    min-height: 2.2em;
+    -webkit-line-clamp: 2;
+  }
+  .cardModelSecondary {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.4rem;
+  }
+  .productDetails {
+    padding-top: 0.4rem;
+    min-height: 2rem;
+  }
+  .cardPrice {
+    font-size: 0.8rem;
+  }
+  .qtyRow {
+    margin-bottom: 0.35rem;
+  }
+  .qtyLabel {
+    font-size: 0.65rem;
+  }
+  .qtyControl button {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 0.85rem;
+  }
+  .qtyNum {
+    min-width: 1.25rem;
+    font-size: 0.7rem;
+  }
+  .addButton {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.65rem;
+  }
+  .brandBadge {
+    top: 4px;
+    right: 4px;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.6rem;
+  }
+  .categoryTitle {
+    font-size: var(--text-sm);
+    margin-bottom: 0.5rem;
+  }
+  .category {
+    padding: 0.75rem 0.75rem;
   }
 }
 
-@media (min-width: 769px) and (max-width: 1024px) {
-  .cards {
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  }
-}

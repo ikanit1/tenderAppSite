@@ -213,4 +213,17 @@
   .box {
     max-width: 100%;
   }
+  .header,
+  .footer {
+    padding: 1rem 1.25rem;
+  }
+  .item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  .itemActions {
+    justify-content: flex-end;
+  }
 }
+

@@ -1,65 +1,56 @@
 import { useState, useEffect, useRef } from 'react';
 import { getCartFromAPI, saveCartToAPI, addItemToAPI, removeItemFromAPI, clearCartAPI } from '../utils/cartApi';
+import { getCartCookie, setCartCookie } from '../utils/cartCookie';
 
-const CART_KEY = 'b2b_cart';
 const CART_UPDATE_EVENT = 'cart-updated';
 const SYNC_INTERVAL_MS = 5000; // 5 секунд
 
-const loadCartFromStorage = () => {
-  try {
-    const raw = localStorage.getItem(CART_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-};
+/** Загрузка корзины из cookie (единственный клиентский источник) */
+function loadCartFromCookie() {
+  const cookieCart = getCartCookie();
+  if (!cookieCart?.length) return [];
+  return cookieCart.map((item) => ({
+    model: String(item.model || '').trim(),
+    name: item.name != null ? String(item.name).trim() : undefined,
+    brand: item.brand != null ? String(item.brand).trim() : undefined,
+    price: item.price != null && !isNaN(Number(item.price)) ? Number(item.price) : null,
+    quantity: Math.max(1, Math.floor(Number(item.quantity) || 1)),
+  })).filter((item) => item.model.length > 0);
+}
+
+/** Начальное состояние: только из cookie */
+function getInitialCart() {
+  return loadCartFromCookie();
+}
 
 export function useCart() {
-  const [cart, setCartState] = useState(loadCartFromStorage);
+  const [cart, setCartState] = useState(getInitialCart);
   const lastCartStrRef = useRef('');
   const isSyncingRef = useRef(false);
   const syncTimeoutRef = useRef(null);
 
-  // Функция для синхронизации корзины с API
+  // Синхронизация с API — всегда применяем ответ (единая корзина 5173, 8001, Checkout)
   const syncCartWithAPI = async () => {
     if (isSyncingRef.current) return;
-    
     try {
       isSyncingRef.current = true;
       const apiCart = await getCartFromAPI();
-      
-      if (apiCart.length > 0) {
-        // Объединяем локальную и API корзину
-        const localCart = loadCartFromStorage();
-        const mergedCart = [];
-        const seenModels = new Set();
-        
-        // Сначала добавляем товары из API
-        for (const apiItem of apiCart) {
-          mergedCart.push(apiItem);
-          seenModels.add((apiItem.model || '').trim().toLowerCase());
+      const seenModels = new Set(apiCart.map((i) => (i.model || '').trim().toLowerCase()));
+      const mergedCart = [...apiCart];
+      for (const localItem of loadCartFromCookie()) {
+        const key = (localItem.model || '').trim().toLowerCase();
+        if (!seenModels.has(key)) {
+          mergedCart.push(localItem);
+          seenModels.add(key);
         }
-        
-        // Затем добавляем локальные товары, которых нет в API
-        for (const localItem of localCart) {
-          const modelKey = (localItem.model || '').trim().toLowerCase();
-          if (!seenModels.has(modelKey)) {
-            mergedCart.push(localItem);
-            seenModels.add(modelKey);
-          }
-        }
-        
-        // Обновляем состояние только если есть изменения
-        const mergedStr = JSON.stringify(mergedCart);
-        if (lastCartStrRef.current !== mergedStr) {
-          setCartState(mergedCart);
-          localStorage.setItem(CART_KEY, mergedStr);
-          lastCartStrRef.current = mergedStr;
-        }
+      }
+      const mergedStr = JSON.stringify(mergedCart);
+      if (lastCartStrRef.current !== mergedStr) {
+        setCartState(mergedCart);
+        lastCartStrRef.current = mergedStr;
       }
     } catch (error) {
       console.error('Error syncing cart with API:', error);
-      // Fallback на localStorage при ошибке
     } finally {
       isSyncingRef.current = false;
     }
@@ -105,11 +96,10 @@ export function useCart() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(CART_KEY, JSON.stringify(cart));
     lastCartStrRef.current = JSON.stringify(cart);
     window.dispatchEvent(new CustomEvent(CART_UPDATE_EVENT, { detail: cart }));
-    // Сохраняем в API
     saveCartToAPIDebounced(cart);
+    setCartCookie(cart);
   }, [cart]);
 
   useEffect(() => {
@@ -128,25 +118,11 @@ export function useCart() {
       });
     };
 
-    // Слушаем кастомное событие обновления корзины
     window.addEventListener(CART_UPDATE_EVENT, handleCartUpdate);
-    
-    // Слушаем события storage (для синхронизации между вкладками)
-    const handleStorageChange = (e) => {
-      if (e.key === CART_KEY && e.newValue) {
-        try {
-          const newCart = JSON.parse(e.newValue);
-          setCartState(newCart);
-        } catch {
-          // Игнорируем ошибки парсинга
-        }
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
 
-    // Перезагрузка корзины при фокусе окна (для синхронизации между разными доменами)
+    // Перезагрузка корзины из cookie при фокусе окна (синхронизация 5173/8001)
     const handleFocus = () => {
-      const loadedCart = loadCartFromStorage();
+      const loadedCart = loadCartFromCookie();
       const loadedStr = JSON.stringify(loadedCart);
       if (lastCartStrRef.current !== loadedStr) {
         setCartState(loadedCart);
@@ -157,7 +133,6 @@ export function useCart() {
 
     return () => {
       window.removeEventListener(CART_UPDATE_EVENT, handleCartUpdate);
-      window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('focus', handleFocus);
     };
   }, []);
@@ -210,17 +185,29 @@ export function useCart() {
 
   const clearCart = () => {
     setCartState([]);
-    // Очищаем API корзину
     clearCartAPI().catch((error) => {
       console.error('Error clearing API cart:', error);
     });
   };
 
+  /** Заменить корзину внешними данными (fallback для ?cart= в URL) */
+  const setCartFromExternal = (newCart) => {
+    const arr = Array.isArray(newCart) ? newCart : [];
+    const normalized = arr.map((item) => ({
+      model: String(item.model || '').trim(),
+      name: (item.name || '').trim() || String(item.model || '').trim(),
+      brand: (item.brand || '').trim() || '',
+      price: item.price != null && !isNaN(item.price) ? Number(item.price) : (item.final_price != null && !isNaN(item.final_price) ? Number(item.final_price) : null),
+      quantity: item.quantity != null && !isNaN(item.quantity) ? Math.max(1, Number(item.quantity)) : 1,
+    })).filter((item) => item.model);
+    lastCartStrRef.current = JSON.stringify(normalized);
+    setCartState(normalized);
+    setCartCookie(normalized);
+  };
+
   const syncCart = async () => {
-    // Синхронизируем с API
     await syncCartWithAPI();
-    // Также синхронизируем с localStorage
-    const loadedCart = loadCartFromStorage();
+    const loadedCart = loadCartFromCookie();
     const loadedStr = JSON.stringify(loadedCart);
     if (lastCartStrRef.current !== loadedStr) {
       setCartState(loadedCart);
@@ -240,6 +227,7 @@ export function useCart() {
     removeFromCart,
     updateQty,
     clearCart,
+    setCartFromExternal,
     syncCart,
     totalCount,
     totalSum,

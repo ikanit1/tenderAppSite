@@ -57,5 +57,13 @@ OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
 
+# Отправка заказов на email админа (checkout)
+ADMIN_EMAIL = os.getenv("info@grgroup.kz", "").strip()
+SMTP_HOST = os.getenv("info@grgroup.kz", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
+SMTP_USER = os.getenv("info@grgroup.kz", "").strip()
+SMTP_PASSWORD = os.getenv("717^kkOs3", "")
+SMTP_USE_TLS = os.getenv("SMTP_USE_TLS", "false").lower() == "true"
+
 # Создаем директорию для данных
 CACHE_FILE.parent.mkdir(exist_ok=True)

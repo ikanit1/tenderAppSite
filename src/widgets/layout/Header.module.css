@@ -254,34 +254,35 @@
   text-shadow: 0 0 16px rgba(157, 78, 221, 0.55);
 }
 
-/* Адаптив: на мобильных скрываем десктоп-нав, показываем бургер */
-@media (max-width: 767px) {
-  .wrapper {
-    padding: 0.75rem 0.75rem 0;
-  }
-
-  .header {
-    padding: 0.75rem 1rem;
-    border-radius: var(--radius-card);
-    flex-wrap: nowrap;
-  }
-
-  .nav {
+@media (min-width: 768px) {
+  .burger {
     display: none;
   }
-
-  .right {
-    margin-left: auto;
-  }
-
-  .burger {
-    display: flex;
-    position: relative;
+  .menuOverlay {
+    display: none;
   }
 }
 
-@media (min-width: 768px) {
-  .menuOverlay {
+@media (max-width: 767px) {
+  .wrapper {
+    padding: 0.6rem var(--container-padding);
+  }
+  .header {
+    padding: 0.6rem 0.9rem;
+  }
+  .logoImage {
+    width: 56px;
+    height: 56px;
+  }
+  .nav {
     display: none;
+  }
+  .burger {
+    display: flex;
+  }
+  .menuOverlay {
+    display: block;
+    padding-left: var(--container-padding);
+    padding-right: var(--container-padding);
   }
 }

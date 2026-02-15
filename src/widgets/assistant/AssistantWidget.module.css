@@ -148,6 +148,12 @@
     right: 0.5rem;
     left: 0.5rem;
     width: auto;
+    max-width: none;
     bottom: 5rem;
   }
+  .fab {
+    right: 0.75rem;
+    bottom: 1rem;
+  }
 }
+

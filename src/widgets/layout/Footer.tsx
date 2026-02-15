@@ -13,7 +13,7 @@ export function Footer() {
     : {
         initial: { y: 16, opacity: 0 },
         whileInView: { y: 0, opacity: 1 },
-        viewport: { once: true, amount: 0.2 },
+        viewport: { once: true, amount: 0.05 },
         transition: { duration: 0.45, ease: 'easeOut' as const },
       };
 

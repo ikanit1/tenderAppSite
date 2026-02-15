@@ -78,7 +78,7 @@ export function ServicesSection({ fullPage }: ServicesSectionProps) {
       variants={reduceMotion ? undefined : sectionVariants}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, margin: '-60px', amount: 0.2 }}
+      viewport={{ once: true, margin: '0px', amount: 0.05 }}
     >
       <motion.div className={styles.container} variants={reduceMotion ? undefined : sectionVariants}>
         <motion.h2 id="services-heading" className={styles.heading} variants={reduceMotion ? undefined : headerVariants}>

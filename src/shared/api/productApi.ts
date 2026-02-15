@@ -1,3 +1,4 @@
+// Относительный путь /catalog в production — запросы на тот же хост (grgroup.kz), Nginx проксирует локально
 const PRODUCT_API_ORIGIN = import.meta.env.VITE_PRODUCT_API_ORIGIN || 'http://localhost:8001';
 
 export interface AssistantChatRequest {

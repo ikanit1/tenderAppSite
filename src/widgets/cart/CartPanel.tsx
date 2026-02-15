@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useCart } from '@/shared/context/CartContext';
 import { getCatalogUrl } from '@/shared/utils/catalogUrl';
@@ -21,32 +22,27 @@ interface CartPanelProps {
 }
 
 export function CartPanel({ isOpen, onClose }: CartPanelProps) {
-  const { items, removeFromCart, updateQty, totalSum } = useCart();
+  const { items, removeFromCart, updateQty, totalSum, refreshCart, saveCartNow } = useCart();
+
+  // Синхронизация с API при открытии панели (корзина с 8001 видна на 5173)
+  useEffect(() => {
+    if (isOpen) void refreshCart();
+  }, [isOpen, refreshCart]);
 
   const formatPrice = (price: number | null | undefined) => {
     if (price == null || isNaN(price)) return '0';
     return new Intl.NumberFormat('ru-RU').format(Math.round(price));
   };
 
-  const handleCheckout = (e: React.MouseEvent<HTMLAnchorElement>) => {
+  const handleCheckout = async (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     if (items.length === 0) return;
-    
     try {
-      // Кодируем корзину в base64 для передачи через URL
-      const cartData = JSON.stringify(items);
-      const encodedCart = btoa(encodeURIComponent(cartData));
-      const checkoutUrl = `${getCatalogUrl()}/checkout?cart=${encodedCart}`;
-      
-      // Закрываем панель корзины перед переходом
+      await saveCartNow(items);
       onClose();
-      
-      // Переходим на checkout с корзиной в URL
-      window.location.href = checkoutUrl;
-    } catch (error) {
-      console.error('Failed to encode cart for checkout', error);
-      // Fallback: переход без корзины
       window.location.href = `${getCatalogUrl()}/checkout`;
+    } catch (error) {
+      console.error('Failed to save cart before checkout', error);
     }
   };
 

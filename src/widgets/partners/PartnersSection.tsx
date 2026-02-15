@@ -36,7 +36,7 @@ export function PartnersSection() {
       variants={reduceMotion ? undefined : sectionVariants}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, margin: '-60px', amount: 0.2 }}
+      viewport={{ once: true, margin: '0px', amount: 0.05 }}
     >
       {partnersContent.mainPartner && (
         <div className={styles.mainPartnerBlock}>

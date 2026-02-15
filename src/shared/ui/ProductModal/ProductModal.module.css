@@ -68,8 +68,14 @@
 @media (max-width: 768px) {
   .body {
     grid-template-columns: 1fr;
+    padding: 1rem;
+    gap: 1rem;
+  }
+  .overlay {
+    padding: 0.5rem;
   }
 }
+
 
 .imageSection {
   display: flex;

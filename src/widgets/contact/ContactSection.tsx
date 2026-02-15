@@ -46,7 +46,7 @@ export function ContactSection({ fullPage: _fullPage }: ContactSectionProps) {
       variants={reduceMotion ? undefined : sectionVariants}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, margin: '-60px', amount: 0.2 }}
+      viewport={{ once: true, margin: '0px', amount: 0.05 }}
     >
       <div className={styles.container}>
         <motion.h2 id="contact-heading" className={styles.heading} variants={reduceMotion ? undefined : itemVariants}>

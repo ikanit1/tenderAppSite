@@ -1,20 +1,6 @@
 .section {
-  padding: 0 var(--container-padding) var(--gap-section);
+  padding: 0 var(--container-padding-lg) var(--gap-section);
   background: transparent;
-}
-
-@media (min-width: 768px) {
-  .section {
-    padding-left: var(--container-padding-md);
-    padding-right: var(--container-padding-md);
-  }
-}
-
-@media (min-width: 1024px) {
-  .section {
-    padding-left: var(--container-padding-lg);
-    padding-right: var(--container-padding-lg);
-  }
 }
 
 /* —— Hero —— */
@@ -30,10 +16,16 @@
   overflow: hidden;
 }
 
-@media (min-width: 768px) {
-  .hero {
-    padding: 4rem 3rem 4.5rem;
-  }
+.hero {
+  position: relative;
+  max-width: var(--container-max);
+  margin: 0 auto 3.5rem;
+  padding: 4rem 3rem 4.5rem;
+  background: linear-gradient(160deg, rgba(45, 7, 84, 0.95) 0%, rgba(25, 8, 50, 0.98) 50%, rgba(15, 2, 35, 0.98) 100%);
+  border-radius: var(--radius-block);
+  border: 1px solid var(--color-border-strong);
+  box-shadow: 0 0 60px rgba(157, 78, 221, 0.2), 0 20px 50px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
 }
 
 .heroGlow {
@@ -140,17 +132,11 @@
 .block {
   max-width: var(--container-max);
   margin: 0 auto 3.5rem;
-  padding: 2.5rem var(--container-padding);
+  padding: 3rem 2.5rem;
   background: var(--content-block-bg);
   border-radius: var(--radius-block);
   border: 1px solid var(--color-border-strong);
   box-shadow: 0 0 32px rgba(157, 78, 221, 0.12);
-}
-
-@media (min-width: 768px) {
-  .block {
-    padding: 3rem 2.5rem;
-  }
 }
 
 .blockHeading {
@@ -171,20 +157,8 @@
 /* —— Scope cards —— */
 .scopeGrid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
-}
-
-@media (min-width: 640px) {
-  .scopeGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 960px) {
-  .scopeGrid {
-    grid-template-columns: repeat(3, 1fr);
-  }
 }
 
 .scopeCard {
@@ -318,27 +292,8 @@
 /* —— Advantages —— */
 .advGrid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
-}
-
-@media (min-width: 520px) {
-  .advGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 900px) {
-  .advGrid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.25rem;
-  }
-}
-
-@media (min-width: 1100px) {
-  .advGrid {
-    grid-template-columns: repeat(5, 1fr);
-  }
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.25rem;
 }
 
 .advCard {
@@ -482,14 +437,8 @@
 /* —— Equipment —— */
 .equipmentGrid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 1.25rem;
-}
-
-@media (min-width: 640px) {
-  .equipmentGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
 .equipmentCard {
@@ -559,4 +508,45 @@
 
 .ctaBlock .ctaSecondary {
   padding: 1rem 2rem;
+}
+
+@media (max-width: 767px) {
+  .section {
+    padding: 0 var(--container-padding) var(--gap-section);
+  }
+  .hero {
+    padding: 2.5rem var(--container-padding) 3rem;
+    margin-bottom: 2rem;
+  }
+  .heroTitle {
+    font-size: 1.75rem;
+  }
+  .heroTagline {
+    font-size: var(--text-lg);
+  }
+  .block {
+    padding: 2rem var(--container-padding);
+    margin-bottom: 2rem;
+  }
+  .scopeGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .advGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .equipmentGrid {
+    grid-template-columns: 1fr;
+  }
+  .termsStrip {
+    padding: 1.5rem var(--container-padding);
+    margin-bottom: 2rem;
+  }
+  .ctaBlock {
+    padding: 2rem var(--container-padding);
+  }
+  .cardsGrid {
+    grid-template-columns: 1fr;
+  }
 }

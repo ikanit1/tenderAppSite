@@ -5,6 +5,7 @@ import { generateImageUrl, generateAlternativeImageUrls } from '../utils/imageUr
 function ProductCardInner({ product, onCardClick }) {
   const { addToCart } = useCart();
   const [added, setAdded] = useState(false);
+  const [qty, setQty] = useState(1);
   const [imageError, setImageError] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState(null);
   const [fallbackAttempts, setFallbackAttempts] = useState(0);
@@ -24,7 +25,7 @@ function ProductCardInner({ product, onCardClick }) {
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
-    addToCart(product, 1);
+    addToCart(product, qty);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
@@ -86,7 +87,6 @@ function ProductCardInner({ product, onCardClick }) {
     // Все варианты исчерпаны
     console.warn('All image URL alternatives failed for product:', model);
     setImageError(true);
-    setImageLoaded(false);
   };
 
   const handleImageLoad = () => {
@@ -148,12 +148,24 @@ function ProductCardInner({ product, onCardClick }) {
             )}
           </div>
         </div>
+        <div
+          className="qty-row product-qty-row"
+          onClick={(e) => e.stopPropagation()}
+          style={{ display: 'flex', flexShrink: 0 }}
+        >
+          <span className="qty-label">Кол-во:</span>
+          <div className="qty-control">
+            <button type="button" aria-label="Меньше" onClick={() => setQty((n) => Math.max(1, n - 1))}>−</button>
+            <span className="qty-num">{qty}</span>
+            <button type="button" aria-label="Больше" onClick={() => setQty((n) => Math.min(99, n + 1))}>+</button>
+          </div>
+        </div>
         <button
           className={`btn-add-cart ${added ? 'added' : ''}`}
           onClick={handleAddToCart}
           disabled={added}
         >
-          {added ? '✓ Добавлено' : '🛒 В корзину'}
+          {added ? '✓ Добавлено' : `🛒 В корзину (${qty})`}
         </button>
       </div>
     </div>

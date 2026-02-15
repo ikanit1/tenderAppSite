@@ -66,6 +66,27 @@
   background-clip: text;
 }
 
+/* Мобильная сетка скрыта — везде показываем десктопную бегущую строку */
+.marqueeGridWrap {
+  display: none;
+}
+
+.marqueeDesktopWrap {
+  display: block;
+}
+
+/* На мобильных: статичная сетка вместо бегущей строки */
+.marqueeGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  padding: 0 1rem 1rem;
+}
+
+.marqueeGrid .marqueeCard {
+  min-width: 0;
+}
+
 .marqueeContainer {
   position: relative;
   overflow: hidden;
@@ -224,17 +245,36 @@
   background: linear-gradient(to left, rgba(10, 0, 31, 1) 0%, rgba(10, 0, 31, 0) 100%);
 }
 
-@media (max-width: 768px) {
-  .marqueeCard {
-    flex: 0 0 140px;
+@media (max-width: 767px) {
+  .smartMarquee {
+    padding: 1rem 0;
   }
-  
+  .marqueeHeader {
+    padding: 0 var(--container-padding) 0.75rem;
+  }
+  .marqueeDesktopWrap {
+    display: none;
+  }
+  .marqueeGridWrap {
+    display: block;
+  }
+  .marqueeGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    padding: 0 var(--container-padding) 0.75rem;
+  }
+  .marqueeCard {
+    flex: none;
+  }
   .marqueeCardImage {
     height: 90px;
   }
-  
-  .marqueeGradientLeft,
-  .marqueeGradientRight {
-    width: 60px;
+  .marqueeCardName {
+    font-size: 0.75rem;
+    -webkit-line-clamp: 2;
+  }
+  .marqueeCardPrice {
+    font-size: 0.875rem;
   }
 }
+

@@ -27,7 +27,9 @@ export function SmartSystemsPage() {
       />
       <MainContainer>
         <BackButton />
-        <SmartMarquee onProductClick={handleProductClick} />
+        <div className="catalogContent">
+          <SmartMarquee onProductClick={handleProductClick} />
+        </div>
         <SmartSystemsSection />
       </MainContainer>
       <SmartSystemsProductModal product={selectedProduct} onClose={handleCloseModal} />

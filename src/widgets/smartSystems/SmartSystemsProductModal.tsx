@@ -23,11 +23,13 @@ export function SmartSystemsProductModal({ product, onClose }: SmartSystemsProdu
   const { addToCart } = useCart();
   const [imageError, setImageError] = useState(false);
   const [added, setAdded] = useState(false);
+  const [qty, setQty] = useState(1);
 
   useEffect(() => {
     if (product) {
       setImageError(false);
       setAdded(false);
+      setQty(1);
     }
   }, [product?.model]);
 
@@ -40,7 +42,7 @@ export function SmartSystemsProductModal({ product, onClose }: SmartSystemsProdu
       name: product.model,
       brand: 'Akuvox',
       price: product.priceKzt,
-    }, 1);
+    }, qty);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
@@ -107,6 +109,14 @@ export function SmartSystemsProductModal({ product, onClose }: SmartSystemsProdu
                   <div className={styles.price}>
                     {Number(product.priceKzt).toLocaleString('ru-KZ')} ₸
                   </div>
+                  <div className={styles.qtyRow}>
+                    <span className={styles.qtyLabel}>Кол-во:</span>
+                    <div className={styles.qtyControl}>
+                      <button type="button" aria-label="Меньше" onClick={() => setQty((n) => Math.max(1, n - 1))}>−</button>
+                      <span className={styles.qtyNum}>{qty}</span>
+                      <button type="button" aria-label="Больше" onClick={() => setQty((n) => Math.min(99, n + 1))}>+</button>
+                    </div>
+                  </div>
                   <motion.button
                     className={`${styles.addButton} ${added ? styles.addButtonAdded : ''}`}
                     onClick={handleAddToCart}
@@ -115,7 +125,7 @@ export function SmartSystemsProductModal({ product, onClose }: SmartSystemsProdu
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    {added ? '✓ Добавлено' : 'В корзину'}
+                    {added ? '✓ Добавлено' : `В корзину (${qty})`}
                   </motion.button>
                   {product.descriptionRu && (
                     <div className={styles.descBlock}>

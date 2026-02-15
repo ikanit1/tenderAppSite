@@ -75,7 +75,7 @@ export function Logo3D() {
       className={styles.logo3d}
       initial={{ opacity: 0, scale: 0.8 }}
       whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true }}
+      viewport={{ once: true, amount: 0.05 }}
       transition={{ type: 'spring', stiffness: 300, damping: 25 }}
     >
       <Canvas

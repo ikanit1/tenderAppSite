@@ -24238,6 +24238,67 @@
         "https://complex.com.kz/image/cache/catalog/318423_2-360x360.png",
         "https://complex.com.kz/image/cache/catalog/318423_3-360x360.png"
       ]
+    },
+    {
+      "model": "NVR-508-64-E",
+      "name": "NVR-508-64-E Видеорегистратор IP 64-х канальный",
+      "price": 335000195200,
+      "descr": "",
+      "category": "",
+      "image": [
+        "https://complex.com.kz/image/catalog/catalog/447e366e-b4f7-4aa3-af12-641073791844.jpg",
+        "https://complex.com.kz/image/cache/catalog/447e366e-b4f7-4aa3-af12-641073791844-360x360.jpg"
+      ]
+    },
+    {
+      "model": "LWE-15U6X-DR",
+      "name": "ITK Дверь стеклянная для шкафа LINEA WE 15U 600мм",
+      "price": 18459,
+      "descr": "",
+      "category": "",
+      "image": [
+        "https://complex.com.kz/image/catalog/catalog/itk/a3d637f2a892739ef8f673925745988080b8de1dff3dca32c22eaf7e414f1b82.png",
+        "https://complex.com.kz/image/cache/catalog/itk/a3d637f2a892739ef8f673925745988080b8de1dff3dca32c22eaf7e414f1b82-360x360.png"
+      ]
+    },
+    {
+      "model": "TR-WE45-IN",
+      "name": "TR-WE45-IN настенный кронштейн",
+      "price": 95006300,
+      "descr": "",
+      "category": "",
+      "image": [
+        "https://complex.com.kz/image/catalog/catalog/Picture/Podrazmersajta/TR-WE45-IN1.jpg",
+        "https://complex.com.kz/image/catalog/catalog/Picture/Podrazmersajta/TR-WE45-IN_1.jpg",
+        "https://complex.com.kz/image/cache/catalog/Picture/Podrazmersajta/TR-WE45-IN1-360x360.jpg",
+        "https://complex.com.kz/image/cache/catalog/Picture/Podrazmersajta/TR-WE45-IN_1-360x360.jpg"
+      ]
+    },
+    {
+      "model": "IPC3534LB-ADZK-H",
+      "name": "IPC3534LB-ADZK-H купольная IP видеокамера",
+      "price": 6830040200,
+      "descr": "",
+      "category": "",
+      "image": [
+        "https://complex.com.kz/image/catalog/catalog/20210323_1789691_1_898728_140445_0.jpg",
+        "https://complex.com.kz/image/catalog/catalog/UNV/IPC3534LB-ADZK-H-(1).jpg",
+        "https://complex.com.kz/image/cache/catalog/20210323_1789691_1_898728_140445_0-360x360.jpg",
+        "https://complex.com.kz/image/cache/catalog/UNV/IPC3534LB-ADZK-H-(1)-360x360.jpg"
+      ]
+    },
+    {
+      "model": "IPC94144SR-X25-F40C",
+      "name": "IPC94144SR-X25-F40C Uniview PTZ IP видеокамера",
+      "price": 274275182850,
+      "descr": "",
+      "category": "",
+      "image": [
+        "https://complex.com.kz/image/catalog/catalog/20240416_1901473_3_9625413213124_600324_0.jpg",
+        "https://complex.com.kz/image/catalog/catalog/Picture/Podrazmersajta/IPC94144SR-X25-F40C1.jpg",
+        "https://complex.com.kz/image/cache/catalog/20240416_1901473_3_9625413213124_600324_0-360x360.jpg",
+        "https://complex.com.kz/image/cache/catalog/Picture/Podrazmersajta/IPC94144SR-X25-F40C1-360x360.jpg"
+      ]
     }
   ]
 }

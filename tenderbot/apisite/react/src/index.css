@@ -233,6 +233,13 @@ body::before {
     z-index: 2;
 }
 
+@media (max-width: 767px) {
+    .container {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+}
+
 /* Header */
 .header {
     background: rgba(10, 0, 31, 0.95);
@@ -1399,12 +1406,58 @@ body::before {
     justify-content: center;
 }
 
-/* Кнопка «В корзину» на карточке — прижата к низу блока, всегда видна */
+/* Выбор количества на карточке товара (.product-card) — не сжимать, всегда показывать */
+.product-card .product-qty-row.qty-row,
+.product-qty-row.qty-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  margin-top: 0.25rem;
+  flex-shrink: 0;
+}
+.product-info .product-qty-row.qty-row {
+  flex-shrink: 0;
+}
+.qty-row .qty-label {
+  font-size: 0.875rem;
+  color: var(--text-muted, rgba(255, 255, 255, 0.6));
+}
+.qty-row .qty-control {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.qty-row .qty-control button {
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: rgba(139, 92, 246, 0.2);
+  color: var(--text-color);
+  font-size: 1.125rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.qty-row .qty-control button:hover {
+  background: rgba(139, 92, 246, 0.4);
+}
+.qty-row .qty-num {
+  min-width: 2rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+/* Кнопка «В корзину» на карточке — прижата к низу блока, всегда видна, не сжимать */
 .product-info .btn-add-cart {
     width: 100%;
     margin-top: auto;
     margin-bottom: 0;
     padding: 0.65rem 1rem;
+    flex-shrink: 0;
     border: 1px solid var(--primary-color);
     border-radius: 8px;
     background: rgba(139, 92, 246, 0.25);
@@ -1821,12 +1874,14 @@ body::before {
     border-color: var(--primary-color);
 }
 
-.product-info {
+.product-card .product-info {
     padding: 1.5rem;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     min-height: 0;
+    /* Чтобы блок «Кол-во» и кнопка «В корзину» не обрезались в сетке */
+    min-height: 260px;
 }
 
 /* Фиксированная высота блока описания для выравнивания всех карточек */
@@ -2405,8 +2460,84 @@ body::before {
         padding: 0.5rem 1rem;
     }
 
+    /* Сетка 2×2: 4 товара видно без длинного скролла */
     .products-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .product-card {
+        border-radius: 12px;
+    }
+
+    .product-image {
+        height: 90px;
+    }
+
+    .product-card .product-info {
+        padding: 0.5rem 0.5rem 0.6rem;
+        min-height: auto;
+    }
+
+    .product-description-block {
+        min-height: 2.5rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .product-name {
+        font-size: 0.7rem;
+        line-height: 1.25;
+        min-height: 2.2em;
+        -webkit-line-clamp: 2;
+    }
+
+    .product-model {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.4rem;
+    }
+
+    .product-details {
+        padding-top: 0.4rem;
+        min-height: 2rem;
+    }
+
+    .price-client {
+        font-size: 0.8rem;
+    }
+
+    .quantity {
+        font-size: 0.65rem;
+        padding: 0.25rem 0.4rem;
+    }
+
+    .product-image .brand-badge {
+        top: 4px;
+        right: 4px;
+        padding: 0.2rem 0.4rem;
+        font-size: 0.6rem;
+    }
+
+    .product-card .product-qty-row.qty-row,
+    .product-qty-row .qty-label {
+        font-size: 0.65rem;
+    }
+
+    .product-qty-row .qty-control button {
+        width: 1.5rem;
+        height: 1.5rem;
+        font-size: 0.85rem;
+    }
+
+    .product-qty-row .qty-num {
+        min-width: 1.25rem;
+        font-size: 0.7rem;
+    }
+
+    .product-info .btn-add-cart {
+        padding: 0.4rem 0.5rem;
+        font-size: 0.65rem;
+        margin-top: 0.35rem;
     }
 
     .filter-row {
@@ -2993,6 +3124,242 @@ html {
     font-size: 1.05rem;
 }
 
+/* Checkout — адаптивность для мобильных */
+@media (max-width: 768px) {
+    .checkout-main {
+        padding: 1rem 0.75rem 3rem;
+    }
+
+    .breadcrumbs {
+        font-size: 0.8rem;
+        margin-bottom: 1rem;
+    }
+
+    .checkout-title {
+        font-size: 1.35rem;
+        margin-bottom: 1rem;
+    }
+
+    .checkout-empty {
+        padding: 2rem 1rem;
+    }
+
+    .checkout-empty p {
+        font-size: 0.9rem;
+    }
+
+    /* Блок таблицы — без скролла, карточки вместо таблицы */
+    .checkout-table-section {
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        border-radius: 12px;
+        overflow: visible;
+    }
+
+    .checkout-table {
+        display: block;
+        font-size: 0.85rem;
+    }
+
+    .checkout-table thead {
+        display: none;
+    }
+
+    .checkout-table tbody {
+        display: block;
+    }
+
+    .checkout-table tr.checkout-row {
+        display: block;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
+        background: rgba(15, 23, 42, 0.4);
+    }
+
+    .checkout-table tr.checkout-row:last-of-type {
+        margin-bottom: 0;
+    }
+
+    .checkout-table td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.4rem 0;
+        border: none;
+        gap: 0.5rem;
+    }
+
+    .checkout-table td[data-label]:not([data-label=""])::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        flex-shrink: 0;
+    }
+
+    .checkout-table td.checkout-cell-name {
+        padding-top: 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 0.35rem;
+    }
+
+    .checkout-table td.checkout-cell-name::before {
+        content: none;
+    }
+
+    .checkout-table td.checkout-cell-remove {
+        justify-content: flex-end;
+        padding-top: 0.5rem;
+        padding-bottom: 0;
+    }
+
+    .checkout-table td.checkout-cell-remove::before {
+        content: none;
+    }
+
+    .checkout-cell-name {
+        gap: 0.5rem;
+    }
+
+    .checkout-cell-name span {
+        flex: 1;
+        min-width: 0;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .checkout-cell-img {
+        width: 48px;
+        height: 36px;
+    }
+
+    .checkout-cell-model {
+        font-size: 0.8rem;
+    }
+
+    .checkout-cell-qty {
+        gap: 0.35rem;
+        justify-content: flex-end;
+    }
+
+    .checkout-qty-btn {
+        width: 1.75rem;
+        height: 1.75rem;
+        font-size: 0.9rem;
+    }
+
+    .checkout-qty-num {
+        min-width: 1.25rem;
+        font-size: 0.85rem;
+    }
+
+    .checkout-cell-price,
+    .checkout-cell-total {
+        font-size: 0.85rem;
+    }
+
+    .checkout-cell-total {
+        font-weight: 600;
+    }
+
+    .checkout-remove {
+        width: 1.75rem;
+        height: 1.75rem;
+        font-size: 1.1rem;
+    }
+
+    .checkout-total-row {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    .checkout-total-row strong {
+        font-size: 1.1rem;
+    }
+
+    .checkout-vat {
+        font-size: 0.75rem;
+    }
+
+    .checkout-form-grid {
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .checkout-card {
+        padding: 1rem;
+        border-radius: 12px;
+    }
+
+    .checkout-card h3 {
+        font-size: 0.95rem;
+    }
+
+    .checkout-section-title {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .checkout-icon {
+        width: 2rem;
+        height: 2rem;
+        font-size: 1.25rem;
+    }
+
+    .checkout-radios {
+        gap: 0.5rem;
+    }
+
+    .checkout-radio {
+        font-size: 0.9rem;
+    }
+
+    .checkout-radio input {
+        width: 1.1rem;
+        height: 1.1rem;
+    }
+
+    .checkout-installation-warranty {
+        font-size: 0.8rem;
+        padding: 0.6rem 0.75rem;
+    }
+
+    .checkout-form-row {
+        gap: 0.75rem;
+    }
+
+    .checkout-label {
+        font-size: 0.85rem;
+    }
+
+    .checkout-input {
+        padding: 0.6rem 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    .checkout-textarea {
+        padding: 0.75rem;
+        min-height: 80px;
+        font-size: 0.9rem;
+    }
+
+    .checkout-actions {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .checkout-actions .btn-lg,
+    .checkout-actions .btn-action {
+        width: 100%;
+        justify-content: center;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+    }
+}
 
 /* Admin styles */
 .admin-container {
@@ -3391,7 +3758,9 @@ html {
   font-weight: bold;
 }
 
-.product-info {
+/* Общий блок описания (чекаут и т.д.) — не трогать карточки каталога */
+.product-detail .product-info,
+.checkout .product-info {
   margin-top: 20px;
   padding: 20px;
   background: rgba(10, 0, 31, 0.6);

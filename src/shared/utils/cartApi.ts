@@ -28,18 +28,29 @@ export async function getCartFromAPI(): Promise<CartItem[]> {
   }
 }
 
+function normalizeCartItems(items: CartItem[]): CartItem[] {
+  return items.map((item) => ({
+    model: String(item.model ?? '').trim(),
+    name: item.name != null ? String(item.name).trim() : undefined,
+    brand: item.brand != null ? String(item.brand).trim() : undefined,
+    price: item.price != null && !isNaN(Number(item.price)) ? Number(item.price) : null,
+    quantity: Math.max(1, Math.floor(Number(item.quantity) || 1)),
+  })).filter((item) => item.model.length > 0);
+}
+
 /**
  * Сохраняет корзину на сервер
  */
 export async function saveCartToAPI(items: CartItem[]): Promise<boolean> {
   try {
+    const normalized = normalizeCartItems(items);
     const response = await fetch(`${API_BASE_URL}/api/cart`, {
       method: 'POST',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ items }),
+      body: JSON.stringify({ items: normalized }),
     });
 
     if (!response.ok) {

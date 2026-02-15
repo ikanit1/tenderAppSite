@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { getCartFromAPI, saveCartToAPI, addItemToAPI, removeItemFromAPI, clearCartAPI } from '@/shared/utils/cartApi';
+import { getCartCookie, setCartCookie } from '@/shared/utils/cartCookie';
 
-const CART_KEY = 'b2b_cart';
 const CART_UPDATE_EVENT = 'cart-updated';
 const SYNC_INTERVAL_MS = 5000; // 5 секунд
 
@@ -21,6 +21,8 @@ interface CartContextType {
   updateQuantity: (model: string, quantity: number) => void;
   updateQty: (model: string, delta: number) => void; // For compatibility with catalog
   clearCart: () => void;
+  refreshCart: () => Promise<void>;
+  saveCartNow: (itemsToSave?: CartItem[]) => Promise<void>;
   getCartModels: () => string[];
   totalCount: number;
   totalSum: number;
@@ -28,71 +30,53 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | null>(null);
 
-const loadCartFromStorage = (): CartItem[] => {
-  try {
-    const raw = localStorage.getItem(CART_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    // Ensure all items have required fields
-    return Array.isArray(parsed) ? parsed.map((item: any) => ({
-      model: String(item.model || '').trim(),
-      name: item.name ? String(item.name).trim() : undefined,
-      brand: item.brand ? String(item.brand).trim() : undefined,
-      price: item.price != null && !isNaN(item.price) && Number(item.price) > 0 ? Number(item.price) : null,
-      quantity: item.quantity && !isNaN(item.quantity) ? Math.max(1, Number(item.quantity)) : 1,
-    })) : [];
-  } catch {
-    return [];
-  }
-};
+/** Загрузка корзины из cookie (единственный клиентский источник) */
+function loadCartFromCookie(): CartItem[] {
+  const cookieCart = getCartCookie();
+  if (!cookieCart?.length) return [];
+  return cookieCart.map((item) => ({
+    model: String(item.model || '').trim(),
+    name: item.name != null ? String(item.name).trim() : undefined,
+    brand: item.brand != null ? String(item.brand).trim() : undefined,
+    price: item.price != null && !isNaN(Number(item.price)) ? Number(item.price) : null,
+    quantity: Math.max(1, Math.floor(Number(item.quantity) || 1)),
+  })).filter((item) => item.model.length > 0);
+}
+
+/** Начальное состояние: только из cookie */
+function getInitialCart(): CartItem[] {
+  return loadCartFromCookie();
+}
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>(loadCartFromStorage);
+  const [items, setItems] = useState<CartItem[]>(getInitialCart);
   const lastCartStrRef = useRef('');
   const isSyncingRef = useRef(false);
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Функция для синхронизации корзины с API
+  // Синхронизация с API — общая корзина для localhost:5173/smart-systems и localhost:8001
   const syncCartWithAPI = useCallback(async () => {
     if (isSyncingRef.current) return;
-    
     try {
       isSyncingRef.current = true;
       const apiCart = await getCartFromAPI();
-      
-      if (apiCart.length > 0) {
-        // Объединяем локальную и API корзину
-        // Приоритет у API корзины, но сохраняем локальные товары, которых нет в API
-        const localCart = loadCartFromStorage();
-        const mergedCart: CartItem[] = [];
-        const seenModels = new Set<string>();
-        
-        // Сначала добавляем товары из API
-        for (const apiItem of apiCart) {
-          mergedCart.push(apiItem);
-          seenModels.add(apiItem.model.trim().toLowerCase());
+      const seenModels = new Set(apiCart.map((i) => i.model.trim().toLowerCase()));
+      const mergedCart = [...apiCart];
+      // Подмешиваем позиции из cookie, которых ещё нет в API
+      for (const localItem of loadCartFromCookie()) {
+        const key = (localItem.model || '').trim().toLowerCase();
+        if (!seenModels.has(key)) {
+          mergedCart.push(localItem);
+          seenModels.add(key);
         }
-        
-        // Затем добавляем локальные товары, которых нет в API
-        for (const localItem of localCart) {
-          const modelKey = localItem.model.trim().toLowerCase();
-          if (!seenModels.has(modelKey)) {
-            mergedCart.push(localItem);
-            seenModels.add(modelKey);
-          }
-        }
-        
-        // Обновляем состояние только если есть изменения
-        const mergedStr = JSON.stringify(mergedCart);
-        if (lastCartStrRef.current !== mergedStr) {
-          setItems(mergedCart);
-          localStorage.setItem(CART_KEY, mergedStr);
-          lastCartStrRef.current = mergedStr;
-        }
+      }
+      const mergedStr = JSON.stringify(mergedCart);
+      if (lastCartStrRef.current !== mergedStr) {
+        setItems(mergedCart);
+        lastCartStrRef.current = mergedStr;
       }
     } catch (error) {
       console.error('Error syncing cart with API:', error);
-      // Fallback на localStorage при ошибке
     } finally {
       isSyncingRef.current = false;
     }
@@ -103,7 +87,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (syncTimeoutRef.current) {
       clearTimeout(syncTimeoutRef.current);
     }
-    
     syncTimeoutRef.current = setTimeout(async () => {
       try {
         await saveCartToAPI(cartItems);
@@ -112,6 +95,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
     }, 300); // Debounce 300ms
   }, []);
+
+  // Сохранить корзину в API сразу (перед переходом на Checkout); можно передать актуальный список
+  const saveCartNow = useCallback(async (itemsToSave?: CartItem[]) => {
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
+      syncTimeoutRef.current = null;
+    }
+    const payload = itemsToSave ?? items;
+    const ok = await saveCartToAPI(payload);
+    if (!ok) throw new Error('Failed to save cart to API');
+  }, [items]);
 
   // Загрузка корзины с API при монтировании
   useEffect(() => {
@@ -137,19 +131,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
   }, [syncCartWithAPI]);
 
-  // Save to localStorage and API on changes
+  // Save to API и cookie (domain=localhost для 5173/8001)
   useEffect(() => {
     const cartStr = JSON.stringify(items);
     if (lastCartStrRef.current !== cartStr) {
-      localStorage.setItem(CART_KEY, cartStr);
       lastCartStrRef.current = cartStr;
       window.dispatchEvent(new CustomEvent(CART_UPDATE_EVENT, { detail: items }));
-      // Сохраняем в API
       saveCartToAPIDebounced(items);
+      setCartCookie(items);
     }
   }, [items, saveCartToAPIDebounced]);
 
-  // Listen for storage events (cross-tab sync) and custom events
+  // Слушаем кастомное событие обновления корзины (синхронизация внутри приложения)
   useEffect(() => {
     const handleCartUpdate = (e: CustomEvent) => {
       const newCart = e.detail as CartItem[];
@@ -162,28 +155,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       });
     };
 
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === CART_KEY && e.newValue) {
-        try {
-          const newCart = JSON.parse(e.newValue) as CartItem[];
-          setItems((prev) => {
-            const str = JSON.stringify(newCart);
-            if (lastCartStrRef.current === str) return prev;
-            lastCartStrRef.current = str;
-            return newCart;
-          });
-        } catch {
-          // Ignore parse errors
-        }
-      }
-    };
-
     window.addEventListener(CART_UPDATE_EVENT, handleCartUpdate as EventListener);
-    window.addEventListener('storage', handleStorageChange);
 
     return () => {
       window.removeEventListener(CART_UPDATE_EVENT, handleCartUpdate as EventListener);
-      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
@@ -233,11 +208,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return [...prev, newItem];
     });
 
-    // Сохраняем в API сразу
-    addItemToAPI(newItem, quantity).catch((error) => {
-      console.error('Error adding item to API:', error);
-    });
-  }, []);
+    // Сохраняем в API сразу, после успеха синхронизируем с сервером
+    addItemToAPI(newItem, quantity)
+      .then((ok) => {
+        if (ok) void syncCartWithAPI();
+      })
+      .catch((error) => {
+        console.error('Error adding item to API:', error);
+      });
+  }, [syncCartWithAPI]);
 
   const removeFromCart = useCallback((model: string) => {
     setItems((prev) => prev.filter((item) => item.model.trim() !== model.trim()));
@@ -295,6 +274,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         updateQuantity,
         updateQty,
         clearCart,
+        refreshCart: syncCartWithAPI,
+        saveCartNow,
         getCartModels,
         totalCount,
         totalSum,

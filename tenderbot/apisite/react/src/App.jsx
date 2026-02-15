@@ -15,14 +15,17 @@ function PageFallback() {
   );
 }
 
-// Базовый путь для роутера (для работы под префиксом /catalog/)
-// В dev режиме пусто, в production будет /catalog
-// Если VITE_BASE_PATH не задан, используем пустую строку (для dev режима)
-const basename = import.meta.env.VITE_BASE_PATH || '';
+// Базовый путь: если открыто по корню (localhost:8001/), basename пустой;
+// если по префикту (grgroup.kz/catalog/), используем VITE_BASE_PATH
+function getBasename() {
+  const envBase = import.meta.env.VITE_BASE_PATH || '';
+  if (!envBase) return '';
+  return window.location.pathname.startsWith(envBase) ? envBase : '';
+}
 
 function App() {
   return (
-    <Router basename={basename}>
+    <Router basename={getBasename()}>
       <Layout>
         <Suspense fallback={<PageFallback />}>
           <Routes>

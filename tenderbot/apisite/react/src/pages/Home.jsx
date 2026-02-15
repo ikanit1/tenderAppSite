@@ -158,7 +158,9 @@ export default function Home() {
     <>
       <Background />
       <Header onCartToggle={onCartToggle} />
-      <SmartMarquee products={products} onProductClick={handleCardClick} />
+      <div className="container">
+        <SmartMarquee products={products} onProductClick={handleCardClick} />
+      </div>
       <FloatingActionsBar onCartToggle={onCartToggle} />
       
       <div className="container">

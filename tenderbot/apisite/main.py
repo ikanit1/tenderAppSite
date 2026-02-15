@@ -13,6 +13,7 @@ from config import (
     UPDATE_INTERVAL_MINUTES, IMAGE_PARSER_ENABLED, IMAGE_PARSER_MAX_PAGES, IMAGE_PARSER_STARTUP_DELAY,
     OPENAI_API_KEY, OPENAI_MODEL, OPENROUTER_API_KEY, OPENROUTER_MODEL,
     CORS_ORIGINS,
+    ADMIN_EMAIL, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_USE_TLS,
 )
 import json
 import time
@@ -51,6 +52,9 @@ _react_build_error: Optional[str] = None
 # Портал: категории и картинки из portal_export/items.json
 PORTAL_ITEMS_JSON = Path(__file__).parent / "portal_export" / "items.json"
 PORTAL_EXPORT_DIR = Path(__file__).parent / "portal_export"
+
+# Папка Akuvox в корне проекта (public/akuvox) — для checkout и каталога
+_PUBLIC_AKUVOX_DIR = Path(__file__).resolve().parent.parent.parent / "public" / "akuvox"
 
 # Кэш: clean_id → имя папки в portal_export (для сопоставления без учёта /, -, _ и т.д.)
 _clean_id_to_portal_folder: dict = {}
@@ -201,8 +205,8 @@ def get_or_create_session_id(request: Request, response: Response) -> str:
             value=session_id,
             max_age=30 * 24 * 60 * 60,  # 30 дней
             httponly=False,  # Нужен доступ из JavaScript
-            samesite="lax",  # Для работы с cross-origin запросами
-            secure=False  # Для dev (localhost), в production должно быть True
+            samesite="none",  # Чтобы cookie отправлялась при cross-origin (5173 -> 8001)
+            secure=True,  # Обязательно для SameSite=None; на localhost браузеры считают secure
         )
     return session_id
 
@@ -1184,6 +1188,111 @@ class AddItemRequest(BaseModel):
     quantity: int = 1
 
 
+class CheckoutDelivery(BaseModel):
+    type: str = ""
+    address: str = ""
+    phone: str = ""
+
+
+class CheckoutSubmitRequest(BaseModel):
+    items: list[CartItem]
+    installation: str = "none"
+    delivery: CheckoutDelivery = CheckoutDelivery()
+    payment: str = ""
+    comment: str = ""
+    total: Optional[float] = None
+    date: str = ""
+
+
+def _send_order_email_sync(to_email: str, subject: str, body: str) -> None:
+    """Синхронная отправка письма через SMTP. Вызывать из run_in_executor."""
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.utils import formatdate
+
+    msg = MIMEText(body, "plain", "utf-8")
+    msg["Subject"] = subject
+    msg["From"] = SMTP_USER or to_email
+    msg["To"] = to_email
+    msg["Date"] = formatdate(localtime=True)
+
+    if SMTP_USE_TLS:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls()
+            if SMTP_USER and SMTP_PASSWORD:
+                server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(msg["From"], [to_email], msg.as_string())
+    else:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            if SMTP_USER and SMTP_PASSWORD:
+                server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(msg["From"], [to_email], msg.as_string())
+
+
+@app.post("/api/checkout/submit")
+async def checkout_submit(payload: CheckoutSubmitRequest):
+    """Принимает данные заказа и отправляет их на email админа."""
+    if not ADMIN_EMAIL:
+        logger.warning("Checkout submit: ADMIN_EMAIL не задан, отправка заказов отключена")
+        raise HTTPException(
+            status_code=503,
+            detail="Отправка заказов не настроена. Обратитесь к администратору.",
+        )
+
+    # Формируем текст письма
+    lines = [
+        "Новый заказ с сайта",
+        "=" * 40,
+        f"Дата: {payload.date or '—'}",
+        "",
+        "Состав заказа:",
+        "-" * 40,
+    ]
+    for item in payload.items:
+        name = (item.name or item.model or "—").strip()
+        price_str = f"{item.price:.0f} ₸" if item.price is not None else "по запросу"
+        line_total = ""
+        if item.price is not None and item.quantity:
+            line_total = f" = {item.price * item.quantity:.0f} ₸"
+        lines.append(f"  • {item.model} — {name}, кол-во: {item.quantity}, цена: {price_str}{line_total}")
+    lines.extend([
+        "",
+        "Доставка:",
+        "-" * 40,
+        f"  Способ: {payload.delivery.type or '—'}",
+        f"  Адрес: {payload.delivery.address or '—'}",
+        f"  Телефон: {payload.delivery.phone or '—'}",
+        "",
+        f"Оплата: {payload.payment or '—'}",
+        f"Монтаж: {payload.installation or '—'}",
+        "",
+        f"Итого: {payload.total:.0f} ₸" if payload.total is not None else "Итого: —",
+        "",
+    ])
+    if payload.comment and payload.comment.strip():
+        lines.extend(["Комментарий:", payload.comment.strip(), ""])
+    body = "\n".join(lines)
+    subject = "Новый заказ с сайта"
+
+    try:
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(
+            None,
+            _send_order_email_sync,
+            ADMIN_EMAIL,
+            subject,
+            body,
+        )
+    except Exception as e:
+        logger.exception("Ошибка отправки заказа на email (SMTP)")
+        raise HTTPException(
+            status_code=500,
+            detail="Не удалось отправить заказ. Попробуйте позже.",
+        )
+
+    return JSONResponse(content={"ok": True})
+
+
 @app.get("/api/cart")
 async def get_cart(request: Request, response: Response):
     """Получает корзину пользователя"""
@@ -1835,7 +1944,8 @@ async def get_product_image(
 ):
     """
     Получает изображение товара (index=0,1,2... — номер картинки из portal_export).
-    Приоритет: portal_export/{model}/ → images/{model}/ → сайт → placeholder.
+    Приоритет: portal_export → public/akuvox → images/ → сайт → placeholder.
+    Товар может отсутствовать в каталоге (например, из корзины smart-systems) — тогда ищем только по model.
     """
     from urllib.parse import unquote
 
@@ -1843,10 +1953,8 @@ async def get_product_image(
     image_index = index if index is not None and index >= 0 else 0
     products = cached_data.get("products", [])
     product = _find_product_by_model(products, model_decoded)
-    if not product:
-        raise HTTPException(status_code=404, detail="Товар не найден")
-    model = product.get("model", model_decoded)
-    brand = product.get('brand', '')
+    model = product.get("model", model_decoded) if product else model_decoded
+    brand = (product.get("brand") or "") if product else ""
     
     # 1. portal_export: по model_to_foldername и по clean_id
     portal_dir = _portal_folder_for_model(model)
@@ -1872,6 +1980,59 @@ async def get_product_image(
                 )
             except Exception as e:
                 logger.warning("Ошибка чтения portal_export изображения %s: %s", image_file, e)
+
+    # 1.5. Папка public/akuvox в корне проекта (для checkout и Akuvox-товаров)
+    if _PUBLIC_AKUVOX_DIR.exists() and _PUBLIC_AKUVOX_DIR.is_dir():
+        model_variants_akuvox = _folder_candidates_for_model(model) + [model.replace("/", "_"), model.replace("/", "-"), model]
+        for variant in model_variants_akuvox:
+            if not variant:
+                continue
+            # Файл по имени модели: MODEL.jpg, MODEL.png и т.д.
+            for ext in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
+                candidate = _PUBLIC_AKUVOX_DIR / f"{variant}{ext}"
+                if candidate.is_file():
+                    try:
+                        content_type_map = {
+                            ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+                            ".png": "image/png", ".webp": "image/webp", ".gif": "image/gif",
+                        }
+                        content_type = content_type_map.get(ext.lower(), "image/jpeg")
+                        safe = model_decoded.encode("ascii", "ignore").decode("ascii") or "product"
+                        return FileResponse(
+                            path=str(candidate),
+                            media_type=content_type,
+                            headers={
+                                "Cache-Control": "public, max-age=3600",
+                                "Content-Disposition": f'inline; filename="{safe}{ext}"',
+                            },
+                        )
+                    except Exception as e:
+                        logger.warning("Ошибка чтения public/akuvox изображения %s: %s", candidate, e)
+                    break
+            # Подпапка по модели с image_* или любым изображением
+            subdir = _PUBLIC_AKUVOX_DIR / variant
+            if subdir.is_dir():
+                image_files = sorted(subdir.glob("image_*.*")) or list(subdir.glob("*.*"))
+                image_files = [f for f in image_files if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp", ".gif")]
+                if image_files and image_index < len(image_files):
+                    image_file = image_files[image_index]
+                    try:
+                        content_type_map = {
+                            ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+                            ".png": "image/png", ".webp": "image/webp", ".gif": "image/gif",
+                        }
+                        content_type = content_type_map.get(image_file.suffix.lower(), "image/jpeg")
+                        safe = model_decoded.encode("ascii", "ignore").decode("ascii") or "product"
+                        return FileResponse(
+                            path=str(image_file),
+                            media_type=content_type,
+                            headers={
+                                "Cache-Control": "public, max-age=3600",
+                                "Content-Disposition": f'inline; filename="{safe}{image_file.suffix}"',
+                            },
+                        )
+                    except Exception as e:
+                        logger.warning("Ошибка чтения public/akuvox подпапки %s: %s", image_file, e)
 
     # 2. Локальные изображения из парсера (images/{model}/)
     model_variants = [model_to_foldername(model), model.replace("/", "_"), model.replace("/", "-"), model]

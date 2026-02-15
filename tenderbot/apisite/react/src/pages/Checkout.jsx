@@ -4,9 +4,10 @@ import { motion } from 'framer-motion';
 import Background from '../components/Background';
 import Header from '../components/Header';
 import { useCart } from '../hooks/useCart';
+import { saveCartToAPI } from '../utils/cartApi';
 
 export default function Checkout() {
-  const { cart, removeFromCart, updateQty, clearCart, totalSum, syncCart, addToCart } = useCart();
+  const { cart, removeFromCart, updateQty, clearCart, totalSum, syncCart, setCartFromExternal } = useCart();
   const navigate = useNavigate();
   const [delivery, setDelivery] = useState('transport');
   const [payment, setPayment] = useState('cash');
@@ -17,8 +18,9 @@ export default function Checkout() {
   const [room, setRoom] = useState('');
   const [phone, setPhone] = useState('');
   const [comment, setComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  // Синхронизация корзины из localStorage и API при монтировании компонента
+  // Синхронизация корзины из cookie и API при монтировании компонента
   useEffect(() => {
     syncCart();
   }, [syncCart]);
@@ -41,41 +43,37 @@ export default function Checkout() {
     };
   }, [syncCart]);
 
-  // Чтение корзины из URL параметров (при переходе с основного сайта)
+  // Fallback: корзина из URL (старые ссылки) — заменяем корзину, сохраняем в API, очищаем URL (один раз при монтировании)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const cartParam = params.get('cart');
-    
-    if (cartParam) {
+    if (!cartParam) return;
+    let mounted = true;
+    (async () => {
       try {
-        // Декодируем base64 строку в массив товаров
         const decodedCart = JSON.parse(decodeURIComponent(atob(cartParam)));
-        
-        if (Array.isArray(decodedCart) && decodedCart.length > 0) {
-          // Добавляем товары в корзину
-          // useCart.addToCart ожидает final_price, но также может использовать price
-          decodedCart.forEach(item => {
-            if (item.model) {
-              addToCart({
-                model: item.model,
-                name: item.name,
-                brand: item.brand,
-                final_price: item.price != null ? item.price : undefined,
-                price: item.price, // для совместимости
-              }, item.quantity || 1);
-            }
-          });
-          
-          // Очищаем URL параметр после обработки
+        if (!Array.isArray(decodedCart) || decodedCart.length === 0) {
           window.history.replaceState({}, '', window.location.pathname);
+          return;
         }
+        const normalized = decodedCart.map((item) => ({
+          model: String(item.model || '').trim(),
+          name: (item.name || '').trim() || String(item.model || '').trim(),
+          brand: (item.brand || '').trim() || '',
+          price: item.price != null && !isNaN(item.price) ? Number(item.price) : (item.final_price != null && !isNaN(item.final_price) ? Number(item.final_price) : null),
+          quantity: item.quantity != null && !isNaN(item.quantity) ? Math.max(1, Number(item.quantity)) : 1,
+        })).filter((item) => item.model);
+        await saveCartToAPI(normalized);
+        if (mounted) setCartFromExternal(normalized);
+        window.history.replaceState({}, '', window.location.pathname);
       } catch (error) {
         console.error('Failed to parse cart from URL', error);
-        // Очищаем URL даже при ошибке
         window.history.replaceState({}, '', window.location.pathname);
       }
-    }
-  }, [addToCart]);
+    })();
+    return () => { mounted = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (cart.length === 0) {
@@ -109,7 +107,7 @@ export default function Checkout() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (cart.length === 0) return;
 
     let address = '';
@@ -141,8 +139,14 @@ export default function Checkout() {
     }
 
     const orderData = {
-      items: cart,
-      installation: installation, // 'none' | 'professional'
+      items: cart.map((i) => ({
+        model: i.model,
+        name: i.name ?? '',
+        brand: i.brand ?? '',
+        quantity: i.quantity ?? 1,
+        price: i.price != null ? i.price : i.final_price ?? null,
+      })),
+      installation: installation,
       delivery: {
         type: delivery,
         address,
@@ -154,9 +158,31 @@ export default function Checkout() {
       date: new Date().toISOString(),
     };
 
-    alert(`Заказ принят в обработку. Сумма: ${formatPrice(totalSum)} ₸`);
-    clearCart();
-    navigate('/');
+    setSubmitting(true);
+    try {
+      const response = await fetch('/api/checkout/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(orderData),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        let message = data.detail || data.message || 'Не удалось отправить заказ. Попробуйте позже.';
+        if (Array.isArray(message)) {
+          message = message.map((e) => e.msg || e.message || String(e)).join(' ');
+        }
+        alert(message);
+        return;
+      }
+      alert(`Заказ принят в обработку. Сумма: ${formatPrice(totalSum)} ₸`);
+      clearCart();
+      navigate('/');
+    } catch (err) {
+      alert('Не удалось отправить заказ. Попробуйте позже.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (cart.length === 0) {
@@ -219,7 +245,7 @@ export default function Checkout() {
                   const lineTotal = item.price != null ? formatPrice((item.price || 0) * (item.quantity || 1)) + ' ₸' : '—';
                   return (
                     <tr key={item.model} className="checkout-row">
-                      <td className="checkout-cell-name">
+                      <td className="checkout-cell-name" data-label="">
                         <div className="checkout-cell-img">
                           <img src={imageUrl(item.model)} alt="" loading="lazy" onError={(e) => {
                             e.target.onerror = null;
@@ -228,15 +254,15 @@ export default function Checkout() {
                         </div>
                         <span>{item.name}</span>
                       </td>
-                      <td className="checkout-cell-model">{item.model}</td>
-                      <td className="checkout-cell-qty">
+                      <td className="checkout-cell-model" data-label="Модель">{item.model}</td>
+                      <td className="checkout-cell-qty" data-label="Кол-во">
                         <button type="button" className="checkout-qty-btn" onClick={() => updateQty(item.model, -1)}>−</button>
                         <span className="checkout-qty-num">{item.quantity || 1}</span>
                         <button type="button" className="checkout-qty-btn" onClick={() => updateQty(item.model, 1)}>+</button>
                       </td>
-                      <td className="checkout-cell-price">{priceLabel}</td>
-                      <td className="checkout-cell-total">{lineTotal}</td>
-                      <td>
+                      <td className="checkout-cell-price" data-label="Цена">{priceLabel}</td>
+                      <td className="checkout-cell-total" data-label="Всего">{lineTotal}</td>
+                      <td className="checkout-cell-remove" data-label="">
                         <button type="button" className="checkout-remove" onClick={() => removeFromCart(item.model)} title="Удалить">×</button>
                       </td>
                     </tr>
@@ -387,8 +413,14 @@ export default function Checkout() {
             className="checkout-actions"
             variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }}
           >
-            <button type="button" className="btn-action btn-success btn-large" id="checkoutSubmit" onClick={handleSubmit}>
-              Оформить заказ
+            <button
+              type="button"
+              className="btn-action btn-success btn-large"
+              id="checkoutSubmit"
+              onClick={handleSubmit}
+              disabled={submitting}
+            >
+              {submitting ? 'Отправка…' : 'Оформить заказ'}
             </button>
             <Link to="/" className="btn-action btn-secondary">
               Отмена
