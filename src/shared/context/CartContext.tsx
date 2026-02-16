@@ -49,8 +49,10 @@ function getInitialCart(): CartItem[] {
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>(getInitialCart);
-  const lastCartStrRef = useRef('');
+  const initialCart = getInitialCart();
+  const [items, setItems] = useState<CartItem[]>(initialCart);
+  // Important: initialize to avoid saving empty cart before first API sync.
+  const lastCartStrRef = useRef(JSON.stringify(initialCart));
   const isSyncingRef = useRef(false);
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 

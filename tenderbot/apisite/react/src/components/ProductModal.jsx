@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useCart } from '../hooks/useCart';
 import { generateImageUrl, generateAlternativeImageUrls } from '../utils/imageUrl';
+import { withBaseUrl } from '../utils/baseUrl';
 
 const modalTransition = { type: 'tween', duration: 0.25, ease: [0.25, 0.1, 0.25, 1] };
 const detailVariants = {
@@ -46,7 +47,7 @@ export default function ProductModal({ isOpen, model, onClose }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/products/${encodeURIComponent(model)}/detail`);
+      const response = await fetch(withBaseUrl(`/api/products/${encodeURIComponent(model)}/detail`));
       if (!response.ok) throw new Error('Товар не найден');
       const data = await response.json();
       setProduct(data);
@@ -103,13 +104,13 @@ export default function ProductModal({ isOpen, model, onClose }) {
                 <div className="product-detail-main">
                   {product.images && product.images.length > 0 ? (
                     <img 
-                      src={product.images[selectedImageIndex] || product.images[0]} 
+                      src={withBaseUrl(product.images[selectedImageIndex] || product.images[0])} 
                       alt={product.name}
                       id="productDetailMainImg"
                     />
                   ) : (
                     <img 
-                      src={generateImageUrl(product) || `/api/products/${encodeURIComponent(String(product.model || '').trim())}/image`}
+                      src={generateImageUrl(product) || withBaseUrl(`/api/products/${encodeURIComponent(String(product.model || '').trim())}/image`)}
                       alt={product.name}
                       id="productDetailMainImg"
                       onError={(e) => {
@@ -155,7 +156,7 @@ export default function ProductModal({ isOpen, model, onClose }) {
                         className={`product-detail-thumb ${i === selectedImageIndex ? 'active' : ''}`}
                         onClick={() => setSelectedImageIndex(i)}
                       >
-                        <img src={url} alt="" loading="lazy" />
+                        <img src={withBaseUrl(url)} alt="" loading="lazy" />
                       </button>
                     ))}
                   </div>

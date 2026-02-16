@@ -1,11 +1,11 @@
-const API_BASE_URL = ''; // Используем относительный путь, так как мы на том же домене
+import { withBaseUrl } from './baseUrl';
 
 /**
  * Получает корзину с сервера
  */
 export async function getCartFromAPI() {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/cart`, {
+    const response = await fetch(withBaseUrl('/api/cart'), {
       method: 'GET',
       credentials: 'include', // Важно для отправки cookies
       headers: {
@@ -30,7 +30,7 @@ export async function getCartFromAPI() {
  */
 export async function saveCartToAPI(items) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/cart`, {
+    const response = await fetch(withBaseUrl('/api/cart'), {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -55,7 +55,7 @@ export async function saveCartToAPI(items) {
  */
 export async function addItemToAPI(item, quantity = 1) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/cart/items`, {
+    const response = await fetch(withBaseUrl('/api/cart/items'), {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -89,7 +89,7 @@ export async function addItemToAPI(item, quantity = 1) {
 export async function removeItemFromAPI(model) {
   try {
     const encodedModel = encodeURIComponent(model);
-    const response = await fetch(`${API_BASE_URL}/api/cart/items/${encodedModel}`, {
+    const response = await fetch(withBaseUrl(`/api/cart/items/${encodedModel}`), {
       method: 'DELETE',
       credentials: 'include',
       headers: {
@@ -113,7 +113,7 @@ export async function removeItemFromAPI(model) {
  */
 export async function clearCartAPI() {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/cart`, {
+    const response = await fetch(withBaseUrl('/api/cart'), {
       method: 'DELETE',
       credentials: 'include',
       headers: {

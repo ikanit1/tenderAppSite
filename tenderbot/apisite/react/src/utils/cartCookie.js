@@ -1,6 +1,22 @@
 const CART_COOKIE_NAME = 'b2b_cart_data';
 const MAX_COOKIE_LENGTH = 3000;
-const COOKIE_OPTS = 'path=/; domain=localhost; max-age=604800; SameSite=Lax';
+
+function getCookieOpts() {
+  const maxAge = 'max-age=604800'; // 7 days
+  const sameSite = 'SameSite=Lax';
+  const path = 'path=/';
+
+  if (typeof window === 'undefined') {
+    return `${path}; ${maxAge}; ${sameSite}`;
+  }
+
+  const host = window.location.hostname;
+  const isLocal = host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0';
+  const domainPart = isLocal ? 'domain=localhost; ' : '';
+  const securePart = window.location.protocol === 'https:' ? 'Secure; ' : '';
+
+  return `${path}; ${domainPart}${maxAge}; ${sameSite}; ${securePart}`.trim();
+}
 
 function getCookie(name) {
   if (typeof document === 'undefined') return null;
@@ -10,7 +26,7 @@ function getCookie(name) {
 
 function setCookie(name, value) {
   if (typeof document === 'undefined') return;
-  document.cookie = `${name}=${encodeURIComponent(value)}; ${COOKIE_OPTS}`;
+  document.cookie = `${name}=${encodeURIComponent(value)}; ${getCookieOpts()}`;
 }
 
 /**

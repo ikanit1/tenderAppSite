@@ -7,5 +7,16 @@ export function getCatalogUrl(): string {
   if (typeof envUrl === 'string' && envUrl.trim()) {
     return envUrl.trim();
   }
+
+  // Safe production fallback: same host, proxied by Nginx.
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    const isLocal =
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host === '0.0.0.0';
+    if (!isLocal) return '/catalog';
+  }
+
   return 'http://localhost:8001';
 }

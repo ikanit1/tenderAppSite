@@ -5,6 +5,7 @@ import Background from '../components/Background';
 import Header from '../components/Header';
 import { useCart } from '../hooks/useCart';
 import { saveCartToAPI } from '../utils/cartApi';
+import { withBaseUrl } from '../utils/baseUrl';
 
 export default function Checkout() {
   const { cart, removeFromCart, updateQty, clearCart, totalSum, syncCart, setCartFromExternal } = useCart();
@@ -87,7 +88,7 @@ export default function Checkout() {
   };
 
   const imageUrl = (model) => {
-    return model ? `/api/products/${encodeURIComponent(model)}/image` : '';
+    return model ? withBaseUrl(`/api/products/${encodeURIComponent(model)}/image`) : '';
   };
 
   const showAddressFields = delivery !== 'pickup1' && delivery !== 'pickup3';
@@ -160,7 +161,7 @@ export default function Checkout() {
 
     setSubmitting(true);
     try {
-      const response = await fetch('/api/checkout/submit', {
+      const response = await fetch(withBaseUrl('/api/checkout/submit'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

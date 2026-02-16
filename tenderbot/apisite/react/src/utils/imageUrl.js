@@ -3,6 +3,8 @@
  * Обеспечивает корректное кодирование моделей с кириллицей, скобками, пробелами и другими символами
  */
 
+import { withBaseUrl } from './baseUrl';
+
 /**
  * Генерирует URL изображения товара с правильным кодированием специальных символов
  * @param {Object} product - Объект товара
@@ -17,12 +19,12 @@ export function generateImageUrl(product) {
   
   // Если есть готовый URL изображения из API, используем его
   if (product.image) {
-    if (product.image.startsWith('/')) return product.image;
+    if (product.image.startsWith('/')) return withBaseUrl(product.image);
     if (product.image.startsWith('http')) {
-      if (model) return `/api/products/${encodeURIComponent(model)}/image`;
+      if (model) return withBaseUrl(`/api/products/${encodeURIComponent(model)}/image`);
       return product.image;
     }
-    return product.image.startsWith('/') ? product.image : '/' + product.image;
+    return withBaseUrl(product.image.startsWith('/') ? product.image : '/' + product.image);
   }
   
   // Генерируем URL с правильным кодированием всех специальных символов
@@ -33,7 +35,7 @@ export function generateImageUrl(product) {
     // - Кириллица: фиолетовый → %D1%84%D0%B8%D0%BE%D0%BB%D0%B5%D1%82%D0%BE%D0%B2%D1%8B%D0%B9
     // - Специальные символы: / → %2F
     const encodedModel = encodeURIComponent(model);
-    return `/api/products/${encodedModel}/image`;
+    return withBaseUrl(`/api/products/${encodedModel}/image`);
   }
   
   return null;
@@ -65,5 +67,5 @@ export function generateAlternativeImageUrls(model) {
     alternatives.push(encodeURIComponent(modelWithUnderscores));
   }
   
-  return alternatives.map(encoded => `/api/products/${encoded}/image`);
+  return alternatives.map(encoded => withBaseUrl(`/api/products/${encoded}/image`));
 }

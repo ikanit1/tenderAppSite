@@ -200,13 +200,20 @@ def get_or_create_session_id(request: Request, response: Response) -> str:
     session_id = request.cookies.get("cart_session_id")
     if not session_id:
         session_id = str(uuid.uuid4())
+        # Behind Nginx we rely on X-Forwarded-Proto to decide whether HTTPS is used.
+        forwarded_proto = (request.headers.get("x-forwarded-proto") or "").lower()
+        is_https = forwarded_proto == "https" or (getattr(request.url, "scheme", "") == "https")
         response.set_cookie(
             key="cart_session_id",
             value=session_id,
             max_age=30 * 24 * 60 * 60,  # 30 дней
             httponly=False,  # Нужен доступ из JavaScript
-            samesite="none",  # Чтобы cookie отправлялась при cross-origin (5173 -> 8001)
-            secure=True,  # Обязательно для SameSite=None; на localhost браузеры считают secure
+            # Path "/" is important: otherwise cookie path may be tied to /catalog/api/ or /api/
+            # and the cart would "disappear" when requests hit another prefix.
+            path="/",
+            # SameSite=None requires Secure. For localhost HTTP we fallback to Lax.
+            samesite="none" if is_https else "lax",
+            secure=True if is_https else False,
         )
     return session_id
 
@@ -1300,7 +1307,8 @@ async def get_cart(request: Request, response: Response):
         session_id = get_or_create_session_id(request, response)
         with _cart_storage_lock:
             cart = _cart_storage.get(session_id, [])
-        return JSONResponse(content={"items": cart})
+        # Return a plain dict so FastAPI reuses `response` with Set-Cookie applied.
+        return {"items": cart}
     except Exception as e:
         logger.error(f"Ошибка при получении корзины: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -1327,7 +1335,7 @@ async def save_cart(request: Request, response: Response, cart_request: CartRequ
         with _cart_storage_lock:
             _cart_storage[session_id] = items
         
-        return JSONResponse(content={"status": "success", "items": items})
+        return {"status": "success", "items": items}
     except Exception as e:
         logger.error(f"Ошибка при сохранении корзины: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -1340,7 +1348,7 @@ async def clear_cart(request: Request, response: Response):
         session_id = get_or_create_session_id(request, response)
         with _cart_storage_lock:
             _cart_storage[session_id] = []
-        return JSONResponse(content={"status": "success"})
+        return {"status": "success"}
     except Exception as e:
         logger.error(f"Ошибка при очистке корзины: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -1380,7 +1388,7 @@ async def add_item_to_cart(request: Request, response: Response, add_request: Ad
             
             _cart_storage[session_id] = cart
         
-        return JSONResponse(content={"status": "success", "items": cart})
+        return {"status": "success", "items": cart}
     except HTTPException:
         raise
     except Exception as e:
@@ -1400,7 +1408,7 @@ async def remove_item_from_cart(request: Request, response: Response, model: str
             cart = [item for item in cart if item.get("model", "").strip() != model]
             _cart_storage[session_id] = cart
         
-        return JSONResponse(content={"status": "success", "items": cart})
+        return {"status": "success", "items": cart}
     except Exception as e:
         logger.error(f"Ошибка при удалении товара из корзины: {e}")
         raise HTTPException(status_code=500, detail=str(e))

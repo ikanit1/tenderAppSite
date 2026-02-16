@@ -24,8 +24,10 @@ function getInitialCart() {
 }
 
 export function useCart() {
-  const [cart, setCartState] = useState(getInitialCart);
-  const lastCartStrRef = useRef('');
+  const initialCart = getInitialCart();
+  const [cart, setCartState] = useState(() => initialCart);
+  // Important: initialize to avoid saving empty cart before first API sync.
+  const lastCartStrRef = useRef(JSON.stringify(initialCart));
   const isSyncingRef = useRef(false);
   const syncTimeoutRef = useRef(null);
 
@@ -96,10 +98,13 @@ export function useCart() {
   }, []);
 
   useEffect(() => {
-    lastCartStrRef.current = JSON.stringify(cart);
-    window.dispatchEvent(new CustomEvent(CART_UPDATE_EVENT, { detail: cart }));
-    saveCartToAPIDebounced(cart);
-    setCartCookie(cart);
+    const cartStr = JSON.stringify(cart);
+    if (lastCartStrRef.current !== cartStr) {
+      lastCartStrRef.current = cartStr;
+      window.dispatchEvent(new CustomEvent(CART_UPDATE_EVENT, { detail: cart }));
+      saveCartToAPIDebounced(cart);
+      setCartCookie(cart);
+    }
   }, [cart]);
 
   useEffect(() => {
@@ -120,20 +125,8 @@ export function useCart() {
 
     window.addEventListener(CART_UPDATE_EVENT, handleCartUpdate);
 
-    // Перезагрузка корзины из cookie при фокусе окна (синхронизация 5173/8001)
-    const handleFocus = () => {
-      const loadedCart = loadCartFromCookie();
-      const loadedStr = JSON.stringify(loadedCart);
-      if (lastCartStrRef.current !== loadedStr) {
-        setCartState(loadedCart);
-        lastCartStrRef.current = loadedStr;
-      }
-    };
-    window.addEventListener('focus', handleFocus);
-
     return () => {
       window.removeEventListener(CART_UPDATE_EVENT, handleCartUpdate);
-      window.removeEventListener('focus', handleFocus);
     };
   }, []);
 
@@ -207,12 +200,6 @@ export function useCart() {
 
   const syncCart = async () => {
     await syncCartWithAPI();
-    const loadedCart = loadCartFromCookie();
-    const loadedStr = JSON.stringify(loadedCart);
-    if (lastCartStrRef.current !== loadedStr) {
-      setCartState(loadedCart);
-      lastCartStrRef.current = loadedStr;
-    }
   };
 
   const totalCount = cart.reduce((sum, i) => sum + (i.quantity || 1), 0);

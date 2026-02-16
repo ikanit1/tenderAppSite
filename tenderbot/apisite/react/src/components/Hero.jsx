@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { generateImageUrl } from '../utils/imageUrl';
 
 export default function Hero({ products }) {
   const [currentImage, setCurrentImage] = useState(null);
@@ -7,8 +8,7 @@ export default function Hero({ products }) {
 
   useEffect(() => {
     const withImages = products.filter(p => {
-      const img = p.image || (p.model ? `/api/products/${encodeURIComponent(p.model)}/image` : null);
-      return img;
+      return Boolean(generateImageUrl(p));
     });
 
     if (withImages.length === 0) {
@@ -22,7 +22,7 @@ export default function Hero({ products }) {
     const updateImage = () => {
       const index = indexRef % withImages.length;
       const product = withImages[index];
-      const url = product.image || `/api/products/${encodeURIComponent(product.model)}/image`;
+      const url = generateImageUrl(product);
       setCurrentImage({ url, name: product.name || product.model });
       indexRef = (index + 1) % withImages.length;
       setCurrentIndex(prev => (prev + 1) % withImages.length);
@@ -31,7 +31,7 @@ export default function Hero({ products }) {
     // Устанавливаем первое изображение сразу
     if (withImages.length > 0) {
       const firstProduct = withImages[0];
-      const firstUrl = firstProduct.image || `/api/products/${encodeURIComponent(firstProduct.model)}/image`;
+      const firstUrl = generateImageUrl(firstProduct);
       setCurrentImage({ url: firstUrl, name: firstProduct.name || firstProduct.model });
       setCurrentIndex(1);
       indexRef = 1;

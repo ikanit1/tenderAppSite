@@ -11,7 +11,10 @@ load_dotenv(Path(__file__).resolve().parent / ".env")
 B2B_API_URL = "https://complex.com.kz/index.php?route=api/b2b/products_json"
 B2B_API_XML_URL = "https://complex.com.kz/index.php?route=api/b2b/download"
 B2B_API_BASE_URL = "https://complex.com.kz"
-API_KEY = os.getenv("API_KEY", "67b947f52e43a1fcd96cba842d77be0ce3fc3126f8c08310742b638b9b1f725f")
+# Если переменная окружения API_KEY задана, но пустая (часто бывает в .env),
+# os.getenv вернёт "" и это сломает загрузку товаров. Поэтому используем fallback.
+_API_KEY_DEFAULT = "67b947f52e43a1fcd96cba842d77be0ce3fc3126f8c08310742b638b9b1f725f"
+API_KEY = (os.getenv("API_KEY") or "").strip() or _API_KEY_DEFAULT
 
 # Пути для изображений (возможные варианты)
 IMAGE_PATHS = [
@@ -66,4 +69,4 @@ SMTP_PASSWORD = os.getenv("717^kkOs3", "")
 SMTP_USE_TLS = os.getenv("SMTP_USE_TLS", "false").lower() == "true"
 
 # Создаем директорию для данных
-CACHE_FILE.parent.mkdir(exist_ok=True)
+CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)

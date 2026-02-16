@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { withBaseUrl } from '../utils/baseUrl';
 
 export function useProducts() {
   const [products, setProducts] = useState([]);
@@ -16,7 +17,7 @@ export function useProducts() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('/products');
+      const response = await fetch(withBaseUrl('/products'));
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setProducts(data.products || []);

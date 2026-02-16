@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { withBaseUrl } from '../utils/baseUrl';
 
 const MotionLink = motion(Link);
 import Background from '../components/Background';
@@ -20,7 +21,15 @@ const listItemVariants = { hidden: { opacity: 0, y: 6 }, visible: { opacity: 1, 
 const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_ORIGIN) || '';
 
 function api(path, options = {}) {
-  const url = path.startsWith('/') ? `${API_BASE}${path}` : `${API_BASE}/api/${path}`;
+  if (API_BASE) {
+    const url = path.startsWith('/') ? `${API_BASE}${path}` : `${API_BASE}/api/${path}`;
+    return fetch(url, options).then(r => {
+      if (!r.ok) return r.json().then(d => { throw new Error(d.detail || r.statusText); });
+      return r.json().catch(() => ({}));
+    });
+  }
+
+  const url = path.startsWith('/') ? withBaseUrl(path) : withBaseUrl(`/api/${path}`);
   return fetch(url, options).then(r => {
     if (!r.ok) return r.json().then(d => { throw new Error(d.detail || r.statusText); });
     return r.json().catch(() => ({}));
