@@ -615,10 +615,12 @@ async def tender_step_deadline(message: Message, state: FSMContext) -> None:
     raw = message.text.strip()
     deadline = None
     if raw.lower() not in ("нет", "-", "—", "0", ""):
-        from datetime import datetime, timezone
+        from datetime import datetime
         try:
-            deadline = datetime.strptime(raw, "%d.%m.%Y %H:%M").replace(tzinfo=timezone.utc)
-            if deadline < datetime.now(timezone.utc):
+            # В БД дедлайны хранятся как naive UTC (TIMESTAMP WITHOUT TIME ZONE),
+            # поэтому здесь тоже используем naive UTC.
+            deadline = datetime.strptime(raw, "%d.%m.%Y %H:%M")
+            if deadline < datetime.utcnow():
                 await message.answer("❌ Дедлайн не может быть в прошлом. Введите корректную дату:")
                 return
         except ValueError:

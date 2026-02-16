@@ -1,42 +1,17 @@
 version: "3.8"
 
-# Root site (маркетинговый сайт) собирается на хосте командой:
-# cd /path/to/tenderAppSite-main && npm run build
-# Собранный dist/ должен быть размещен по пути, указанному в nginx конфиге
-# (по умолчанию /var/www/tenderAppSite/dist)
-# Root site раздается через Nginx напрямую, без Docker контейнера
-
 services:
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: tenderbot
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tenderbot_secret}
-      POSTGRES_DB: tenderbot
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tenderbot"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
   app:
     build: .
     restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
     env_file:
       - .env
-    environment:
-      DATABASE_URL: postgresql+asyncpg://tenderbot:${POSTGRES_PASSWORD:-tenderbot_secret}@db:5432/tenderbot
+    # УДАЛЕНО: блок environment с DATABASE_URL (теперь берется из .env)
+    # УДАЛЕНО: depends_on (так как база теперь внутри приложения)
     ports:
       - "${WEB_PORT:-8000}:8000"
     volumes:
+      - .:/app  # Пробрасываем текущую папку, чтобы test.db лежал на сервере
       - uploads:/app/web/static/uploads
 
   apisite:
@@ -61,8 +36,8 @@ services:
       - apisite_portal_export:/app/portal_export
 
 volumes:
-  pgdata:
   uploads:
   apisite_data:
   apisite_images:
   apisite_portal_export:
+  # pgdata удален, так как он больше не нужен
