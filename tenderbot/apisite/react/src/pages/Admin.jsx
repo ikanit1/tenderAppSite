@@ -37,6 +37,11 @@ function api(path, options = {}) {
 }
 
 export default function Admin() {
+  const [authenticated, setAuthenticated] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [login, setLogin] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
   const [tab, setTab] = useState('dashboard');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -120,6 +125,7 @@ export default function Admin() {
   }, []);
 
   const loadPortalMismatch = useCallback(async () => {
+    if (!authenticated) return;
     setPortalLoading(true);
     try {
       const data = await api('/api/admin/portal-mismatch');
@@ -129,7 +135,7 @@ export default function Admin() {
     } finally {
       setPortalLoading(false);
     }
-  }, []);
+  }, [authenticated]);
 
   const loadPortalParserStatus = useCallback(async () => {
     try {
@@ -152,18 +158,75 @@ export default function Admin() {
     }
   }, []);
 
+  const checkAuth = useCallback(async () => {
+    try {
+      const data = await api('/api/admin/check');
+      setAuthenticated(data.authenticated || false);
+    } catch (err) {
+      setAuthenticated(false);
+    } finally {
+      setCheckingAuth(false);
+    }
+  }, []);
+
+  const handleLogin = useCallback(async (e) => {
+    e.preventDefault();
+    setLoginError('');
+    try {
+      await api('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ login, password }),
+      });
+      setAuthenticated(true);
+      setLogin('');
+      setPassword('');
+    } catch (err) {
+      setLoginError('Неверный логин или пароль');
+    }
+  }, [login, password]);
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await api('/api/admin/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      setAuthenticated(false);
+    } catch (err) {
+      console.error('Ошибка выхода:', err);
+    }
+  }, []);
+
   useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  useEffect(() => {
+    if (!authenticated) return;
     if (tab === 'dashboard' || tab === 'prices') loadProducts();
-  }, [tab, loadProducts]);
+  }, [tab, loadProducts, authenticated]);
   useEffect(() => {
+    if (!authenticated) return;
     if (tab === 'dashboard') api('/health').then(setHealthData).catch(() => setHealthData(null));
-  }, [tab]);
-  useEffect(() => { if (tab === 'prices') loadPrices(); }, [tab, loadPrices]);
-  useEffect(() => { if (tab === 'parser') { loadParserStatus(); loadParserStats(); loadPortalParserStatus(); loadPortalParserLogs(); } }, [tab, loadParserStatus, loadParserStats, loadPortalParserStatus, loadPortalParserLogs]);
+  }, [tab, authenticated]);
+  useEffect(() => {
+    if (!authenticated) return;
+    if (tab === 'prices') loadPrices();
+  }, [tab, loadPrices, authenticated]);
+  useEffect(() => {
+    if (!authenticated) return;
+    if (tab === 'parser') { loadParserStatus(); loadParserStats(); loadPortalParserStatus(); loadPortalParserLogs(); }
+  }, [tab, loadParserStatus, loadParserStats, loadPortalParserStatus, loadPortalParserLogs, authenticated]);
+  useEffect(() => {
+    if (!authenticated) return;
+    if (tab === 'portal') loadPortalMismatch();
+  }, [tab, loadPortalMismatch, authenticated]);
 
   // Polling статуса и логов парсера портала, когда он запущен и открыта вкладка «Парсер»
   useEffect(() => {
-    if (tab !== 'parser' || !portalParserStatus?.running) return;
+    if (!authenticated || tab !== 'parser' || !portalParserStatus?.running) return;
     let ignore = false;
     const interval = setInterval(async () => {
       if (ignore) return;
@@ -175,12 +238,13 @@ export default function Admin() {
       ignore = true;
       clearInterval(interval);
     };
-  }, [tab, portalParserStatus?.running, loadPortalParserStatus, loadPortalParserLogs]);
+  }, [authenticated, tab, portalParserStatus?.running, loadPortalParserStatus, loadPortalParserLogs]);
 
   useEffect(() => {
+    if (!authenticated) return;
     if (portalLogPreRef.current && portalParserLogs.length)
       portalLogPreRef.current.scrollTop = portalLogPreRef.current.scrollHeight;
-  }, [portalParserLogs]);
+  }, [portalParserLogs, authenticated]);
 
   const handleTabChange = (newTab) => {
     if (newTab === tab) return;
@@ -432,12 +496,97 @@ export default function Admin() {
   const withoutPrice = withoutPriceFiltered.slice(0, 50);
   const withoutPriceBrands = [...new Set(withoutPriceAll.map(p => p.brand).filter(Boolean))].sort();
 
+  if (checkingAuth) {
+    return (
+      <>
+        <Background />
+        <div className="admin-container">
+          <div className="container">
+            <div className="loading">
+              <div className="spinner"></div>
+              <p>Проверка авторизации...</p>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (!authenticated) {
+    return (
+      <>
+        <Background />
+        <div className="admin-container">
+          <div className="container">
+            <h1 className="admin-title">Вход в админ-панель</h1>
+            <motion.form
+              className="admin-login-form"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              onSubmit={handleLogin}
+            >
+              {loginError && (
+                <motion.div
+                  className="admin-message admin-message-error"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  {loginError}
+                </motion.div>
+              )}
+              <div className="form-row">
+                <input
+                  type="text"
+                  placeholder="Логин"
+                  value={login}
+                  onChange={(e) => setLogin(e.target.value)}
+                  className="admin-input"
+                  required
+                  autoFocus
+                />
+              </div>
+              <div className="form-row">
+                <input
+                  type="password"
+                  placeholder="Пароль"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="admin-input"
+                  required
+                />
+              </div>
+              <motion.button
+                type="submit"
+                className="btn-action btn-primary"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Войти
+              </motion.button>
+            </motion.form>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <Background />
       <div className="admin-container">
         <div className="container">
-          <h1 className="admin-title">Админ-панель</h1>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+            <h1 className="admin-title" style={{ margin: 0 }}>Админ-панель</h1>
+            <motion.button
+              type="button"
+              className="btn-action btn-secondary"
+              onClick={handleLogout}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Выйти
+            </motion.button>
+          </div>
 
           <div className="admin-tabs" role="tablist">
             {TABS.map(t => (

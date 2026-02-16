@@ -24,15 +24,27 @@ export default function LazyProductCard({ product, onCardClick, delay = 0 }) {
   }, [hasIntersected, delay, shouldRender]);
 
   return (
-    <div ref={ref} style={{ minHeight: '400px' }}>
+    <div 
+      ref={ref} 
+      style={{ 
+        position: 'relative',
+        width: '100%',
+        minHeight: 0,
+      }}
+    >
       <AnimatePresence mode="wait">
         {shouldRender ? (
           <motion.div
             key="card"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            style={{ height: '100%' }}
+            style={{ 
+              position: 'relative',
+              width: '100%',
+              height: '100%',
+            }}
           >
             <ProductCard
               product={product}
@@ -42,8 +54,14 @@ export default function LazyProductCard({ product, onCardClick, delay = 0 }) {
         ) : (
           <motion.div
             key="skeleton"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
+            style={{
+              position: 'relative',
+              width: '100%',
+            }}
           >
             <motion.div
               className="product-card-skeleton"

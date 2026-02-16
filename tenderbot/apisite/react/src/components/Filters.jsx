@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 
 const CATEGORIES = [
@@ -604,10 +604,33 @@ const CATEGORY_KEYWORDS = {
   },
 };
 
-export default function Filters({ brands, onFilterChange, onReset, defaultCategory = 'ip-cameras' }) {
+export default function Filters({ brands, onFilterChange, onReset, defaultCategory = 'ip-cameras', externalFilters = null }) {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState(defaultCategory);
   const [brand, setBrand] = useState('');
+  const prevExternalFiltersRef = useRef(null);
+
+  // Синхронизация с внешним состоянием при сбросе фильтров
+  useEffect(() => {
+    if (externalFilters) {
+      const newSearch = externalFilters.search || '';
+      const newCategory = externalFilters.category || defaultCategory;
+      const newBrand = externalFilters.brand || '';
+      
+      const prevFilters = prevExternalFiltersRef.current;
+      const filtersChanged = !prevFilters || 
+        prevFilters.search !== newSearch ||
+        prevFilters.category !== newCategory ||
+        prevFilters.brand !== newBrand;
+      
+      if (filtersChanged) {
+        setSearch(newSearch);
+        setCategory(newCategory);
+        setBrand(newBrand);
+        prevExternalFiltersRef.current = { search: newSearch, category: newCategory, brand: newBrand };
+      }
+    }
+  }, [externalFilters, defaultCategory]);
 
   useEffect(() => {
     onFilterChange({ search, category, brand });

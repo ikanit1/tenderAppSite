@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import { aboutContent } from '@/shared/content/home';
-import { Card } from '@/shared/ui/Card/Card';
 import { Button } from '@/shared/ui/Button/Button';
 import styles from './AboutSection.module.css';
 
@@ -27,7 +26,7 @@ const itemVariants: Variants = {
 };
 
 export function AboutSection() {
-  const { title, intro, historyTitle, historyText, advantagesTitle, advantages, missionValues, whyChoose, stats, footerText } = aboutContent;
+  const { title, intro, advantagesTitle, advantages, missionValues, whyChoose, stats, footerText } = aboutContent;
   const reduceMotion = useReducedMotion();
 
   return (
@@ -71,13 +70,6 @@ export function AboutSection() {
           ))}
         </motion.div>
         <motion.div className={styles.grid} variants={reduceMotion ? undefined : sectionVariants}>
-          <motion.div variants={reduceMotion ? undefined : itemVariants}>
-            <Card title={historyTitle} className={styles.card}>
-              <div className={styles.text} style={{ whiteSpace: 'pre-line' }}>
-                {historyText}
-              </div>
-            </Card>
-          </motion.div>
           <motion.div variants={reduceMotion ? undefined : itemVariants}>
             <h3 className={styles.advTitle}>{advantagesTitle}</h3>
             <ul className={styles.list}>

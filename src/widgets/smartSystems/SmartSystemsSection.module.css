@@ -197,10 +197,10 @@
   margin: 0 0 0.75rem;
 }
 
-/* Сетка как в каталоге 8001: одинаковые отступы между карточками */
+/* Сетка: 4 карточки в ряд */
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
   margin-bottom: 2rem;
   align-items: stretch;
@@ -563,7 +563,37 @@
   margin: 0.75rem 0 0;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1280px) {
+  .sectionContent {
+    padding: 0 var(--container-padding-md);
+  }
+  .filtersBlock {
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 1200px) {
+  .cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .sectionContent {
+    padding: 0 var(--container-padding-md);
+  }
+  .filtersBlock {
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
   .sectionContent {
     padding: 0 var(--container-padding);
   }
@@ -657,3 +687,32 @@
   }
 }
 
+@media (max-width: 480px) {
+  .sectionContent {
+    padding: 0 0.75rem;
+  }
+  .section {
+    padding: 1.25rem 0 1.5rem;
+  }
+  .title {
+    font-size: var(--text-base);
+  }
+  .filtersBlock {
+    padding: 0.75rem;
+  }
+  .cards {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  .cardImageWrapper,
+  .cardImagePlaceholder {
+    height: 80px;
+    min-height: 80px;
+  }
+  .cardInfo {
+    padding: 0.5rem;
+  }
+  .category {
+    padding: 0.6rem;
+  }
+}

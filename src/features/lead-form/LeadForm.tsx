@@ -3,7 +3,7 @@ import { Input } from '@/shared/ui/Input/Input';
 import { Textarea } from '@/shared/ui/Textarea/Textarea';
 import { Select, type SelectOption } from '@/shared/ui/Select/Select';
 import { Button } from '@/shared/ui/Button/Button';
-import { submitLead } from '@/mock/leadApi.mock';
+import { submitLead } from '@/shared/api/leadApi';
 import type { LeadFormData } from '@/entities/lead';
 import { useToast } from '@/features/toast/ToastProvider';
 import { projectTypeOptions } from './leadFormConfig';

@@ -14,5 +14,6 @@ export const navItems: NavItem[] = [
   { href: catalogUrl, label: 'Каталог', external: true },
   { to: '/smart-systems', label: 'Умные системы' },
   { to: '/digital-ecosystem', label: 'Цифровая экосистема дома' },
+  { to: '/work', label: 'Работа' },
   { to: '/contacts', label: 'Контакты' },
 ];

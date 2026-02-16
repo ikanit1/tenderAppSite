@@ -111,9 +111,37 @@
   text-align: center;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1280px) {
   .section {
-    padding: var(--gap-section) var(--container-padding);
+    padding: var(--gap-section-md) var(--container-padding-md);
+  }
+  .container {
+    padding: 2.5rem 2rem;
+  }
+  .heading {
+    font-size: clamp(var(--text-xl), 2.5vw, var(--text-3xl));
+  }
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .section {
+    padding: var(--gap-section-md) var(--container-padding-md);
+  }
+  .container {
+    padding: 2rem 1.75rem;
+  }
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: var(--gap-section-sm) var(--container-padding);
   }
   .container {
     padding: 2rem var(--container-padding);
@@ -124,5 +152,26 @@
   }
   .heading {
     font-size: var(--text-xl);
+  }
+}
+
+@media (max-width: 480px) {
+  .section {
+    padding: var(--gap-section-sm) 0.75rem;
+  }
+  .container {
+    padding: 1.5rem 0.75rem;
+  }
+  .heading {
+    font-size: var(--text-lg);
+  }
+  .subtitle {
+    font-size: var(--text-base);
+  }
+  .card {
+    padding: 1.25rem;
+  }
+  .cardTitle {
+    font-size: var(--text-base);
   }
 }

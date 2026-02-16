@@ -21,17 +21,7 @@ body::before {
   z-index: 0;
 }
 
-body[data-custom-cursor] {
-  cursor: none;
-}
-
-body[data-custom-cursor] button,
-body[data-custom-cursor] a,
-body[data-custom-cursor] input,
-body[data-custom-cursor] textarea,
-body[data-custom-cursor] select {
-  cursor: none;
-}
+/* Кастомный курсор отключен */
 
 .main {
   flex: 1;
@@ -50,10 +40,24 @@ body[data-custom-cursor] select {
   padding-right: var(--container-padding-lg);
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1280px) {
+  .container {
+    padding-left: var(--container-padding-md);
+    padding-right: var(--container-padding-md);
+  }
+}
+
+@media (max-width: 768px) {
   .container {
     padding-left: var(--container-padding);
     padding-right: var(--container-padding);
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
   }
 }
 
@@ -67,10 +71,17 @@ body[data-custom-cursor] select {
   padding-right: 20px;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 768px) {
   .catalogContent {
     padding-left: var(--container-padding);
     padding-right: var(--container-padding);
+  }
+}
+
+@media (max-width: 480px) {
+  .catalogContent {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
   }
 }
 

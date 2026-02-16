@@ -17,10 +17,10 @@ interface CartContextType {
   items: CartItem[];
   cart: CartItem[]; // Alias for items for compatibility
   addToCart: (product: CartItem | { model: string; name?: string; brand?: string; price?: number | null } | string, quantity?: number) => void;
-  removeFromCart: (model: string) => void;
+  removeFromCart: (model: string) => Promise<void>;
   updateQuantity: (model: string, quantity: number) => void;
   updateQty: (model: string, delta: number) => void; // For compatibility with catalog
-  clearCart: () => void;
+  clearCart: () => Promise<void>;
   refreshCart: () => Promise<void>;
   saveCartNow: (itemsToSave?: CartItem[]) => Promise<void>;
   getCartModels: () => string[];
@@ -220,13 +220,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
       });
   }, [syncCartWithAPI]);
 
-  const removeFromCart = useCallback((model: string) => {
+  const removeFromCart = useCallback(async (model: string) => {
+    // Оптимистичное обновление: удаляем локально сразу
     setItems((prev) => prev.filter((item) => item.model.trim() !== model.trim()));
-    // Удаляем из API
-    removeItemFromAPI(model).catch((error) => {
+    // Удаляем из API и после успеха синхронизируемся, чтобы получить актуальное состояние
+    try {
+      const ok = await removeItemFromAPI(model);
+      if (ok) {
+        // Синхронизируемся с API сразу после удаления, чтобы убедиться что состояние совпадает
+        await syncCartWithAPI();
+      }
+    } catch (error) {
       console.error('Error removing item from API:', error);
-    });
-  }, []);
+      // В случае ошибки тоже синхронизируемся, чтобы восстановить корректное состояние
+      await syncCartWithAPI();
+    }
+  }, [syncCartWithAPI]);
 
   const updateQuantity = useCallback((model: string, quantity: number) => {
     if (quantity <= 0) {
@@ -239,22 +248,43 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [removeFromCart]);
 
   const updateQty = useCallback((model: string, delta: number) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.model.trim() === model.trim()
-          ? { ...item, quantity: Math.max(1, (item.quantity || 1) + delta) }
-          : item
-      )
-    );
-  }, []);
-
-  const clearCart = useCallback(() => {
-    setItems([]);
-    // Очищаем API корзину
-    clearCartAPI().catch((error) => {
-      console.error('Error clearing API cart:', error);
+    setItems((prev) => {
+      const item = prev.find((i) => i.model.trim() === model.trim());
+      if (!item) return prev;
+      
+      const newQuantity = (item.quantity || 1) + delta;
+      
+      // Если количество стало 0 или меньше, удаляем товар
+      if (newQuantity <= 0) {
+        // Удаляем локально и из API
+        removeFromCart(model).catch((error) => {
+          console.error('Error removing item after quantity update:', error);
+        });
+        return prev.filter((i) => i.model.trim() !== model.trim());
+      }
+      
+      // Иначе обновляем количество
+      return prev.map((i) =>
+        i.model.trim() === model.trim() ? { ...i, quantity: newQuantity } : i
+      );
     });
-  }, []);
+  }, [removeFromCart]);
+
+  const clearCart = useCallback(async () => {
+    // Оптимистичное обновление: очищаем локально сразу
+    setItems([]);
+    // Очищаем API корзину и после успеха синхронизируемся
+    try {
+      const ok = await clearCartAPI();
+      if (ok) {
+        await syncCartWithAPI();
+      }
+    } catch (error) {
+      console.error('Error clearing API cart:', error);
+      // В случае ошибки тоже синхронизируемся
+      await syncCartWithAPI();
+    }
+  }, [syncCartWithAPI]);
 
   const getCartModels = useCallback(() => {
     return items.map((item) => item.model);

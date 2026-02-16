@@ -510,9 +510,61 @@
   padding: 1rem 2rem;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1280px) {
   .section {
-    padding: 0 var(--container-padding) var(--gap-section);
+    padding: 0 var(--container-padding-md) var(--gap-section-md);
+  }
+  .hero {
+    padding: 3.5rem 2.5rem 4rem;
+    margin-bottom: 3rem;
+  }
+  .heroTitle {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+  }
+  .block {
+    padding: 2.5rem 2rem;
+    margin-bottom: 3rem;
+  }
+  .scopeGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+  .advGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  .equipmentGrid {
+    gap: 1rem;
+  }
+  .termsStrip {
+    padding: 1.75rem var(--container-padding-md);
+    margin-bottom: 3rem;
+  }
+  .ctaBlock {
+    padding: 2.5rem var(--container-padding-md);
+  }
+}
+
+@media (max-width: 1024px) {
+  .section {
+    padding: 0 var(--container-padding-md) var(--gap-section-md);
+  }
+  .hero {
+    padding: 3rem 2rem 3.5rem;
+    margin-bottom: 2.5rem;
+  }
+  .block {
+    padding: 2rem 1.75rem;
+    margin-bottom: 2.5rem;
+  }
+  .advGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 0 var(--container-padding) var(--gap-section-sm);
   }
   .hero {
     padding: 2.5rem var(--container-padding) 3rem;
@@ -548,5 +600,43 @@
   }
   .cardsGrid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .section {
+    padding: 0 0.75rem var(--gap-section-sm);
+  }
+  .hero {
+    padding: 1.75rem 0.75rem 2rem;
+    margin-bottom: 1.5rem;
+  }
+  .heroTitle {
+    font-size: 1.5rem;
+  }
+  .heroTagline {
+    font-size: var(--text-base);
+  }
+  .block {
+    padding: 1.5rem 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .blockHeading {
+    font-size: var(--text-lg);
+  }
+  .scopeCard,
+  .serviceCard,
+  .scaleCard {
+    padding: 1rem;
+  }
+  .termsStrip {
+    padding: 1rem 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .ctaBlock {
+    padding: 1.5rem 0.75rem;
+  }
+  .conclusion {
+    font-size: var(--text-base);
   }
 }

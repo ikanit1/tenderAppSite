@@ -20,6 +20,26 @@
   border: 1px solid var(--color-border);
 }
 
+@media (max-width: 480px) {
+  .overlay {
+    padding: 0.75rem;
+  }
+  .modal {
+    width: calc(100vw - 1.5rem);
+    max-width: none;
+    max-height: 85vh;
+  }
+  .header {
+    padding: 0.85rem 1rem;
+  }
+  .title {
+    font-size: var(--text-lg);
+  }
+  .body {
+    padding: 1rem;
+  }
+}
+
 .header {
   display: flex;
   align-items: center;

@@ -11,3 +11,8 @@
   position: relative;
   z-index: 2;
 }
+
+.mainContent {
+  min-height: 100%;
+  position: relative;
+}

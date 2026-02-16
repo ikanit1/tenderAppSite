@@ -164,7 +164,12 @@ export default function Home() {
       <FloatingActionsBar onCartToggle={onCartToggle} />
       
       <div className="container">
-        <Filters brands={brands} onFilterChange={handleFilterChange} onReset={handleResetFilters} />
+        <Filters 
+          brands={brands} 
+          onFilterChange={handleFilterChange} 
+          onReset={handleResetFilters}
+          externalFilters={filters}
+        />
 
         {loading && (
           <motion.div

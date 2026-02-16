@@ -1,5 +1,5 @@
 """Основной API сервер"""
-from fastapi import FastAPI, HTTPException, Depends, Request, Response
+from fastapi import FastAPI, HTTPException, Depends, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from typing import Optional
@@ -13,7 +13,9 @@ from config import (
     UPDATE_INTERVAL_MINUTES, IMAGE_PARSER_ENABLED, IMAGE_PARSER_MAX_PAGES, IMAGE_PARSER_STARTUP_DELAY,
     OPENAI_API_KEY, OPENAI_MODEL, OPENROUTER_API_KEY, OPENROUTER_MODEL,
     CORS_ORIGINS,
-    ADMIN_EMAIL, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_USE_TLS,
+    ADMIN_EMAIL, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_USE_TLS, SMTP_USE_SSL,
+    ADMIN_LOGIN, ADMIN_PASSWORD,
+    SITEMAP_BASE_URL,
 )
 import json
 import time
@@ -25,6 +27,7 @@ import subprocess
 import threading
 import re
 import uuid
+import secrets
 from functools import lru_cache
 
 logging.basicConfig(
@@ -187,6 +190,10 @@ image_parser_state = {
 _cart_storage: dict[str, list] = {}
 _cart_storage_lock = threading.Lock()
 
+# Хранилище сессий админа: session_id -> True (если авторизован)
+_admin_sessions: set[str] = set()
+_admin_sessions_lock = threading.Lock()
+
 # Инициализируем lock при первом использовании
 def get_lock():
     """Получает или создает lock для кэша"""
@@ -216,6 +223,65 @@ def get_or_create_session_id(request: Request, response: Response) -> str:
             secure=True if is_https else False,
         )
     return session_id
+
+
+def require_admin_auth(request: Request) -> None:
+    """Проверяет авторизацию админа, выбрасывает HTTPException если не авторизован"""
+    if not is_admin_authenticated(request):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Требуется авторизация")
+
+
+def get_admin_session_id(request: Request) -> Optional[str]:
+    """Получает session ID админа из cookie"""
+    return request.cookies.get("admin_session_id")
+
+
+def is_admin_authenticated(request: Request) -> bool:
+    """Проверяет, авторизован ли админ"""
+    session_id = get_admin_session_id(request)
+    if not session_id:
+        return False
+    with _admin_sessions_lock:
+        return session_id in _admin_sessions
+
+
+def create_admin_session(response: Response, request: Request) -> str:
+    """Создает новую сессию админа"""
+    session_id = str(uuid.uuid4())
+    with _admin_sessions_lock:
+        _admin_sessions.add(session_id)
+    
+    forwarded_proto = (request.headers.get("x-forwarded-proto") or "").lower()
+    is_https = forwarded_proto == "https" or (getattr(request.url, "scheme", "") == "https")
+    
+    response.set_cookie(
+        key="admin_session_id",
+        value=session_id,
+        max_age=24 * 60 * 60,  # 24 часа
+        httponly=False,
+        path="/",
+        samesite="none" if is_https else "lax",
+        secure=True if is_https else False,
+    )
+    return session_id
+
+
+def remove_admin_session(request: Request, response: Response) -> None:
+    """Удаляет сессию админа"""
+    session_id = get_admin_session_id(request)
+    if session_id:
+        with _admin_sessions_lock:
+            _admin_sessions.discard(session_id)
+    
+    forwarded_proto = (request.headers.get("x-forwarded-proto") or "").lower()
+    is_https = forwarded_proto == "https" or (getattr(request.url, "scheme", "") == "https")
+    
+    response.delete_cookie(
+        key="admin_session_id",
+        path="/",
+        samesite="none" if is_https else "lax",
+        secure=True if is_https else False,
+    )
 
 
 @lru_cache()
@@ -611,6 +677,53 @@ async def admin_page():
     return _react_build_missing_response()
 
 
+@app.get("/sitemap.xml")
+async def sitemap_xml(cached_data: dict = Depends(get_cached_data)):
+    """
+    Генерирует sitemap.xml для поисковиков: главная, страницы сайта, каталог, опционально товары.
+    Nginx проксирует запрос grgroup.kz/sitemap.xml сюда.
+    """
+    from urllib.parse import quote
+    base = SITEMAP_BASE_URL
+    lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ]
+    # Статические страницы
+    static_urls = [
+        (f"{base}/", "1.0", "weekly"),
+        (f"{base}/services", "0.9", "monthly"),
+        (f"{base}/contacts", "0.9", "monthly"),
+        (f"{base}/projects", "0.9", "monthly"),
+        (f"{base}/smart-systems", "0.9", "monthly"),
+        (f"{base}/digital-ecosystem", "0.9", "monthly"),
+        (f"{base}/work", "0.9", "monthly"),
+        (f"{base}/catalog/", "0.8", "weekly"),
+    ]
+    for loc, priority, changefreq in static_urls:
+        lines.append("  <url>")
+        lines.append(f"    <loc>{loc}</loc>")
+        lines.append(f"    <changefreq>{changefreq}</changefreq>")
+        lines.append(f"    <priority>{priority}</priority>")
+        lines.append("  </url>")
+    # Товары: ссылки на каталог с ?model= для глубокой индексации (каталог может поддержать ?model= позже)
+    products = cached_data.get("products", []) or []
+    for p in products[:5000]:  # лимит 5000, чтобы sitemap не разрастался
+        model = (p.get("model") or "").strip()
+        if not model:
+            continue
+        encoded = quote(model, safe="")
+        loc = f"{base}/catalog/?model={encoded}"
+        lines.append("  <url>")
+        lines.append(f"    <loc>{loc}</loc>")
+        lines.append("    <changefreq>weekly</changefreq>")
+        lines.append("    <priority>0.6</priority>")
+        lines.append("  </url>")
+    lines.append("</urlset>")
+    xml_body = "\n".join(lines)
+    return Response(content=xml_body, media_type="application/xml")
+
+
 @app.get("/products", response_model=ProductsResponse)
 async def get_products(
     brand: Optional[str] = None,
@@ -961,7 +1074,9 @@ async def test_image_url(model: str, cached_data: dict = Depends(get_cached_data
 
 
 @app.post("/api/parse-images/start")
-async def start_image_parsing(max_pages: Optional[int] = 5):
+async def start_image_parsing(request: Request, max_pages: Optional[int] = 5):
+    """Запускает парсинг изображений"""
+    require_admin_auth(request)
     """
     Запускает парсинг изображений товаров с сайта
     
@@ -1016,7 +1131,9 @@ async def start_image_parsing(max_pages: Optional[int] = 5):
 
 
 @app.get("/api/parse-images/cache")
-async def get_parse_images_cache():
+async def get_parse_images_cache(request: Request):
+    """Получает информацию о кэше парсера"""
+    require_admin_auth(request)
     """Получает информацию о кэше парсера (обработанные товары и изображения)"""
     try:
         from product_image_parser import PARSER_CACHE_FILE
@@ -1071,7 +1188,9 @@ async def get_parse_images_cache():
 
 
 @app.post("/api/parse-images/clear-cache")
-async def clear_parse_images_cache():
+async def clear_parse_images_cache(request: Request):
+    """Очищает кэш парсера"""
+    require_admin_auth(request)
     """Очищает кэш парсера (обработанные товары и изображения)"""
     try:
         from product_image_parser import PARSER_CACHE_FILE
@@ -1098,7 +1217,9 @@ async def clear_parse_images_cache():
 
 
 @app.get("/api/parse-images/stats")
-async def get_parsed_images_stats():
+async def get_parsed_images_stats(request: Request):
+    """Возвращает статистику по спарсенным изображениям"""
+    require_admin_auth(request)
     """Возвращает статистику по спарсенным изображениям"""
     try:
         images_dir = Path(__file__).parent / "images"
@@ -1208,28 +1329,55 @@ class CheckoutSubmitRequest(BaseModel):
     payment: str = ""
     comment: str = ""
     total: Optional[float] = None
-    date: str = ""
+    date: Optional[str] = None
 
 
-def _send_order_email_sync(to_email: str, subject: str, body: str) -> None:
+class AdminLoginRequest(BaseModel):
+    login: str
+    password: str
+
+
+class ContactsSubmitRequest(BaseModel):
+    name: str
+    phone: str
+    email: Optional[str] = None
+    projectType: Optional[str] = None
+    message: Optional[str] = None
+
+
+def _send_order_email_sync(to_email: str, subject: str, body_plain: str, body_html: Optional[str] = None) -> None:
     """Синхронная отправка письма через SMTP. Вызывать из run_in_executor."""
     import smtplib
     from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
     from email.utils import formatdate
 
-    msg = MIMEText(body, "plain", "utf-8")
+    if body_html:
+        msg = MIMEMultipart("alternative")
+        msg.attach(MIMEText(body_plain, "plain", "utf-8"))
+        msg.attach(MIMEText(body_html, "html", "utf-8"))
+    else:
+        msg = MIMEText(body_plain, "plain", "utf-8")
     msg["Subject"] = subject
     msg["From"] = SMTP_USER or to_email
     msg["To"] = to_email
     msg["Date"] = formatdate(localtime=True)
 
-    if SMTP_USE_TLS:
+    # Для порта 465 используется SSL напрямую (SMTP_SSL)
+    if SMTP_USE_SSL:
+        with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT) as server:
+            if SMTP_USER and SMTP_PASSWORD:
+                server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(msg["From"], [to_email], msg.as_string())
+    elif SMTP_USE_TLS:
+        # Для порта 587 используется STARTTLS
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
             server.starttls()
             if SMTP_USER and SMTP_PASSWORD:
                 server.login(SMTP_USER, SMTP_PASSWORD)
             server.sendmail(msg["From"], [to_email], msg.as_string())
     else:
+        # Обычное SMTP без шифрования (не рекомендуется)
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
             if SMTP_USER and SMTP_PASSWORD:
                 server.login(SMTP_USER, SMTP_PASSWORD)
@@ -1246,40 +1394,172 @@ async def checkout_submit(payload: CheckoutSubmitRequest):
             detail="Отправка заказов не настроена. Обратитесь к администратору.",
         )
 
-    # Формируем текст письма
+    # Человекочитаемые подписи для способов доставки, оплаты и монтажа
+    DELIVERY_LABELS = {
+        "transport": "Транспортная компания",
+        "courier": "Курьерская доставка",
+        "pickup1": "Самовывоз (склад 1)",
+        "pickup3": "Самовывоз (склад 3)",
+    }
+    PAYMENT_LABELS = {
+        "cash": "Наличными",
+        "transfer": "Банковский перевод",
+        "card": "Оплата картой",
+        "kaspi": "Kaspi рассрочка/оплата",
+    }
+    INSTALLATION_LABELS = {
+        "none": "Не требуется",
+        "professional": "Профессиональный монтаж",
+    }
+
+    import datetime
+    if payload.date:
+        try:
+            dt = datetime.datetime.fromisoformat(payload.date.replace("Z", "+00:00"))
+            if dt.tzinfo:
+                dt = dt.astimezone().replace(tzinfo=None)
+            order_date_str = dt.strftime("%d.%m.%Y, %H:%M")
+        except Exception:
+            order_date_str = payload.date
+    else:
+        order_date_str = datetime.datetime.now().strftime("%d.%m.%Y, %H:%M")
+
+    delivery_label = DELIVERY_LABELS.get((payload.delivery.type or "").strip(), payload.delivery.type or "—")
+    payment_label = PAYMENT_LABELS.get((payload.payment or "").strip(), payload.payment or "—")
+    installation_label = INSTALLATION_LABELS.get((payload.installation or "").strip(), payload.installation or "—")
+
+    total_sum = payload.total if payload.total is not None else 0
+    total_str = f"{total_sum:,.0f} ₸".replace(",", " ") if total_sum else "—"
+
+    # ——— Текстовое письмо (удобно для поиска и копирования) ———
     lines = [
-        "Новый заказ с сайта",
-        "=" * 40,
-        f"Дата: {payload.date or '—'}",
+        "Новый заказ с сайта grgroup.kz (B2B каталог)",
+        "=" * 50,
         "",
-        "Состав заказа:",
-        "-" * 40,
+        "Дата и время заказа:  " + order_date_str,
+        "Количество позиций:   " + str(len(payload.items)),
+        "Сумма заказа:         " + total_str,
+        "",
+        "┌────────────────────────────────────────────────────────────",
+        "│  СОСТАВ ЗАКАЗА",
+        "└────────────────────────────────────────────────────────────",
+        "",
     ]
-    for item in payload.items:
+    for idx, item in enumerate(payload.items, 1):
         name = (item.name or item.model or "—").strip()
-        price_str = f"{item.price:.0f} ₸" if item.price is not None else "по запросу"
-        line_total = ""
-        if item.price is not None and item.quantity:
-            line_total = f" = {item.price * item.quantity:.0f} ₸"
-        lines.append(f"  • {item.model} — {name}, кол-во: {item.quantity}, цена: {price_str}{line_total}")
+        price_str = f"{item.price:,.0f} ₸".replace(",", " ") if item.price is not None else "по запросу"
+        qty = item.quantity or 0
+        line_sum = ""
+        if item.price is not None and qty:
+            line_sum = f"  →  {item.price * qty:,.0f} ₸".replace(",", " ")
+        lines.append(f"  {idx}. {item.model}")
+        lines.append(f"     Наименование: {name}")
+        lines.append(f"     Количество:   {qty} шт.")
+        lines.append(f"     Цена за ед.:  {price_str}{line_sum}")
+        lines.append("")
     lines.extend([
+        "┌────────────────────────────────────────────────────────────",
+        "│  ДОСТАВКА",
+        "└────────────────────────────────────────────────────────────",
         "",
-        "Доставка:",
-        "-" * 40,
-        f"  Способ: {payload.delivery.type or '—'}",
-        f"  Адрес: {payload.delivery.address or '—'}",
-        f"  Телефон: {payload.delivery.phone or '—'}",
+        "  Способ доставки:  " + delivery_label,
+        "  Адрес:           " + (payload.delivery.address or "—"),
+        "  Телефон:         " + (payload.delivery.phone or "—"),
         "",
-        f"Оплата: {payload.payment or '—'}",
-        f"Монтаж: {payload.installation or '—'}",
+        "┌────────────────────────────────────────────────────────────",
+        "│  ОПЛАТА И МОНТАЖ",
+        "└────────────────────────────────────────────────────────────",
         "",
-        f"Итого: {payload.total:.0f} ₸" if payload.total is not None else "Итого: —",
+        "  Способ оплаты:   " + payment_label,
+        "  Монтаж:          " + installation_label,
+        "",
+        "┌────────────────────────────────────────────────────────────",
+        "│  ИТОГО К ОПЛАТЕ:  " + total_str,
+        "└────────────────────────────────────────────────────────────",
         "",
     ])
     if payload.comment and payload.comment.strip():
-        lines.extend(["Комментарий:", payload.comment.strip(), ""])
-    body = "\n".join(lines)
-    subject = "Новый заказ с сайта"
+        lines.extend([
+            "Комментарий клиента:",
+            "-" * 40,
+            payload.comment.strip(),
+            "",
+        ])
+    lines.append("— Конец заказа —")
+    body_plain = "\n".join(lines)
+
+    # ——— HTML-письмо (удобный просмотр в почтовом клиенте) ———
+    from html import escape as html_escape
+    rows_html = []
+    for idx, item in enumerate(payload.items, 1):
+        name = (item.name or item.model or "—").strip()
+        price_val = item.price
+        qty = item.quantity or 0
+        price_str = f"{price_val:,.0f} ₸".replace(",", " ") if price_val is not None else "по запросу"
+        line_sum = ""
+        if price_val is not None and qty:
+            line_sum = f"{price_val * qty:,.0f} ₸".replace(",", " ")
+        rows_html.append(
+            f"<tr><td>{idx}</td><td>{html_escape(item.model)}</td><td>{html_escape(name)}</td>"
+            f"<td>{qty}</td><td>{price_str}</td><td>{line_sum}</td></tr>"
+        )
+    items_table = "\n".join(rows_html)
+    body_html = f"""
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {{ font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5; color: #333; max-width: 640px; }}
+    h1 {{ font-size: 18px; color: #1a1a1a; border-bottom: 2px solid #4a90d9; padding-bottom: 8px; }}
+    h2 {{ font-size: 14px; color: #4a90d9; margin-top: 20px; margin-bottom: 8px; }}
+    table {{ border-collapse: collapse; width: 100%; margin: 10px 0; }}
+    th, td {{ border: 1px solid #ddd; padding: 8px 10px; text-align: left; }}
+    th {{ background: #f5f5f5; font-weight: 600; }}
+    .meta {{ background: #f9f9f9; padding: 12px; border-radius: 6px; margin: 12px 0; }}
+    .meta p {{ margin: 4px 0; }}
+    .total {{ font-size: 16px; font-weight: bold; color: #1a1a1a; margin-top: 12px; }}
+    .comment {{ background: #fffbe6; padding: 10px; border-left: 4px solid #d4a012; margin-top: 12px; }}
+  </style>
+</head>
+<body>
+  <h1>Новый заказ с сайта grgroup.kz</h1>
+  <p style="color:#666;">B2B каталог — форма checkout</p>
+
+  <div class="meta">
+    <p><strong>Дата и время:</strong> {order_date_str}</p>
+    <p><strong>Позиций в заказе:</strong> {len(payload.items)}</p>
+    <p><strong>Сумма заказа:</strong> {total_str}</p>
+  </div>
+
+  <h2>Состав заказа</h2>
+  <table>
+    <thead><tr><th>№</th><th>Модель</th><th>Наименование</th><th>Кол-во</th><th>Цена за ед.</th><th>Сумма</th></tr></thead>
+    <tbody>
+      {items_table}
+    </tbody>
+  </table>
+
+  <h2>Доставка</h2>
+  <table>
+    <tr><td><strong>Способ</strong></td><td>{html_escape(delivery_label)}</td></tr>
+    <tr><td><strong>Адрес</strong></td><td>{html_escape(payload.delivery.address or "—")}</td></tr>
+    <tr><td><strong>Телефон</strong></td><td>{html_escape(payload.delivery.phone or "—")}</td></tr>
+  </table>
+
+  <h2>Оплата и монтаж</h2>
+  <table>
+    <tr><td><strong>Способ оплаты</strong></td><td>{html_escape(payment_label)}</td></tr>
+    <tr><td><strong>Монтаж</strong></td><td>{html_escape(installation_label)}</td></tr>
+  </table>
+
+  <p class="total">Итого к оплате: {total_str}</p>
+"""
+    if payload.comment and payload.comment.strip():
+        body_html += f'  <div class="comment"><strong>Комментарий клиента:</strong><br>{html_escape(payload.comment.strip())}</div>\n'
+    body_html += "</body>\n</html>"
+
+    subject = f"Новый заказ — {order_date_str} — {total_str}"
 
     try:
         loop = asyncio.get_event_loop()
@@ -1288,7 +1568,8 @@ async def checkout_submit(payload: CheckoutSubmitRequest):
             _send_order_email_sync,
             ADMIN_EMAIL,
             subject,
-            body,
+            body_plain,
+            body_html,
         )
     except Exception as e:
         logger.exception("Ошибка отправки заказа на email (SMTP)")
@@ -1296,6 +1577,115 @@ async def checkout_submit(payload: CheckoutSubmitRequest):
             status_code=500,
             detail="Не удалось отправить заказ. Попробуйте позже.",
         )
+
+    return JSONResponse(content={"ok": True})
+
+
+# Человекочитаемые подписи для типа проекта (форма контактов)
+PROJECT_TYPE_LABELS = {
+    "apartment": "Квартира",
+    "house": "Частный дом",
+    "office": "Офис",
+    "commercial": "Коммерческое помещение",
+    "other": "Другое",
+}
+
+
+@app.post("/api/contacts/submit")
+async def contacts_submit(payload: ContactsSubmitRequest):
+    """Принимает данные заявки с страницы контактов и отправляет на email админа."""
+    if not ADMIN_EMAIL:
+        logger.warning("Contacts submit: ADMIN_EMAIL не задан")
+        raise HTTPException(
+            status_code=503,
+            detail="Отправка заявок не настроена. Обратитесь к администратору.",
+        )
+
+    import datetime
+    from html import escape as html_escape
+
+    now_str = datetime.datetime.now().strftime("%d.%m.%Y, %H:%M")
+    project_label = PROJECT_TYPE_LABELS.get((payload.projectType or "").strip(), payload.projectType or "—")
+
+    # ——— Текстовое письмо ———
+    lines = [
+        "Заявка с сайта grgroup.kz (Контакты)",
+        "=" * 50,
+        "",
+        "Дата и время:  " + now_str,
+        "",
+        "┌────────────────────────────────────────────────────────────",
+        "│  КОНТАКТНЫЕ ДАННЫЕ",
+        "└────────────────────────────────────────────────────────────",
+        "",
+        "  Имя:         " + (payload.name or "—"),
+        "  Телефон:     " + (payload.phone or "—"),
+        "  Email:       " + (payload.email or "—"),
+        "  Тип проекта: " + project_label,
+        "",
+        "┌────────────────────────────────────────────────────────────",
+        "│  СООБЩЕНИЕ",
+        "└────────────────────────────────────────────────────────────",
+        "",
+        (payload.message or "—").strip(),
+        "",
+        "— Конец заявки —",
+    ]
+    body_plain = "\n".join(lines)
+
+    # ——— HTML-письмо ———
+    body_html = f"""
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {{ font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5; color: #333; max-width: 640px; }}
+    h1 {{ font-size: 18px; color: #1a1a1a; border-bottom: 2px solid #4a90d9; padding-bottom: 8px; }}
+    h2 {{ font-size: 14px; color: #4a90d9; margin-top: 20px; margin-bottom: 8px; }}
+    table {{ border-collapse: collapse; width: 100%; margin: 10px 0; }}
+    th, td {{ border: 1px solid #ddd; padding: 8px 10px; text-align: left; }}
+    th {{ background: #f5f5f5; font-weight: 600; }}
+    .meta {{ background: #f9f9f9; padding: 12px; border-radius: 6px; margin: 12px 0; }}
+    .message {{ background: #f5f5f5; padding: 12px; border-radius: 6px; white-space: pre-wrap; }}
+  </style>
+</head>
+<body>
+  <h1>Заявка с сайта grgroup.kz (Контакты)</h1>
+  <div class="meta">
+    <p><strong>Дата и время:</strong> {now_str}</p>
+  </div>
+  <h2>Контактные данные</h2>
+  <table>
+    <tr><td><strong>Имя</strong></td><td>{html_escape(payload.name or "—")}</td></tr>
+    <tr><td><strong>Телефон</strong></td><td>{html_escape(payload.phone or "—")}</td></tr>
+    <tr><td><strong>Email</strong></td><td>{html_escape(payload.email or "—")}</td></tr>
+    <tr><td><strong>Тип проекта</strong></td><td>{html_escape(project_label)}</td></tr>
+  </table>
+  <h2>Сообщение</h2>
+  <div class="message">{html_escape((payload.message or "—").strip())}</div>
+</body>
+</html>
+"""
+
+    subject = f"Заявка с сайта (Контакты) — {now_str} — {payload.name or 'Без имени'}"
+
+    try:
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(
+            None,
+            _send_order_email_sync,
+            ADMIN_EMAIL,
+            subject,
+            body_plain,
+            body_html,
+        )
+    except Exception as e:
+        logger.exception("Ошибка отправки заявки с контактов на email (SMTP)")
+        raise HTTPException(
+            status_code=500,
+            detail="Не удалось отправить заявку. Попробуйте позже.",
+        ) from e
 
     return JSONResponse(content={"ok": True})
 
@@ -1414,8 +1804,35 @@ async def remove_item_from_cart(request: Request, response: Response, model: str
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/api/admin/login")
+async def admin_login(request: Request, response: Response, login_data: AdminLoginRequest):
+    """Авторизация админа"""
+    # Используем timing-safe сравнение для защиты от timing attacks
+    login_ok = secrets.compare_digest(login_data.login.strip(), ADMIN_LOGIN)
+    password_ok = secrets.compare_digest(login_data.password, ADMIN_PASSWORD)
+    if login_ok and password_ok:
+        create_admin_session(response, request)
+        return {"ok": True}
+    raise HTTPException(status_code=401, detail="Неверный логин или пароль")
+
+
+@app.get("/api/admin/check")
+async def admin_check(request: Request):
+    """Проверка авторизации админа"""
+    return {"authenticated": is_admin_authenticated(request)}
+
+
+@app.post("/api/admin/logout")
+async def admin_logout(request: Request, response: Response):
+    """Выход из админки"""
+    remove_admin_session(request, response)
+    return {"ok": True}
+
+
 @app.get("/api/admin/prices")
-async def get_prices():
+async def get_prices(request: Request):
+    """Получает все настройки цен и скидок"""
+    require_admin_auth(request)
     """Получает все настройки цен и скидок"""
     try:
         from price_manager import get_all_discounts
@@ -1426,12 +1843,13 @@ async def get_prices():
 
 
 @app.post("/api/admin/prices/global-discount")
-async def set_global_discount(request: DiscountRequest):
+async def set_global_discount(request: Request, discount_request: DiscountRequest):
     """Устанавливает глобальную скидку (0-100%)"""
+    require_admin_auth(request)
     try:
         from price_manager import set_global_discount
-        if set_global_discount(request.discount):
-            return {"status": "success", "message": f"Глобальная скидка установлена: {request.discount}%"}
+        if set_global_discount(discount_request.discount):
+            return {"status": "success", "message": f"Глобальная скидка установлена: {discount_request.discount}%"}
         else:
             raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
     except ValueError as e:
@@ -1442,12 +1860,13 @@ async def set_global_discount(request: DiscountRequest):
 
 
 @app.post("/api/admin/prices/model-discount")
-async def set_model_discount(request: ModelDiscountRequest):
+async def set_model_discount(request: Request, model_discount_request: ModelDiscountRequest):
     """Устанавливает скидку для конкретной модели"""
+    require_admin_auth(request)
     try:
         from price_manager import set_model_discount
-        if set_model_discount(request.model, request.discount):
-            return {"status": "success", "message": f"Скидка для модели {request.model} установлена: {request.discount}%"}
+        if set_model_discount(model_discount_request.model, model_discount_request.discount):
+            return {"status": "success", "message": f"Скидка для модели {model_discount_request.model} установлена: {model_discount_request.discount}%"}
         else:
             raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
     except ValueError as e:
@@ -1458,8 +1877,9 @@ async def set_model_discount(request: ModelDiscountRequest):
 
 
 @app.delete("/api/admin/prices/model-discount/{model}")
-async def remove_model_discount(model: str):
+async def remove_model_discount(request: Request, model: str):
     """Удаляет скидку для конкретной модели"""
+    require_admin_auth(request)
     try:
         from price_manager import remove_model_discount
         if remove_model_discount(model):
@@ -1472,12 +1892,13 @@ async def remove_model_discount(model: str):
 
 
 @app.post("/api/admin/prices/brand-discount")
-async def set_brand_discount(request: BrandDiscountRequest):
+async def set_brand_discount(request: Request, brand_discount_request: BrandDiscountRequest):
     """Устанавливает скидку для бренда"""
+    require_admin_auth(request)
     try:
         from price_manager import set_brand_discount
-        if set_brand_discount(request.brand, request.discount):
-            return {"status": "success", "message": f"Скидка для бренда {request.brand} установлена: {request.discount}%"}
+        if set_brand_discount(brand_discount_request.brand, brand_discount_request.discount):
+            return {"status": "success", "message": f"Скидка для бренда {brand_discount_request.brand} установлена: {brand_discount_request.discount}%"}
         else:
             raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
     except ValueError as e:
@@ -1488,8 +1909,9 @@ async def set_brand_discount(request: BrandDiscountRequest):
 
 
 @app.delete("/api/admin/prices/brand-discount/{brand}")
-async def remove_brand_discount(brand: str):
+async def remove_brand_discount(request: Request, brand: str):
     """Удаляет скидку для бренда"""
+    require_admin_auth(request)
     try:
         from price_manager import remove_brand_discount
         if remove_brand_discount(brand):
@@ -1502,12 +1924,13 @@ async def remove_brand_discount(brand: str):
 
 
 @app.post("/api/admin/prices/custom-price")
-async def set_custom_price(request: CustomPriceRequest):
+async def set_custom_price(request: Request, custom_price_request: CustomPriceRequest):
     """Устанавливает кастомную цену для модели"""
+    require_admin_auth(request)
     try:
         from price_manager import set_custom_price
-        if set_custom_price(request.model, request.price):
-            return {"status": "success", "message": f"Кастомная цена для модели {request.model} установлена: {request.price} ₸"}
+        if set_custom_price(custom_price_request.model, custom_price_request.price):
+            return {"status": "success", "message": f"Кастомная цена для модели {custom_price_request.model} установлена: {custom_price_request.price} ₸"}
         else:
             raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
     except ValueError as e:
@@ -1518,8 +1941,9 @@ async def set_custom_price(request: CustomPriceRequest):
 
 
 @app.delete("/api/admin/prices/custom-price/{model}")
-async def remove_custom_price(model: str):
+async def remove_custom_price(request: Request, model: str):
     """Удаляет кастомную цену для модели"""
+    require_admin_auth(request)
     try:
         from price_manager import remove_custom_price
         if remove_custom_price(model):
@@ -1532,11 +1956,14 @@ async def remove_custom_price(model: str):
 
 
 @app.get("/api/admin/portal-mismatch")
-async def get_portal_mismatch(cached_data: dict = Depends(get_cached_data)):
+async def get_portal_mismatch(request: Request, cached_data: dict = Depends(get_cached_data)):
+    """Проверка битых/недостающих позиций"""
+    require_admin_auth(request)
     """
     Проверка битых/недостающих позиций: товары из B2B, для которых нет папки в portal_export.
     Возвращает список позиций без папки и ожидаемое имя папки (model_to_foldername).
     """
+    require_admin_auth(request)
     missing = []
     products = cached_data.get("products", [])
     for p in products:
@@ -1560,7 +1987,9 @@ async def get_portal_mismatch(cached_data: dict = Depends(get_cached_data)):
 
 
 @app.get("/api/parse-images/status")
-async def get_image_parser_status():
+async def get_image_parser_status(request: Request):
+    """Возвращает статус парсера изображений"""
+    require_admin_auth(request)
     """Возвращает статус парсера изображений"""
     return {
         "enabled": IMAGE_PARSER_ENABLED,
@@ -1572,7 +2001,9 @@ async def get_image_parser_status():
 
 
 @app.get("/api/portal-parser/status")
-async def get_portal_parser_status():
+async def get_portal_parser_status(request: Request):
+    """Статус парсера портала"""
+    require_admin_auth(request)
     """Статус парсера портала: работает ли, время старта."""
     running = len(_portal_parser_tasks) > 0
     started_at = None
@@ -1587,7 +2018,9 @@ async def get_portal_parser_status():
 
 
 @app.get("/api/portal-parser/logs")
-async def get_portal_parser_logs(limit: int = 300):
+async def get_portal_parser_logs(request: Request, limit: int = 300):
+    """Последние строки лога парсера портала"""
+    require_admin_auth(request)
     """Последние строки лога парсера портала."""
     n = min(max(1, limit), 500)
     lines = list(_portal_parser_log_buffer[-n:])
@@ -1595,7 +2028,9 @@ async def get_portal_parser_logs(limit: int = 300):
 
 
 @app.post("/api/portal-parser/stop")
-async def stop_portal_parser():
+async def stop_portal_parser(request: Request):
+    """Останавливает все запущенные задачи парсера портала"""
+    require_admin_auth(request)
     """Останавливает все запущенные задачи парсера портала."""
     tasks = list(_portal_parser_tasks)
     if not tasks:
@@ -1606,7 +2041,9 @@ async def stop_portal_parser():
 
 
 @app.post("/api/portal-parser/start-missing")
-async def start_portal_parser_missing(cached_data: dict = Depends(get_cached_data)):
+async def start_portal_parser_missing(request: Request, cached_data: dict = Depends(get_cached_data)):
+    """Запускает парсер для недостающих папок"""
+    require_admin_auth(request)
     """
     Запускает парсер только для товаров без папки в portal_export.
     Парсер ищет эти наименования в каталоге портала и создаёт папки.
@@ -1636,7 +2073,9 @@ async def start_portal_parser_missing(cached_data: dict = Depends(get_cached_dat
 
 
 @app.post("/api/portal-parser/start")
-async def start_portal_parser(start_page: Optional[int] = 1, end_page: Optional[int] = 116):
+async def start_portal_parser(request: Request, start_page: Optional[int] = 1, end_page: Optional[int] = 116):
+    """Запускает portal_parser_cannon.py"""
+    require_admin_auth(request)
     """Запускает portal_parser_cannon.py"""
     try:
         success = await run_portal_parser_cannon(start_page or 1, end_page or 116)

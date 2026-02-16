@@ -214,9 +214,36 @@
   margin-top: 0.25rem;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1280px) {
   .section {
-    padding: var(--gap-section) var(--container-padding);
+    padding: var(--gap-section-md) var(--container-padding-md);
+  }
+  .container {
+    padding: 2.5rem 2rem;
+  }
+  .heading {
+    font-size: clamp(var(--text-xl), 2.5vw, var(--text-3xl));
+  }
+}
+
+@media (max-width: 1024px) {
+  .section {
+    padding: var(--gap-section-md) var(--container-padding-md);
+  }
+  .container {
+    padding: 2rem 1.75rem;
+  }
+  .whyChooseGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: var(--gap-section-sm) var(--container-padding);
   }
   .container {
     padding: 2rem var(--container-padding);
@@ -253,3 +280,36 @@
   }
 }
 
+@media (max-width: 480px) {
+  .section {
+    padding: var(--gap-section-sm) 0.75rem;
+  }
+  .container {
+    padding: 1.5rem 0.75rem;
+  }
+  .heading {
+    font-size: var(--text-lg);
+    padding-right: 70px;
+  }
+  .intro {
+    font-size: var(--text-base);
+    margin-bottom: 1.5rem;
+  }
+  .blockTitle {
+    font-size: var(--text-base);
+  }
+  .missionCard,
+  .whyChooseCard {
+    padding: 1rem;
+  }
+  .missionTitle,
+  .whyChooseTitle {
+    font-size: var(--text-sm);
+  }
+  .stat {
+    padding: 1rem 0.75rem;
+  }
+  .statValue {
+    font-size: var(--text-xl);
+  }
+}

@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /api
+Disallow: /catalog/admin
 
-Sitemap: https://электромонтаж.kz/sitemap.xml
+Sitemap: https://grgroup.kz/sitemap.xml

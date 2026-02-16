@@ -51,9 +51,7 @@ function ProductCardInner({ product, onCardClick }) {
     ? ''
     : quantity === 0 
     ? 'Нет в наличии' 
-    : quantity >= 10 
-    ? `В наличии: ${quantity} шт.` 
-    : `${quantity} шт.`;
+    : `В наличии: ${quantity} шт.`;
 
   const handleImageError = (e) => {
     const model = (product.model != null ? String(product.model) : '').trim();

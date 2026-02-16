@@ -52,10 +52,16 @@
   --container-padding: 1.25rem;
   --container-padding-md: 1.5rem;
   --container-padding-lg: 2rem;
+  --bp-xs: 480px;
+  --bp-sm: 768px;
+  --bp-md: 1024px;
   --bp-mobile: 767px;
   --bp-tablet: 1023px;
   --bp-desktop: 1024px;
+  --bp-medium: 1280px;
   --gap-section: 4.5rem;
+  --gap-section-md: 3rem;
+  --gap-section-sm: 2rem;
   --gap-block: 1.5rem;
   --radius-button: 12px;
   --radius-card: 16px;

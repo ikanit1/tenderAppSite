@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Background from '../components/Background';
 import Header from '../components/Header';
@@ -9,7 +9,6 @@ import { withBaseUrl } from '../utils/baseUrl';
 
 export default function Checkout() {
   const { cart, removeFromCart, updateQty, clearCart, totalSum, syncCart, setCartFromExternal } = useCart();
-  const navigate = useNavigate();
   const [delivery, setDelivery] = useState('transport');
   const [payment, setPayment] = useState('cash');
   const [installation, setInstallation] = useState('none'); // 'none' | 'professional'
@@ -20,6 +19,8 @@ export default function Checkout() {
   const [phone, setPhone] = useState('');
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
+  const [submittedTotal, setSubmittedTotal] = useState(0);
 
   // Синхронизация корзины из cookie и API при монтировании компонента
   useEffect(() => {
@@ -176,15 +177,60 @@ export default function Checkout() {
         alert(message);
         return;
       }
-      alert(`Заказ принят в обработку. Сумма: ${formatPrice(totalSum)} ₸`);
+      setSubmittedTotal(totalSum);
+      setOrderSuccess(true);
       clearCart();
-      navigate('/');
     } catch (err) {
       alert('Не удалось отправить заказ. Попробуйте позже.');
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (orderSuccess) {
+    return (
+      <>
+        <Background />
+        <Header />
+        <main className="checkout-main">
+          <div className="container">
+            <motion.div
+              className="checkout-success"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+            >
+              <motion.div
+                className="checkout-success-icon"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.15, type: 'spring', stiffness: 200, damping: 14 }}
+                aria-hidden
+              >
+                ✓
+              </motion.div>
+              <h2 className="checkout-success-title">Заказ принят в обработку</h2>
+              <p className="checkout-success-text">
+                Мы свяжемся с вами в ближайшее время для уточнения деталей.
+                {submittedTotal > 0 && (
+                  <span className="checkout-success-sum"> Сумма заказа: {formatPrice(submittedTotal)} ₸</span>
+                )}
+              </p>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <Link to="/" className="btn-action btn-primary checkout-success-btn">
+                  Вернуться в каталог
+                </Link>
+              </motion.div>
+            </motion.div>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   if (cart.length === 0) {
     return (

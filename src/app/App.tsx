@@ -8,8 +8,8 @@ import { ContactsPage } from '@/pages/ContactsPage';
 import { ProjectsPage } from '@/pages/ProjectsPage';
 import { SmartSystemsPage } from '@/pages/SmartSystemsPage';
 import { DigitalEcosystemPage } from '@/pages/DigitalEcosystemPage';
+import { WorkPage } from '@/pages/WorkPage';
 import { ToastProvider } from '@/features/toast/ToastProvider';
-import { CustomCursor } from '@/shared/ui/CustomCursor/CustomCursor';
 import { CartProvider } from '@/shared/context/CartContext';
 import { OpenAssistantProvider } from '@/shared/context/OpenAssistantContext';
 import { getCatalogUrl } from '@/shared/utils/catalogUrl';
@@ -55,7 +55,6 @@ export function App() {
   return (
     <BrowserRouter>
       <MotionConfig reducedMotion="user" transition={{ duration: 0.25, ease: 'easeOut' }}>
-        <CustomCursor />
         <ToastProvider>
           <CartProvider>
             <OpenAssistantProvider>
@@ -67,6 +66,7 @@ export function App() {
                   <Route path="/projects" element={<ProjectsPage />} />
                   <Route path="/smart-systems" element={<SmartSystemsPage />} />
                   <Route path="/digital-ecosystem" element={<DigitalEcosystemPage />} />
+                  <Route path="/work" element={<WorkPage />} />
                   <Route path="catalog" element={<CatalogRedirect />} />
                   <Route path="catalog/*" element={<CatalogRedirect />} />
                 </Route>

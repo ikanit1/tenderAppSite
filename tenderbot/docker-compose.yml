@@ -19,6 +19,8 @@ services:
       context: .
       dockerfile: apisite/Dockerfile
     restart: unless-stopped
+    env_file:
+      - apisite/.env
     environment:
       PORT: ${APISITE_PORT:-8001}
       HOST: 0.0.0.0

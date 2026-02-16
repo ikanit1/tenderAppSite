@@ -61,12 +61,20 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
 
 # Отправка заказов на email админа (checkout)
-ADMIN_EMAIL = os.getenv("info@grgroup.kz", "").strip()
-SMTP_HOST = os.getenv("info@grgroup.kz", "smtp.gmail.com")
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "").strip()
+SMTP_HOST = os.getenv("SMTP_HOST", "mail.grgroup.kz")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
-SMTP_USER = os.getenv("info@grgroup.kz", "").strip()
-SMTP_PASSWORD = os.getenv("717^kkOs3", "")
+SMTP_USER = os.getenv("SMTP_USER", "").strip()
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 SMTP_USE_TLS = os.getenv("SMTP_USE_TLS", "false").lower() == "true"
+SMTP_USE_SSL = os.getenv("SMTP_USE_SSL", "true").lower() == "true"  # Для порта 465 используется SSL
+
+# Аутентификация админки каталога
+ADMIN_LOGIN = os.getenv("ADMIN_LOGIN", "admin").strip()
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123").strip()
+
+# Базовый URL сайта для sitemap.xml (без слэша в конце)
+SITEMAP_BASE_URL = (os.getenv("SITEMAP_BASE_URL", "https://grgroup.kz")).rstrip("/")
 
 # Создаем директорию для данных
 CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)

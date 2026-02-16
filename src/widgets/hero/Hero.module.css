@@ -598,6 +598,38 @@
   border-color: var(--color-text-muted);
 }
 
+@media (max-width: 1280px) {
+  .hero {
+    padding: 4rem var(--container-padding-md) 5rem;
+  }
+  .gradientBlock {
+    padding: 4.5rem 3rem 5.5rem;
+  }
+  .title {
+    font-size: clamp(var(--text-2xl), 4vw, var(--text-4xl));
+  }
+  .subtitle {
+    font-size: clamp(var(--text-base), 2vw, var(--text-xl));
+  }
+}
+
+@media (max-width: 1024px) {
+  .hero {
+    padding: 3.5rem var(--container-padding-md) 4.5rem;
+  }
+  .gradientBlock {
+    padding: 3.5rem 2.5rem 4.5rem;
+  }
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+  .blocks {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
 @media (max-width: 768px) {
   .hero {
     padding: 3rem var(--container-padding) 4rem;
@@ -647,24 +679,34 @@
   }
 }
 
-@media (max-width: 479px) {
+@media (max-width: 480px) {
   .hero {
-    padding: 2rem var(--container-padding) 3rem;
+    padding: 1.75rem 0.75rem 2.5rem;
   }
   .gradientBlock {
-    padding: 2rem var(--container-padding) 3rem;
+    padding: 1.75rem 0.75rem 2.5rem;
   }
   .title {
     font-size: var(--text-xl);
+    margin-bottom: 0.75rem;
   }
   .subtitle {
     font-size: var(--text-base);
+    margin-bottom: 0.75rem;
   }
   .card {
     padding: 1rem 0.875rem;
+    font-size: var(--text-xs);
   }
   .block {
     padding: 1.25rem 1rem;
+  }
+  .blockTitle {
+    font-size: var(--text-base);
+  }
+  .ctaPrimary {
+    padding: 0.75rem 1.25rem;
+    font-size: var(--text-xs);
   }
 }
 
