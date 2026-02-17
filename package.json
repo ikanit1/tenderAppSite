@@ -15,7 +15,10 @@
     "preview": "vite preview",
     "start:apisite": "python -m uvicorn tenderbot.apisite.main:app --host 0.0.0.0 --port 8001 --workers 2",
     "lint": "eslint . --ext ts,tsx",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\""
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
+    "lighthouse:audit": "node scripts/lighthouse-audit.js",
+    "lighthouse:local": "node scripts/lighthouse-audit.js --local",
+    "lighthouse:report": "node scripts/open-latest-report.js"
   },
   "dependencies": {
     "@react-three/drei": "^9.122.0",
@@ -39,6 +42,7 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.14",
     "globals": "^15.11.0",
+    "lighthouse": "^12.0.0",
     "prettier": "^3.3.3",
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.11.0",

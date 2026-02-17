@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Чат #{{ ticket.id }} — {{ ticket.user.full_name }}{% endblock %}
+{% block title %}Чат #{{ ticket.id }}{% if ticket.user %} — {{ ticket.user.full_name }}{% endif %}{% endblock %}
 {% block header_title %}Чат #{{ ticket.id }}{% endblock %}
 {% block content %}
 <div class="chat-header">
     <div>
         <a href="/support" class="btn btn-ghost btn-sm" style="margin-right: 0.5rem;">← К списку</a>
-        <strong>{{ ticket.user.full_name }}</strong> (Telegram ID: {{ ticket.user.tg_id }})
+        <strong>{% if ticket.user %}{{ ticket.user.full_name }}{% else %}Пользователь удалён{% endif %}</strong>{% if ticket.user %} (Telegram ID: {{ ticket.user.tg_id }}){% endif %}
         {% if ticket.status == 'new' %}<span class="badge badge-danger">🆕 Новый</span>{% endif %}
         {% if ticket.status == 'in_progress' %}<span class="badge badge-warning">⏳ В процессе</span>{% endif %}
         {% if ticket.status == 'closed' %}<span class="badge badge-neutral">📁 Закрыт</span>{% endif %}

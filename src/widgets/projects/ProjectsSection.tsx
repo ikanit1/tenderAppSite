@@ -46,7 +46,6 @@ export function ProjectsSection() {
       variants={reduceMotion ? undefined : sectionVariants}
       initial="hidden"
       animate="visible"
-      viewport={{ once: true }}
     >
       <div className={styles.container}>
         <motion.h2 id="projects-heading" className={styles.heading} variants={reduceMotion ? undefined : itemVariants}>

@@ -106,7 +106,7 @@ async def support_chat(
     if not ticket:
         return RedirectResponse(url="/support", status_code=302)
 
-    messages = sorted(ticket.messages, key=lambda m: m.created_at or 0)
+    messages = sorted(ticket.messages or [], key=lambda m: (m.created_at or datetime.min).timestamp() if m.created_at else 0)
     return templates.TemplateResponse(
         "support_chat.html",
         {
@@ -149,25 +149,29 @@ async def support_reply(
     ticket.status = TicketStatus.IN_PROGRESS.value
     db.commit()
 
-    tg_id = ticket.user.tg_id
-    base_url = str(request.base_url).rstrip("/")
-    try:
-        async with httpx.AsyncClient() as client:
-            if image_url:
-                photo_url = base_url + image_url
-                r = await client.post(
-                    f"https://api.telegram.org/bot{settings.BOT_TOKEN}/sendPhoto",
-                    data={"chat_id": tg_id, "photo": photo_url, "caption": text[:1024] if text else None, "parse_mode": "HTML"},
-                    timeout=15.0,
-                )
-            else:
-                r = await client.post(
-                    f"https://api.telegram.org/bot{settings.BOT_TOKEN}/sendMessage",
-                    json={"chat_id": tg_id, "text": text, "parse_mode": "HTML"},
-                    timeout=10.0,
-                )
-    except Exception:
-        pass
+    # Отправка в Telegram только если есть пользователь
+    if ticket.user and ticket.user.tg_id:
+        tg_id = ticket.user.tg_id
+        base_url = str(request.base_url).rstrip("/")
+        try:
+            async with httpx.AsyncClient() as client:
+                if image_url:
+                    photo_url = base_url + image_url
+                    r = await client.post(
+                        f"https://api.telegram.org/bot{settings.BOT_TOKEN}/sendPhoto",
+                        data={"chat_id": tg_id, "photo": photo_url, "caption": text[:1024] if text else None, "parse_mode": "HTML"},
+                        timeout=15.0,
+                    )
+                else:
+                    r = await client.post(
+                        f"https://api.telegram.org/bot{settings.BOT_TOKEN}/sendMessage",
+                        json={"chat_id": tg_id, "text": text, "parse_mode": "HTML"},
+                        timeout=10.0,
+                    )
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to send Telegram message for ticket {ticket_id}: {e}")
 
     return RedirectResponse(url=f"/support/{ticket_id}", status_code=302)
 

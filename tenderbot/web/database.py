@@ -14,12 +14,19 @@ if "+aiosqlite" in _db_url:
 
 # Настройка пула соединений для синхронного движка
 if "sqlite" in _db_url:
+    from sqlalchemy import event
     engine = create_engine(
         _db_url,
         echo=False,
         pool_pre_ping=False,  # SQLite не поддерживает
         connect_args={"check_same_thread": False},
     )
+    # Включить foreign keys для SQLite (критично для ON DELETE CASCADE)
+    @event.listens_for(engine, "connect")
+    def set_sqlite_pragma(dbapi_conn, connection_record):
+        cursor = dbapi_conn.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 else:
     engine = create_engine(
         _db_url,

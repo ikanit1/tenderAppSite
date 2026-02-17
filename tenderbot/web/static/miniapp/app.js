@@ -88,6 +88,7 @@
     currentApplicationId: null,
     currentTicketId: null,
     currentTicket: null,
+    supportError: null,
     skills: [],
   };
 
@@ -362,6 +363,9 @@
   }
 
   function renderSupportChat() {
+    if (state.supportError) {
+      return '<div class="screen"><p class="card-meta" style="color: #c33; padding: 1rem;">⚠️ ' + state.supportError + '</p><button type="button" class="btn btn-secondary" onclick="state.screen=\'support\'; render();">← К списку</button></div>';
+    }
     const t = state.currentTicket;
     if (!t) return '<div class="screen"><p>Загрузка...</p></div>';
     const closed = t.status === "closed";
@@ -519,6 +523,7 @@
         state.currentTicketId = parseInt(el.dataset.ticketId, 10);
         state.stack.push(state.screen);
         state.screen = "support_chat";
+        state.supportError = null;
         setHeader("Чат", true);
         setTabbarActive("support_chat");
         loadSupportTicketDetail().then(() => {
@@ -538,6 +543,7 @@
         api("/api/support/tickets", { method: "POST", body: JSON.stringify({ text: "" }) })
           .then((data) => {
             state.currentTicketId = data.id;
+            state.supportError = null;
             state.stack.push(state.screen);
             state.screen = "support_chat";
             return loadSupportTicketDetail();
@@ -569,6 +575,10 @@
         const btn = supportForm.querySelector('button[type="submit"]');
         if (btn) btn.disabled = true;
         function sendPayload(payload) {
+          if (!state.currentTicketId) {
+            TG.showAlert("Тикет не выбран");
+            return Promise.reject(new Error("Тикет не выбран"));
+          }
           return api("/api/support/tickets/" + state.currentTicketId + "/messages", {
             method: "POST",
             body: JSON.stringify(payload),
@@ -603,6 +613,7 @@
           .then(() => {
             state.currentTicketId = null;
             state.currentTicket = null;
+            state.supportError = null;
             state.screen = "support";
             state.stack.pop();
             setHeader("Поддержка", false);
@@ -727,10 +738,18 @@
 
   function loadSupportTicketDetail() {
     if (!state.currentTicketId) return Promise.resolve();
-    return api("/api/support/tickets/" + state.currentTicketId).then((data) => {
-      state.currentTicket = data;
-      return data;
-    });
+    return api("/api/support/tickets/" + state.currentTicketId)
+      .then((data) => {
+        state.currentTicket = data;
+        state.supportError = null;
+        return data;
+      })
+      .catch((err) => {
+        state.supportError = errorToMessage(err) || "Ошибка загрузки тикета";
+        state.currentTicket = null;
+        if (TG && TG.showAlert) TG.showAlert(state.supportError);
+        throw err;
+      });
   }
 
   function loadScreenData() {
@@ -801,9 +820,22 @@
       scheduleUpdates(1500);
       return;
     }
-    if (scope === "support_chat" && !state.currentTicketId) {
-      scheduleUpdates(1000);
-      return;
+    if (scope === "support_chat") {
+      if (!state.currentTicketId) {
+        scheduleUpdates(1000);
+        return;
+      }
+      if (!state.currentTicket && !state.supportError) {
+        loadSupportTicketDetail().catch(() => {
+          stopUpdates();
+        });
+        scheduleUpdates(1000);
+        return;
+      }
+      if (state.supportError) {
+        stopUpdates();
+        return;
+      }
     }
     let url = "/api/updates?scope=" + encodeURIComponent(scope) + "&timeout=25";
     if (updatesSince) url += "&since=" + encodeURIComponent(updatesSince);

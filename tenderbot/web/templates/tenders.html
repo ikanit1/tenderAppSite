@@ -6,6 +6,16 @@
     <h2 class="page-title">Тендеры</h2>
     <p class="page-subtitle">Создание и управление тендерами</p>
 </div>
+{% if error_msg %}
+<div class="alert alert-error" style="margin-bottom: 1rem; padding: 0.75rem 1rem; background: #fee; border: 1px solid #fcc; border-radius: 4px; color: #c33;">
+    ⚠️ {{ error_msg }}
+</div>
+{% endif %}
+{% if success_msg %}
+<div class="alert alert-success" style="margin-bottom: 1rem; padding: 0.75rem 1rem; background: #efe; border: 1px solid #cfc; border-radius: 4px; color: #3c3;">
+    ✅ {{ success_msg }}
+</div>
+{% endif %}
 <div class="filters-bar">
     <a href="/tenders" class="{% if not request.query_params.get('status') %}active{% endif %}">Все</a>
     <a href="/tenders?status=draft" class="{% if request.query_params.get('status') == 'draft' %}active{% endif %}">Черновики</a>

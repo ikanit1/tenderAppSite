@@ -57,6 +57,8 @@ async def tenders_list(
     db: Session = Depends(get_db),
     status: str | None = Query(None),
     page: int = Query(1, ge=1),
+    error: str | None = Query(None),
+    success: str | None = Query(None),
 ):
     if redir := require_admin(request):
         return redir
@@ -75,6 +77,16 @@ async def tenders_list(
     page_info = get_page_info(page, PER_PAGE, total)
     tenders = db.execute(q.offset(page_info.offset).limit(page_info.per_page)).scalars().all()
 
+    # Сообщения об ошибках/успехе
+    error_msg = None
+    success_msg = None
+    if error == "tender_not_found":
+        error_msg = "Тендер не найден."
+    elif error == "delete_failed":
+        error_msg = "Не удалось удалить тендер. Возможно, есть связанные данные."
+    if success == "tender_deleted":
+        success_msg = "Тендер успешно удалён."
+
     return templates.TemplateResponse(
         "tenders.html",
         {
@@ -82,6 +94,8 @@ async def tenders_list(
             "tenders": tenders,
             "statuses": [s.value for s in TenderStatus],
             "page_info": page_info,
+            "error_msg": error_msg,
+            "success_msg": success_msg,
         },
     )
 
@@ -471,17 +485,23 @@ async def tender_delete(
     if redir := require_admin(request):
         return redir
     tender = db.execute(select(Tender).where(Tender.id == tender_id)).scalar_one_or_none()
-    if tender:
-        try:
-            db.delete(tender)
-            db.commit()
-            logger.info(f"Tender {tender_id} deleted via web interface")
-        except Exception as e:
-            db.rollback()
-            logger.error(f"Error deleting tender {tender_id}: {e}")
-    else:
+    if not tender:
         logger.warning(f"Attempt to delete non-existent tender {tender_id}")
-    return RedirectResponse(url="/tenders", status_code=302)
+        return RedirectResponse(url="/tenders?error=tender_not_found", status_code=302)
+    
+    try:
+        db.delete(tender)
+        db.commit()
+        logger.info(f"Tender {tender_id} deleted via web interface")
+        return RedirectResponse(url="/tenders?success=tender_deleted", status_code=302)
+    except IntegrityError as e:
+        db.rollback()
+        logger.error(f"Integrity error deleting tender {tender_id}: {e}")
+        return RedirectResponse(url=f"/tenders?error=delete_failed&tender_id={tender_id}", status_code=302)
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error deleting tender {tender_id}: {e}", exc_info=True)
+        return RedirectResponse(url=f"/tenders?error=delete_failed&tender_id={tender_id}", status_code=302)
 
 
 @router.get("/{tender_id}", response_class=HTMLResponse)

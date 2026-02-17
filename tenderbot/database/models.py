@@ -89,7 +89,7 @@ class Tender(Base):
         "User", back_populates="tenders_created", foreign_keys=[created_by_user_id]
     )
     applications: Mapped[list["TenderApplication"]] = relationship(
-        "TenderApplication", back_populates="tender"
+        "TenderApplication", back_populates="tender", cascade="all, delete-orphan"
     )
 
 

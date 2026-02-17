@@ -62,3 +62,6 @@ Thumbs.db
 
 # Debug
 debug.log
+
+# Lighthouse
+lighthouse-reports/
