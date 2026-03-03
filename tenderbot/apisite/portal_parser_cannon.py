@@ -83,42 +83,115 @@ def save_parsed(parsed: Set[str]) -> None:
     PARSED_FILE.write_text(json.dumps({"parsed_urls": list(parsed)}, indent=2), encoding="utf-8")
 
 
-def run_browser_login_and_save_cookies() -> bool:
-    """Один раз: headless Chrome, логин, сохранение куки."""
-    from selenium import webdriver
-    from selenium.webdriver.chrome.options import Options
-    from selenium.webdriver.common.by import By
-    from selenium.webdriver.support.ui import WebDriverWait
-    from selenium.webdriver.support import expected_conditions as EC
+def _guess_login_form_fields(form) -> tuple[Optional[str], Optional[str]]:
+    """
+    Возвращает (username_field_name, password_field_name) для формы логина.
+    Стараемся поддержать типичные формы OpenCart (telephone/email + password).
+    """
+    pwd = form.select_one("input[type='password'][name]") if form else None
+    pwd_name = (pwd.get("name") if pwd else None)
 
-    CHROME_PATH = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-    opts = Options()
-    opts.binary_location = CHROME_PATH
-    opts.add_argument("--headless=new")
-    opts.add_argument("--disable-gpu")
-    opts.add_argument("--no-sandbox")
-    driver = webdriver.Chrome(options=opts)
+    # Находим "логин" по наиболее вероятным селекторам.
+    user = None
+    if form:
+        selectors = [
+            "input[type='tel'][name]",
+            "input[type='email'][name]",
+            "input[name*='telephone' i]",
+            "input[name*='phone' i]",
+            "input[name*='email' i]",
+            "input[name*='login' i]",
+            "input[name*='username' i]",
+        ]
+        for sel in selectors:
+            user = form.select_one(sel)
+            if user and user.get("name"):
+                break
+    user_name = (user.get("name") if user else None)
+
+    # Fallback: первый text/tel/email input с name, который не password.
+    if form and not user_name:
+        for inp in form.select("input[name]"):
+            t = (inp.get("type") or "text").lower()
+            if t in ("hidden", "submit", "button", "password", "checkbox", "radio", "file"):
+                continue
+            name = inp.get("name")
+            if name and name != pwd_name:
+                user_name = name
+                break
+
+    return user_name, pwd_name
+
+
+def run_http_login_and_save_cookies() -> bool:
+    """Один раз: логин через httpx, сохранение куки в файл."""
+    headers = {
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8",
+    }
+    timeout = httpx.Timeout(20.0, connect=10.0)
+
     try:
-        driver.get(LOGIN_URL)
-        tel = WebDriverWait(driver, 15).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='tel'], input[name*='telephone'], input[name*='phone'], input[name*='email']"))
-        )
-        tel.clear()
-        tel.send_keys(LOGIN_USERNAME)
-        pwd = driver.find_element(By.CSS_SELECTOR, "input[type='password']")
-        pwd.clear()
-        pwd.send_keys(LOGIN_PASSWORD)
-        btn = driver.find_element(By.CSS_SELECTOR, "button[type='submit'], input[type='submit'], .btn-primary")
-        btn.click()
-        WebDriverWait(driver, 10).until(lambda d: "login" not in d.current_url.lower())
-        cookies = driver.get_cookies()
-        save_cookies(cookies)
-        return True
+        with httpx.Client(timeout=timeout, follow_redirects=True, headers=headers) as c:
+            r = c.get(LOGIN_URL)
+            if r.status_code != 200:
+                logger.error("Не удалось открыть страницу логина (%s): %s", LOGIN_URL, r.status_code)
+                return False
+
+            soup = BeautifulSoup(r.text, "html.parser")
+            form = soup.find("form")
+            if not form:
+                logger.error("Форма логина не найдена на странице %s", LOGIN_URL)
+                return False
+
+            user_field, pwd_field = _guess_login_form_fields(form)
+            if not user_field or not pwd_field:
+                logger.error("Не удалось определить поля логина (user=%s, pwd=%s)", user_field, pwd_field)
+                return False
+
+            # Собираем payload (включая скрытые поля/CSRF, если есть)
+            payload: Dict[str, str] = {}
+            for inp in form.select("input[name]"):
+                name = inp.get("name")
+                if not name:
+                    continue
+                t = (inp.get("type") or "").lower()
+                if t in ("submit", "button", "file"):
+                    continue
+                payload[name] = inp.get("value") or ""
+
+            payload[user_field] = LOGIN_USERNAME
+            payload[pwd_field] = LOGIN_PASSWORD
+
+            action = form.get("action") or LOGIN_URL
+            post_url = action if action.startswith("http") else urljoin(BASE_URL, action)
+
+            pr = c.post(post_url, data=payload)
+            if pr.status_code not in (200, 302):
+                logger.error("Логин POST вернул статус %s", pr.status_code)
+                return False
+
+            # Проверка: доступ к порталу не должен редиректить на login
+            check = c.get(PORTAL_URL)
+            if check.status_code == 200 and "login" not in str(check.url).lower():
+                # httpx хранит куки в c.cookies.jar
+                cookies_out: list[dict] = []
+                for cookie in c.cookies.jar:
+                    cookies_out.append(
+                        {
+                            "name": cookie.name,
+                            "value": cookie.value,
+                            "domain": cookie.domain or "",
+                        }
+                    )
+                save_cookies(cookies_out)
+                return True
+
+            logger.error("После логина портал всё ещё требует авторизацию (url=%s)", str(check.url))
+            return False
     except Exception as e:
-        logger.error("Ошибка логина в браузере: %s", e)
+        logger.error("Ошибка логина через HTTP: %s", e)
         return False
-    finally:
-        driver.quit()
 
 
 def ensure_cookies() -> List[Dict[str, str]]:
@@ -134,8 +207,8 @@ def ensure_cookies() -> List[Dict[str, str]]:
                     return cookies
         except Exception:
             pass
-    logger.info("Требуется логин: запуск headless Chrome...")
-    if not run_browser_login_and_save_cookies():
+    logger.info("Требуется логин: выполняю авторизацию и сохраняю cookies...")
+    if not run_http_login_and_save_cookies():
         return []
     return load_cookies()
 

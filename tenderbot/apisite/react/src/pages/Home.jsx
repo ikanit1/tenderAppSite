@@ -14,12 +14,10 @@ import ProductModal from '../components/ProductModal';
 import { useProducts } from '../hooks/useProducts';
 import { CATEGORY_KEYWORDS } from '../components/Filters';
 import { useResetFilters } from '../context/ResetFiltersContext';
-import { getBotUrl } from '../utils/botUrl';
 
 export default function Home() {
   const { products, loading, error, brands } = useProducts();
   const { setResetFiltersFn } = useResetFilters();
-  const botUrl = getBotUrl();
   const [filters, setFilters] = useState({ search: '', category: 'ip-cameras', brand: '' });
   const [modalModel, setModalModel] = useState(null);
   const [cartOpen, setCartOpen] = useState(false);
@@ -275,11 +273,6 @@ export default function Home() {
       >
         <div className="container">
           <p>B2B Products API &copy; 2026</p>
-          <p>
-            <a href={botUrl} target="_blank" rel="noopener noreferrer">
-              Написать в Telegram-бот
-            </a>
-          </p>
         </div>
       </motion.footer>
     </>

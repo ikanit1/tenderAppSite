@@ -1083,6 +1083,10 @@ async def start_image_parsing(request: Request, max_pages: Optional[int] = 5):
     Args:
         max_pages: Максимальное количество страниц каталога для парсинга
     """
+    if image_parser_state.get("running"):
+        raise HTTPException(status_code=409, detail="Парсер уже запущен")
+
+    image_parser_state["running"] = True
     try:
         from product_image_parser import parse_catalog, download_images_for_products, load_parser_cache
         
@@ -1114,6 +1118,8 @@ async def start_image_parsing(request: Request, max_pages: Optional[int] = 5):
         )
         
         total_downloaded = sum(downloaded.values())
+
+        image_parser_state["last_run"] = time.time()
         
         return {
             "status": "success",
@@ -1124,10 +1130,13 @@ async def start_image_parsing(request: Request, max_pages: Optional[int] = 5):
         }
     except Exception as e:
         logger.error(f"Ошибка при парсинге изображений: {e}")
+        image_parser_state["last_run"] = time.time()
         return {
             "status": "error",
             "message": str(e)
         }
+    finally:
+        image_parser_state["running"] = False
 
 
 @app.get("/api/parse-images/cache")

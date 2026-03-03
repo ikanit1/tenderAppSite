@@ -36,6 +36,32 @@ function api(path, options = {}) {
   });
 }
 
+function formatDateTime(value) {
+  if (value == null || value === '') return '—';
+  let date;
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    date = new Date(value * 1000);
+  } else if (typeof value === 'string') {
+    const s = value.trim();
+    if (!s) return '—';
+    const n = Number(s);
+    if (Number.isFinite(n)) date = new Date(n * 1000);
+    else date = new Date(s);
+  } else {
+    return '—';
+  }
+
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleString('ru-RU', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 export default function Admin() {
   const [authenticated, setAuthenticated] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -64,7 +90,7 @@ export default function Admin() {
   const [parserStats, setParserStats] = useState(null);
   const [parserAction, setParserAction] = useState(null);
 
-  // Portal parser (cannon) state
+  // Portal parser state
   const [portalParserStatus, setPortalParserStatus] = useState(null);
   const [portalParserLogs, setPortalParserLogs] = useState([]);
   const portalLogPreRef = useRef(null);
@@ -427,7 +453,7 @@ export default function Admin() {
     setParserAction('portal');
     try {
       await api('/api/portal-parser/start?start_page=1&end_page=116', { method: 'POST' });
-      showPriceMsg('success', 'Парсер portal_parser_cannon запущен');
+      showPriceMsg('success', 'Парсер портала запущен');
       loadPortalParserStatus();
       loadPortalParserLogs();
       setTimeout(() => {
@@ -878,7 +904,7 @@ export default function Admin() {
             {tab === 'parser' && (
               <div className="admin-parser">
                 <motion.section className="admin-section" initial="hidden" animate="visible" variants={sectionVariants}>
-                  <h2>Парсер портала (portal_parser_cannon)</h2>
+                  <h2>Парсер портала</h2>
                   {portalParserStatus?.error ? (
                     <p className="admin-error">{portalParserStatus.error}</p>
                   ) : portalParserStatus == null ? (
@@ -891,7 +917,7 @@ export default function Admin() {
                         </span>
                         {portalParserStatus?.started_at && (
                           <span className="admin-portal-parser-time">
-                            Запущен: {new Date(portalParserStatus.started_at).toLocaleString('ru')}
+                            Запущен: {formatDateTime(portalParserStatus.started_at)}
                           </span>
                         )}
                         <div className="form-actions" style={{ marginTop: 8 }}>
@@ -933,8 +959,10 @@ export default function Admin() {
                   ) : parserStatus ? (
                     <ul className="admin-status-list">
                       <li>Включён: {parserStatus.enabled ? 'да' : 'нет'}</li>
-                      <li>Запущен: {parserStatus.running ? 'да' : 'нет'}</li>
-                      <li>Последний запуск: {parserStatus.last_run || '—'}</li>
+                      <li>
+                        Статус: <strong>{parserStatus.running ? 'работает' : 'остановлен'}</strong>
+                      </li>
+                      <li>Последний запуск: {formatDateTime(parserStatus.last_run)}</li>
                       <li>Макс. страниц: {parserStatus.max_pages ?? '—'}</li>
                     </ul>
                   ) : (
@@ -969,7 +997,7 @@ export default function Admin() {
                       animate={parserAction === 'portal' ? { boxShadow: ['0 0 0 0 rgba(59, 130, 246, 0.35)', '0 0 0 10px rgba(59, 130, 246, 0)'] } : {}}
                       transition={{ duration: 1.2, repeat: parserAction === 'portal' ? Infinity : 0 }}
                     >
-                      {parserAction === 'portal' ? 'Запуск...' : 'Запустить portal_parser_cannon'}
+                      {parserAction === 'portal' ? 'Запуск...' : 'Запустить парсер портала'}
                     </motion.button>
                     <motion.button
                       type="button"

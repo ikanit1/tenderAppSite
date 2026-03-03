@@ -1,4 +1,5 @@
 # web/routes/support.py — тикеты поддержки в веб-админке
+import logging
 import uuid
 import httpx
 from datetime import datetime
@@ -16,6 +17,7 @@ from web.templates_loader import templates
 from database.models import User, SupportTicket, SupportMessage, TicketStatus
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 _UPLOADS_SUPPORT = Path(__file__).resolve().parent.parent / "static" / "uploads" / "support"
 _ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
@@ -23,19 +25,20 @@ _MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
 
 
 def _save_support_image(file: UploadFile) -> str | None:
-    if not file.content_type or file.content_type.lower() not in _ALLOWED_IMAGE_TYPES:
-        return None
-    ext = ".jpg" if "jpeg" in file.content_type else ".png" if "png" in file.content_type else ".gif" if "gif" in file.content_type else ".webp"
-    _UPLOADS_SUPPORT.mkdir(parents=True, exist_ok=True)
-    name = uuid.uuid4().hex + ext
-    path = _UPLOADS_SUPPORT / name
     try:
+        if not file or not getattr(file, "content_type", None) or file.content_type.lower() not in _ALLOWED_IMAGE_TYPES:
+            return None
+        ext = ".jpg" if "jpeg" in file.content_type else ".png" if "png" in file.content_type else ".gif" if "gif" in file.content_type else ".webp"
+        _UPLOADS_SUPPORT.mkdir(parents=True, exist_ok=True)
+        name = uuid.uuid4().hex + ext
+        path = _UPLOADS_SUPPORT / name
         content = file.file.read()
         if len(content) > _MAX_IMAGE_SIZE:
             return None
         path.write_bytes(content)
         return f"/static/uploads/support/{name}"
-    except Exception:
+    except Exception as e:
+        logger.warning("_save_support_image failed: %s", e)
         return None
 
 
@@ -137,41 +140,55 @@ async def support_reply(
     if not ticket:
         return RedirectResponse(url="/support", status_code=302)
 
+    # Получить tg_id до любых изменений сессии (на случай lazy load после commit)
+    tg_id = None
+    if ticket.user is not None:
+        try:
+            tg_id = ticket.user.tg_id
+        except Exception as e:
+            logger.warning("Support ticket %s: could not get user tg_id: %s", ticket_id, e)
+
     text = (text or "").strip()
     image_url = None
-    if image and image.filename:
-        image_url = _save_support_image(image)
+    if image and getattr(image, "filename", None):
+        try:
+            image_url = _save_support_image(image)
+        except Exception as e:
+            logger.warning("Support ticket %s: could not save image: %s", ticket_id, e)
+
     if not text and not image_url:
         return RedirectResponse(url=f"/support/{ticket_id}", status_code=302)
 
-    msg = SupportMessage(ticket_id=ticket_id, author="admin", text=text or "(изображение)", image_url=image_url)
-    db.add(msg)
-    ticket.status = TicketStatus.IN_PROGRESS.value
-    db.commit()
+    try:
+        msg = SupportMessage(ticket_id=ticket_id, author="admin", text=text or "(изображение)", image_url=image_url)
+        db.add(msg)
+        ticket.status = TicketStatus.IN_PROGRESS.value
+        db.commit()
+    except Exception as e:
+        logger.exception("Support reply ticket %s: db error", ticket_id)
+        db.rollback()
+        return RedirectResponse(url=f"/support/{ticket_id}?error=save_failed", status_code=302)
 
     # Отправка в Telegram только если есть пользователь
-    if ticket.user and ticket.user.tg_id:
-        tg_id = ticket.user.tg_id
+    if tg_id:
         base_url = str(request.base_url).rstrip("/")
         try:
             async with httpx.AsyncClient() as client:
                 if image_url:
                     photo_url = base_url + image_url
-                    r = await client.post(
+                    await client.post(
                         f"https://api.telegram.org/bot{settings.BOT_TOKEN}/sendPhoto",
                         data={"chat_id": tg_id, "photo": photo_url, "caption": text[:1024] if text else None, "parse_mode": "HTML"},
                         timeout=15.0,
                     )
                 else:
-                    r = await client.post(
+                    await client.post(
                         f"https://api.telegram.org/bot{settings.BOT_TOKEN}/sendMessage",
                         json={"chat_id": tg_id, "text": text, "parse_mode": "HTML"},
                         timeout=10.0,
                     )
         except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.warning(f"Failed to send Telegram message for ticket {ticket_id}: {e}")
+            logger.warning("Failed to send Telegram message for ticket %s: %s", ticket_id, e)
 
     return RedirectResponse(url=f"/support/{ticket_id}", status_code=302)
 

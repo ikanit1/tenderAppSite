@@ -67,7 +67,6 @@ export function Footer() {
           <span className={styles.copyright}>
             © {new Date().getFullYear()} ТОО «G&R Group»
           </span>
-          <span className={styles.status}>Все системы в норме</span>
         </div>
       </div>
     </motion.footer>

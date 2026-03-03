@@ -44,7 +44,7 @@ export function ProjectsSection() {
       className={styles.section}
       aria-labelledby="projects-heading"
       variants={reduceMotion ? undefined : sectionVariants}
-      initial="hidden"
+      initial="visible"
       animate="visible"
     >
       <div className={styles.container}>
@@ -54,7 +54,7 @@ export function ProjectsSection() {
         <motion.p className={styles.subtitle} variants={reduceMotion ? undefined : itemVariants}>
           Реализованные решения для предприятий и организаций Казахстана
         </motion.p>
-        <motion.div className={styles.grid} variants={reduceMotion ? undefined : sectionVariants}>
+        <motion.div className={styles.grid} variants={reduceMotion ? undefined : sectionVariants} initial="visible" animate="visible">
           {projectsList.map((project) => {
             const isExpanded = expandedId === project.id;
             return (
@@ -62,6 +62,8 @@ export function ProjectsSection() {
                 key={project.id}
                 className={`${styles.card} ${isExpanded ? styles.cardExpanded : ''}`}
                 variants={reduceMotion ? undefined : itemVariants}
+                initial="visible"
+                animate="visible"
                 layout
                 whileHover={reduceMotion ? undefined : { y: -4, transition: springTransition }}
                 whileTap={reduceMotion ? undefined : { scale: 0.99 }}
