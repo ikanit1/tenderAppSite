@@ -15,5 +15,6 @@ export const navItems: NavItem[] = [
   { to: '/smart-systems', label: 'Умные системы' },
   { to: '/digital-ecosystem', label: 'Цифровая экосистема дома' },
   { to: '/work', label: 'Работа' },
+  { to: '/calculator', label: 'Калькулятор' },
   { to: '/contacts', label: 'Контакты' },
 ];

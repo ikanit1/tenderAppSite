@@ -9,6 +9,7 @@ import { ProjectsPage } from '@/pages/ProjectsPage';
 import { SmartSystemsPage } from '@/pages/SmartSystemsPage';
 import { DigitalEcosystemPage } from '@/pages/DigitalEcosystemPage';
 import { WorkPage } from '@/pages/WorkPage';
+import { CalculatorPage } from '@/pages/CalculatorPage';
 import { ToastProvider } from '@/features/toast/ToastProvider';
 import { CartProvider } from '@/shared/context/CartContext';
 import { OpenAssistantProvider } from '@/shared/context/OpenAssistantContext';
@@ -67,6 +68,7 @@ export function App() {
                   <Route path="/smart-systems" element={<SmartSystemsPage />} />
                   <Route path="/digital-ecosystem" element={<DigitalEcosystemPage />} />
                   <Route path="/work" element={<WorkPage />} />
+                  <Route path="/calculator" element={<CalculatorPage />} />
                   <Route path="catalog" element={<CatalogRedirect />} />
                   <Route path="catalog/*" element={<CatalogRedirect />} />
                 </Route>

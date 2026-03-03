@@ -128,6 +128,9 @@ export function Hero() {
             <Link to="/projects" className={styles.quickLink}>
               Проекты
             </Link>
+            <Link to="/calculator" className={styles.quickLink}>
+              Калькулятор
+            </Link>
             <Link to="/contacts" className={styles.quickLink}>
               Контакты
             </Link>

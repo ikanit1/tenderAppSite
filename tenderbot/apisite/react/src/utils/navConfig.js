@@ -10,6 +10,7 @@ export function getCatalogNavItems() {
     { href: `${base}/smart-systems`, label: 'Умные системы', isCatalog: false },
     { href: `${base}/digital-ecosystem`, label: 'Цифровая экосистема дома', isCatalog: false },
     { href: `${base}/work`, label: 'Работа', isCatalog: false },
+    { href: `${base}/calculator`, label: 'Калькулятор', isCatalog: false },
     { href: `${base}/contacts`, label: 'Контакты', isCatalog: false },
   ];
 }

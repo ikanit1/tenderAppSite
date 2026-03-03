@@ -8,7 +8,7 @@ import { CartPanel } from '@/widgets/cart/CartPanel';
 import styles from './Layout.module.css';
 
 const pageVariants = {
-  initial: { opacity: 0, y: 8 },
+  initial: { opacity: 1, y: 12 },
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: -6 },
 };
