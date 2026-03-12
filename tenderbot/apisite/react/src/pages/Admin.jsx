@@ -209,7 +209,7 @@ export default function Admin() {
       setLogin('');
       setPassword('');
     } catch (err) {
-      setLoginError('Неверный логин или пароль');
+      setLoginError(err.message || 'Неверный логин или пароль');
     }
   }, [login, password]);
 
@@ -697,6 +697,23 @@ export default function Admin() {
                   transition={{ delay: 0.3 }}
                 >
                   <p>Перейдите в «Цены и скидки» для настройки скидок и кастомных цен, в «Парсер изображений» — для загрузки картинок, в «Портал» — просмотр товаров без папки в portal_export.</p>
+                </motion.div>
+                <motion.div
+                  className="admin-dashboard-hint"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.35 }}
+                  style={{ marginTop: 12 }}
+                >
+                  <p style={{ marginBottom: 6 }}>Экспорт для SATU:</p>
+                  <a
+                    href={withBaseUrl('/api/admin/satu/export-excel')}
+                    download="satu_import.xlsx"
+                    className="admin-dashboard-link"
+                    style={{ display: 'inline-block', padding: '8px 14px', background: 'var(--accent, #2563eb)', color: '#fff', borderRadius: 8, textDecoration: 'none', fontWeight: 500 }}
+                  >
+                    Скачать Excel для импорта в SATU
+                  </a>
                 </motion.div>
               </div>
             )}

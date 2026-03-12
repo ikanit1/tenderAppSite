@@ -1,7 +1,7 @@
 """Основной API сервер"""
 from fastapi import FastAPI, HTTPException, Depends, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, Response as HttpResponse
 from typing import Optional
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -17,6 +17,7 @@ from config import (
     ADMIN_LOGIN, ADMIN_PASSWORD,
     SITEMAP_BASE_URL,
 )
+import io
 import json
 import time
 import logging
@@ -193,6 +194,64 @@ _cart_storage_lock = threading.Lock()
 # Хранилище сессий админа: session_id -> True (если авторизован)
 _admin_sessions: set[str] = set()
 _admin_sessions_lock = threading.Lock()
+
+# Защита от брутфорса входа в админку: IP -> (количество неудачных попыток, время разблокировки)
+_admin_login_attempts: dict[str, tuple[int, float]] = {}
+_admin_login_attempts_lock = threading.Lock()
+ADMIN_LOGIN_MAX_ATTEMPTS = 5
+ADMIN_LOGIN_LOCKOUT_SECONDS = 15 * 60  # 15 минут
+
+
+def _get_client_ip(request: Request) -> str:
+    """IP клиента с учётом X-Forwarded-For (за nginx/proxy)."""
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    if request.client:
+        return request.client.host or "127.0.0.1"
+    return "127.0.0.1"
+
+
+def _check_admin_bruteforce(request: Request) -> None:
+    """Проверяет, не заблокирован ли IP из-за брутфорса. Выбрасывает HTTP 429 при блокировке."""
+    ip = _get_client_ip(request)
+    now = time.time()
+    with _admin_login_attempts_lock:
+        data = _admin_login_attempts.get(ip)
+        if not data:
+            return
+        count, lock_until = data
+        if now < lock_until and count >= ADMIN_LOGIN_MAX_ATTEMPTS:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Слишком много неудачных попыток входа. Попробуйте через {int((lock_until - now) / 60) + 1} мин.",
+            )
+        if now >= lock_until:
+            _admin_login_attempts.pop(ip, None)
+
+
+def _record_admin_login_fail(request: Request) -> None:
+    """Увеличивает счётчик неудачных попыток и при необходимости блокирует IP."""
+    ip = _get_client_ip(request)
+    now = time.time()
+    with _admin_login_attempts_lock:
+        count, lock_until = _admin_login_attempts.get(ip, (0, 0.0))
+        if now >= lock_until:
+            count = 0
+        count += 1
+        if count >= ADMIN_LOGIN_MAX_ATTEMPTS:
+            lock_until = now + ADMIN_LOGIN_LOCKOUT_SECONDS
+        else:
+            lock_until = max(lock_until, now + 60)  # сброс счётчика через 1 мин без попыток
+        _admin_login_attempts[ip] = (count, lock_until)
+
+
+def _clear_admin_login_fail(request: Request) -> None:
+    """Сбрасывает счётчик неудачных попыток после успешного входа."""
+    ip = _get_client_ip(request)
+    with _admin_login_attempts_lock:
+        _admin_login_attempts.pop(ip, None)
+
 
 # Инициализируем lock при первом использовании
 def get_lock():
@@ -1614,11 +1673,13 @@ async def contacts_submit(payload: ContactsSubmitRequest):
     from html import escape as html_escape
 
     now_str = datetime.datetime.now().strftime("%d.%m.%Y, %H:%M")
-    project_label = PROJECT_TYPE_LABELS.get((payload.projectType or "").strip(), payload.projectType or "—")
+    is_calculator = (payload.projectType or "").strip().lower() == "calculator"
+    project_label = "Калькулятор видеонаблюдения" if is_calculator else PROJECT_TYPE_LABELS.get((payload.projectType or "").strip(), payload.projectType or "—")
+    email_title = "Заявка с калькулятора видеонаблюдения (grgroup.kz)" if is_calculator else "Заявка с сайта grgroup.kz (Контакты)"
 
     # ——— Текстовое письмо ———
     lines = [
-        "Заявка с сайта grgroup.kz (Контакты)",
+        email_title,
         "=" * 50,
         "",
         "Дата и время:  " + now_str,
@@ -1660,7 +1721,7 @@ async def contacts_submit(payload: ContactsSubmitRequest):
   </style>
 </head>
 <body>
-  <h1>Заявка с сайта grgroup.kz (Контакты)</h1>
+  <h1>{html_escape(email_title)}</h1>
   <div class="meta">
     <p><strong>Дата и время:</strong> {now_str}</p>
   </div>
@@ -1671,13 +1732,13 @@ async def contacts_submit(payload: ContactsSubmitRequest):
     <tr><td><strong>Email</strong></td><td>{html_escape(payload.email or "—")}</td></tr>
     <tr><td><strong>Тип проекта</strong></td><td>{html_escape(project_label)}</td></tr>
   </table>
-  <h2>Сообщение</h2>
+  <h2>Сообщение / расчёт</h2>
   <div class="message">{html_escape((payload.message or "—").strip())}</div>
 </body>
 </html>
 """
 
-    subject = f"Заявка с сайта (Контакты) — {now_str} — {payload.name or 'Без имени'}"
+    subject = f"Заявка с калькулятора видеонаблюдения — {now_str} — {payload.name or 'Без имени'}" if is_calculator else f"Заявка с сайта (Контакты) — {now_str} — {payload.name or 'Без имени'}"
 
     try:
         loop = asyncio.get_event_loop()
@@ -1815,13 +1876,16 @@ async def remove_item_from_cart(request: Request, response: Response, model: str
 
 @app.post("/api/admin/login")
 async def admin_login(request: Request, response: Response, login_data: AdminLoginRequest):
-    """Авторизация админа"""
+    """Авторизация админа (с защитой от брутфорса по IP)."""
+    _check_admin_bruteforce(request)
     # Используем timing-safe сравнение для защиты от timing attacks
     login_ok = secrets.compare_digest(login_data.login.strip(), ADMIN_LOGIN)
     password_ok = secrets.compare_digest(login_data.password, ADMIN_PASSWORD)
     if login_ok and password_ok:
+        _clear_admin_login_fail(request)
         create_admin_session(response, request)
         return {"ok": True}
+    _record_admin_login_fail(request)
     raise HTTPException(status_code=401, detail="Неверный логин или пароль")
 
 
@@ -1836,6 +1900,40 @@ async def admin_logout(request: Request, response: Response):
     """Выход из админки"""
     remove_admin_session(request, response)
     return {"ok": True}
+
+
+@app.get("/api/admin/satu/export-excel")
+def download_satu_excel(request: Request):
+    """
+    Генерирует Excel для импорта в SATU из API (B2B + слияние с portal_export) и отдаёт файл на скачивание.
+    Доступно только авторизованному админу. Ссылки на изображения — через API сайта (SITEMAP_BASE_URL).
+    """
+    require_admin_auth(request)
+    try:
+        from export_satu_excel import load_products_for_satu, build_full_excel
+        products = load_products_for_satu(from_api=True, limit=None)
+        if not products:
+            raise HTTPException(status_code=404, detail="Товары не найдены в API/кэше.")
+        api_base = (SITEMAP_BASE_URL or "").strip().rstrip("/") or None
+        wb, _count = build_full_excel(
+            products,
+            limit=None,
+            image_via_api=True,
+            api_base_url=api_base,
+        )
+        buf = io.BytesIO()
+        wb.save(buf)
+        buf.seek(0)
+        return HttpResponse(
+            content=buf.getvalue(),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=satu_import.xlsx"},
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("SATU Excel export failed")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/admin/prices")
