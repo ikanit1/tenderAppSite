@@ -76,5 +76,9 @@ ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123").strip()
 # Базовый URL сайта для sitemap.xml (без слэша в конце)
 SITEMAP_BASE_URL = (os.getenv("SITEMAP_BASE_URL", "https://grgroup.kz")).rstrip("/")
 
+# SATU.KZ Public API (выгрузка товаров на маркетплейс)
+SATU_API_BASE_URL = (os.getenv("SATU_API_BASE_URL", "https://my.satu.kz/api/v1")).rstrip("/")
+SATU_API_TOKEN = (os.getenv("SATU_API_TOKEN") or "").strip()
+
 # Создаем директорию для данных
 CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)

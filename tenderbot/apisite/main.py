@@ -787,6 +787,7 @@ async def sitemap_xml(cached_data: dict = Depends(get_cached_data)):
 async def get_products(
     brand: Optional[str] = None,
     search: Optional[str] = None,
+    category: Optional[str] = None,
     min_quantity: Optional[int] = None,
     limit: Optional[int] = None,
     offset: int = 0,
@@ -797,7 +798,8 @@ async def get_products(
 
     Query параметры:
     - brand: Фильтр по производителю
-    - search: Поиск по названию/модели
+    - search: Поиск по названию/модели/бренду
+    - category: Фильтр по категории (slug из portal_export, напр. ip-cameras)
     - min_quantity: Минимальный остаток
     - limit: Лимит записей (пагинация)
     - offset: Смещение (пагинация)
@@ -805,20 +807,43 @@ async def get_products(
     products = cached_data.get("products", [])
     logger.info(f"Получено товаров из кэша: {len(products)}")
 
+    # Обогащаем категорией из portal_export до фильтрации (чтобы фильтр по category работал)
+    # Если в portal категория пустая — подставляем по ключевым словам (category_keywords)
+    from category_keywords import infer_category as _infer_category
+    portal_map = _load_portal_items_map()
+    by_model = portal_map.get("by_model", {})
+    by_name = portal_map.get("by_name", {})
+    for p in products:
+        model_key = (p.get("model") or "").upper()
+        name_key = (p.get("name") or "").lower()
+        item = by_model.get(model_key) or by_name.get(name_key)
+        p["category"] = (item.get("category") or "").strip() if item else ""
+        if not (p.get("category") or "").strip():
+            p["category"] = _infer_category(p)
+
+    all_brands = sorted(set((p.get("brand") or "").strip() for p in products if (p.get("brand") or "").strip()))
+
     # Применяем фильтры
     if brand:
-        products = [p for p in products if p.get("brand", "").lower() == brand.lower()]
+        products = [p for p in products if (p.get("brand") or "").lower() == brand.lower()]
 
     if search:
-        search_lower = search.lower()
-        products = [
-            p for p in products
-            if search_lower in p.get("name", "").lower()
-            or search_lower in p.get("model", "").lower()
-        ]
+        search_lower = search.strip().lower()
+        if search_lower:
+            products = [
+                p for p in products
+                if search_lower in (p.get("name") or "").lower()
+                or search_lower in (p.get("model") or "").lower()
+                or search_lower in (p.get("brand") or "").lower()
+            ]
+
+    if category:
+        cat_lower = category.strip().lower()
+        if cat_lower:
+            products = [p for p in products if (p.get("category") or "").strip().lower() == cat_lower]
 
     if min_quantity is not None:
-        products = [p for p in products if p.get("quantity", 0) >= min_quantity]
+        products = [p for p in products if (p.get("quantity") or 0) >= min_quantity]
 
     total = len(products)
     if limit is not None:
@@ -826,11 +851,7 @@ async def get_products(
         products = products[offset : offset + limit]
     logger.info(f"Товаров после фильтров: {total}" + (f", срез: {len(products)}" if limit is not None else ""))
 
-    # Категории и картинки из portal_export/items.json
-    portal_map = _load_portal_items_map()
-    by_model = portal_map.get("by_model", {})
-    by_name = portal_map.get("by_name", {})
-
+    # Картинки из portal_export (category уже выставлена выше; by_model, by_name в scope)
     from urllib.parse import quote
     for p in products:
         try:
@@ -983,6 +1004,7 @@ async def get_products(
         total=total if limit is not None else None,
         limit=limit,
         offset=offset if limit is not None else None,
+        brands=all_brands,
     )
 
 

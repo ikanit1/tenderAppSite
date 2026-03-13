@@ -41,6 +41,7 @@ class ProductsResponse(BaseModel):
     total: Optional[int] = Field(None, description="Всего товаров до пагинации")
     limit: Optional[int] = Field(None, description="Лимит запроса")
     offset: Optional[int] = Field(None, description="Смещение")
+    brands: Optional[list[str]] = Field(None, description="Список брендов для фильтра (из полного каталога)")
 
 
 class HealthResponse(BaseModel):

@@ -60,7 +60,7 @@ export default function Header({ onCartToggle }) {
                     {item.label}
                   </NavLink>
                 ) : (
-                  <a href={item.href} className="site-nav-link">
+                  <a href={item.href} className="site-nav-link" target="_blank" rel="noopener noreferrer">
                     {item.label}
                   </a>
                 )}
@@ -105,7 +105,7 @@ export default function Header({ onCartToggle }) {
                     {item.label}
                   </NavLink>
                 ) : (
-                  <a href={item.href} className="site-nav-menu-link" onClick={() => setMenuOpen(false)}>
+                  <a href={item.href} className="site-nav-menu-link" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>
                     {item.label}
                   </a>
                 )}

@@ -1,5 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
+
+const SEARCH_DEBOUNCE_MS = 300;
 
 const CATEGORIES = [
   { value: 'ip-cameras', label: 'IP видеокамеры' },
@@ -609,20 +611,19 @@ export default function Filters({ brands, onFilterChange, onReset, defaultCatego
   const [category, setCategory] = useState(defaultCategory);
   const [brand, setBrand] = useState('');
   const prevExternalFiltersRef = useRef(null);
+  const searchDebounceRef = useRef(null);
 
-  // Синхронизация с внешним состоянием при сбросе фильтров
+  // Синхронизация с внешним состоянием (URL)
   useEffect(() => {
     if (externalFilters) {
       const newSearch = externalFilters.search || '';
-      const newCategory = externalFilters.category || defaultCategory;
+      const newCategory = (externalFilters.category !== undefined && externalFilters.category !== null) ? externalFilters.category : defaultCategory;
       const newBrand = externalFilters.brand || '';
-      
       const prevFilters = prevExternalFiltersRef.current;
-      const filtersChanged = !prevFilters || 
+      const filtersChanged = !prevFilters ||
         prevFilters.search !== newSearch ||
         prevFilters.category !== newCategory ||
         prevFilters.brand !== newBrand;
-      
       if (filtersChanged) {
         setSearch(newSearch);
         setCategory(newCategory);
@@ -632,15 +633,24 @@ export default function Filters({ brands, onFilterChange, onReset, defaultCatego
     }
   }, [externalFilters, defaultCategory]);
 
-  useEffect(() => {
-    onFilterChange({ search, category, brand });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, category, brand]); // Убрали onFilterChange из зависимостей, чтобы избежать бесконечного цикла
+  const handleSearchChange = useCallback((value) => {
+    setSearch(value);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      onFilterChange({ search: value, category, brand });
+      searchDebounceRef.current = null;
+    }, SEARCH_DEBOUNCE_MS);
+  }, [category, brand, onFilterChange]);
+
+  useEffect(() => () => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+  }, []);
 
   const handleReset = () => {
     setSearch('');
-    setCategory(defaultCategory);
+    setCategory('');
     setBrand('');
+    onFilterChange({ search: '', category: '', brand: '' });
     if (onReset) onReset();
   };
 
@@ -663,8 +673,12 @@ export default function Filters({ brands, onFilterChange, onReset, defaultCatego
       <div className="filter-row">
         <div className="filter-group">
           <label htmlFor="categorySelect">Категории</label>
-          <select id="categorySelect" value={category} onChange={(e) => setCategory(e.target.value)}>
-            <option value="">Выберите категорию</option>
+          <select id="categorySelect" value={category} onChange={(e) => {
+            const v = e.target.value;
+            setCategory(v);
+            onFilterChange({ search, category: v, brand });
+          }}>
+            <option value="">Все категории</option>
             {CATEGORIES.map(cat => (
               <option key={cat.value} value={cat.value}>{cat.label}</option>
             ))}
@@ -672,7 +686,11 @@ export default function Filters({ brands, onFilterChange, onReset, defaultCatego
         </div>
         <div className="filter-group">
           <label htmlFor="brandSelect">Бренды</label>
-          <select id="brandSelect" value={brand} onChange={(e) => setBrand(e.target.value)}>
+          <select id="brandSelect" value={brand} onChange={(e) => {
+            const v = e.target.value;
+            setBrand(v);
+            onFilterChange({ search, category, brand: v });
+          }}>
             <option value="">Все бренды</option>
             {brands.map(b => (
               <option key={b} value={b}>{b}</option>
@@ -687,7 +705,7 @@ export default function Filters({ brands, onFilterChange, onReset, defaultCatego
               id="searchInput"
               placeholder="Поиск..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
             />
             <button className="btn-search">
               <span>🔍</span>
@@ -706,7 +724,11 @@ export default function Filters({ brands, onFilterChange, onReset, defaultCatego
           <motion.button
             key={cat.value}
             className={`category-tag ${category === cat.value ? 'active' : ''}`}
-            onClick={() => setCategory(cat.value === category ? '' : cat.value)}
+            onClick={() => {
+              const v = cat.value === category ? '' : cat.value;
+              setCategory(v);
+              onFilterChange({ search, category: v, brand });
+            }}
             variants={tagVariants}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
