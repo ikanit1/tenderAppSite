@@ -2583,6 +2583,29 @@ body::before {
     color: var(--text-light);
 }
 
+/* Pagination buttons — match site: dark purple, violet accent, glassmorphism */
+.pagination-btn {
+    background: transparent;
+    border: 1px solid rgba(139, 92, 246, 0.5);
+    color: white;
+    border-radius: 10px;
+    padding: 10px 24px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+    background: rgba(139, 92, 246, 0.1);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
 /* Footer */
 .footer {
     margin-top: auto;

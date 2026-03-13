@@ -12,6 +12,7 @@ import ProductCard from '../components/ProductCard';
 import LazyProductCard from '../components/LazyProductCard';
 import ProductModal from '../components/ProductModal';
 import { useProducts } from '../hooks/useProducts';
+import { useProductByModel } from '../hooks/useProductByModel';
 import { useResetFilters } from '../context/ResetFiltersContext';
 
 // При первом заходе (нет category в URL) не фильтруем по категории — показываем все товары.
@@ -22,12 +23,16 @@ function readFiltersFromSearchParams(searchParams) {
     brand: searchParams.get('brand') ?? '',
     category: searchParams.get('category') ?? '',
     page: Math.max(1, parseInt(searchParams.get('page') ?? '1', 10) || 1),
+    model: searchParams.get('model') ?? '',
   };
 }
 
 export default function Home() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { search, brand, category, page } = readFiltersFromSearchParams(searchParams);
+  const { search, brand, category, page, model: modelParam } = readFiltersFromSearchParams(searchParams);
+  const modelTrimmed = (modelParam || '').trim();
+
+  const { product: singleProduct, loading: singleLoading, error: singleError } = useProductByModel(modelTrimmed || null);
 
   const { products, loading, error, brands, total, limit, reload } = useProducts({
     search,
@@ -77,61 +82,78 @@ export default function Home() {
 
   const filtersForFilters = { search, brand, category };
 
-  // SEO: динамические title и meta description при смене фильтров (URL)
+  // SEO: для страницы одного товара (?model=) или каталога
   const catalogBaseUrl = 'https://grgroup.kz/catalog';
   useEffect(() => {
-    const parts = [];
-    if (search && search.trim()) parts.push(`поиск: ${search.trim()}`);
-    if (brand && brand.trim()) parts.push(`бренд: ${brand.trim()}`);
-    if (category && category.trim()) {
-      const labels = {
-        'ip-cameras': 'IP видеокамеры',
-        'ip-recorders': 'IP видеорегистраторы',
-        'hd-cameras': 'HD видеокамеры',
-        'hd-recorders': 'HD видеорегистраторы',
-        'poe-switches': 'PoE коммутаторы',
-        'monitors': 'Мониторы',
-        'hdd': 'Жесткие диски',
-        'cable': 'Кабель UTP',
-        'wifi-bridges': 'Радиомосты Wi-Fi',
-        'intercoms': 'Видеодомофоны',
-        'wifi-ap': 'Wi-Fi точки доступа',
-        'rj45': 'RJ45 аксессуары',
-        'switches': 'Коммутаторы без PoE',
-        'power-supply': 'Блоки питания',
-        'mounts': 'Кронштейны',
-        'lenses': 'Объективы',
-        'ir-illuminators': 'ИК-прожекторы',
-        'microphones': 'Микрофоны',
-        'speakers': 'Колонки',
-        'keyboards': 'Клавиатуры',
-        'batteries': 'Аккумуляторы',
-        'housings': 'Корпуса',
-        'other': 'Прочее',
-      };
-      parts.push(labels[category] || category);
+    // Режим одного товара: уникальные title, description, canonical по URL
+    if (modelTrimmed && singleProduct) {
+      const name = singleProduct.name || singleProduct.model || modelTrimmed;
+      document.title = `${name} — купить в Казахстане | G&R Group`;
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) {
+        const short = (singleProduct.description || singleProduct.name || '').slice(0, 140);
+        metaDesc.setAttribute('content', short ? `${name}. ${short}` : `${name}. Купить в Казахстане. G&R Group.`);
+      }
+      const canonical = document.querySelector('link[rel="canonical"]');
+      if (canonical) {
+        canonical.setAttribute('href', `${catalogBaseUrl}/?model=${encodeURIComponent(modelTrimmed)}`);
+      }
+      return;
     }
-    const titleSuffix = parts.length ? ` — ${parts.join(', ')}` : '';
-    const newTitle = `Каталог${titleSuffix} | G&R Group`;
-    document.title = newTitle;
+    // Каталог (без ?model= или пока товар ещё не загружен)
+    if (!modelTrimmed) {
+      const parts = [];
+      if (search && search.trim()) parts.push(`поиск: ${search.trim()}`);
+      if (brand && brand.trim()) parts.push(`бренд: ${brand.trim()}`);
+      if (category && category.trim()) {
+        const labels = {
+          'ip-cameras': 'IP видеокамеры',
+          'ip-recorders': 'IP видеорегистраторы',
+          'hd-cameras': 'HD видеокамеры',
+          'hd-recorders': 'HD видеорегистраторы',
+          'poe-switches': 'PoE коммутаторы',
+          'monitors': 'Мониторы',
+          'hdd': 'Жесткие диски',
+          'cable': 'Кабель UTP',
+          'wifi-bridges': 'Радиомосты Wi-Fi',
+          'intercoms': 'Видеодомофоны',
+          'wifi-ap': 'Wi-Fi точки доступа',
+          'rj45': 'RJ45 аксессуары',
+          'switches': 'Коммутаторы без PoE',
+          'power-supply': 'Блоки питания',
+          'mounts': 'Кронштейны',
+          'lenses': 'Объективы',
+          'ir-illuminators': 'ИК-прожекторы',
+          'microphones': 'Микрофоны',
+          'speakers': 'Колонки',
+          'keyboards': 'Клавиатуры',
+          'batteries': 'Аккумуляторы',
+          'housings': 'Корпуса',
+          'other': 'Прочее',
+        };
+        parts.push(labels[category] || category);
+      }
+      const titleSuffix = parts.length ? ` — ${parts.join(', ')}` : '';
+      document.title = `Каталог${titleSuffix} | G&R Group`;
 
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      const descSuffix = parts.length ? ` ${parts.join(', ')}.` : '';
-      metaDesc.setAttribute('content', `Каталог B2B оборудования${descSuffix} Видеонаблюдение, камеры, регистраторы, коммутаторы. G&R Group, Казахстан.`);
-    }
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) {
+        const descSuffix = parts.length ? ` ${parts.join(', ')}.` : '';
+        metaDesc.setAttribute('content', `Каталог B2B оборудования${descSuffix} Видеонаблюдение, камеры, регистраторы, коммутаторы. G&R Group, Казахстан.`);
+      }
 
-    const canonical = document.querySelector('link[rel="canonical"]');
-    if (canonical) {
-      const params = new URLSearchParams();
-      if (search && search.trim()) params.set('q', search.trim());
-      if (brand && brand.trim()) params.set('brand', brand.trim());
-      if (category && category.trim()) params.set('category', category);
-      if (page > 1) params.set('page', String(page));
-      const query = params.toString();
-      canonical.setAttribute('href', query ? `${catalogBaseUrl}?${query}` : `${catalogBaseUrl}/`);
+      const canonical = document.querySelector('link[rel="canonical"]');
+      if (canonical) {
+        const params = new URLSearchParams();
+        if (search && search.trim()) params.set('q', search.trim());
+        if (brand && brand.trim()) params.set('brand', brand.trim());
+        if (category && category.trim()) params.set('category', category);
+        if (page > 1) params.set('page', String(page));
+        const query = params.toString();
+        canonical.setAttribute('href', query ? `${catalogBaseUrl}?${query}` : `${catalogBaseUrl}/`);
+      }
     }
-  }, [search, brand, category, page]);
+  }, [modelTrimmed, singleProduct, search, brand, category, page]);
 
   const handleCardClick = useCallback((model) => {
     setModalModel(model);
@@ -140,6 +162,14 @@ export default function Home() {
   const handleCloseModal = () => {
     setModalModel(null);
   };
+
+  const goToCatalog = useCallback(() => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('model');
+      return next;
+    });
+  }, [setSearchParams]);
 
   useEffect(() => {
     const handleEscape = (e) => {
@@ -161,109 +191,131 @@ export default function Home() {
       <FloatingActionsBar onCartToggle={onCartToggle} />
       
       <div className="container">
-        <Filters 
-          brands={brands} 
-          onFilterChange={handleFilterChange} 
-          onReset={handleResetFilters}
-          externalFilters={filtersForFilters}
-        />
-
-        {loading && (
-          <motion.div
-            className="loading"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="spinner"></div>
-            <p>Загрузка товаров...</p>
-          </motion.div>
-        )}
-
-        {error && (
-          <motion.div
-            className="error"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.2 }}
-          >
-            <p>❌ Ошибка загрузки данных. Попробуйте обновить страницу.</p>
-          </motion.div>
-        )}
-
-        {!loading && !error && (
+        {/* Режим одного товара: ?model= в URL */}
+        {modelTrimmed ? (
           <>
-            {products.length === 0 ? (
-              <motion.div
-                className="no-results"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <p>😔 Товары не найдены</p>
+            <p style={{ marginBottom: '1rem' }}>
+              <button type="button" onClick={goToCatalog} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', padding: 0, textDecoration: 'none', font: 'inherit' }}>
+                ← В каталог
+              </button>
+            </p>
+            {singleLoading && (
+              <motion.div className="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+                <div className="spinner"></div>
+                <p>Загрузка товара...</p>
               </motion.div>
-            ) : (
+            )}
+            {singleError && (
+              <motion.div className="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+                <p>Товар не найден</p>
+                <button type="button" onClick={goToCatalog} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', marginTop: '0.5rem', padding: 0, font: 'inherit', textDecoration: 'underline' }}>
+                  В каталог
+                </button>
+              </motion.div>
+            )}
+            {!singleLoading && !singleError && singleProduct && (
+              <div className="products-grid" style={{ maxWidth: '400px' }}>
+                <ProductCard product={singleProduct} onCardClick={handleCardClick} />
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <Filters
+              brands={brands}
+              onFilterChange={handleFilterChange}
+              onReset={handleResetFilters}
+              externalFilters={filtersForFilters}
+            />
+
+            {loading && (
+              <motion.div
+                className="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="spinner"></div>
+                <p>Загрузка товаров...</p>
+              </motion.div>
+            )}
+
+            {error && (
+              <motion.div
+                className="error"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
+              >
+                <p>❌ Ошибка загрузки данных. Попробуйте обновить страницу.</p>
+              </motion.div>
+            )}
+
+            {!loading && !error && (
               <>
-                <div className="products-grid">
-                  {products.map((product, index) => {
-                    const uniqueKey = `${product.model || 'unknown'}-${product.brand || 'no-brand'}-${product.name || index}-${index}`;
-                    const isInitial = index < 10;
-                    const delay = isInitial ? 0 : (index - 10) * 50;
-                    return isInitial ? (
-                      <ProductCard
-                        key={uniqueKey}
-                        product={product}
-                        onCardClick={handleCardClick}
-                      />
-                    ) : (
-                      <LazyProductCard
-                        key={uniqueKey}
-                        product={product}
-                        onCardClick={handleCardClick}
-                        delay={delay}
-                      />
-                    );
-                  })}
-                </div>
-                {total > 0 && (
+                {products.length === 0 ? (
                   <motion.div
-                    className="pagination"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    style={{ marginTop: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}
+                    className="no-results"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
                   >
-                    <span className="pagination-info">
-                      Показано {(page - 1) * limit + 1}–{Math.min(page * limit, total)} из {total}
-                    </span>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button
-                        type="button"
-                        className="pagination-btn"
-                        disabled={page <= 1}
-                        onClick={() => updateUrl({ page: page - 1 })}
-                        style={{
-                          padding: '0.5rem 1rem',
-                          cursor: page <= 1 ? 'not-allowed' : 'pointer',
-                          opacity: page <= 1 ? 0.5 : 1,
-                        }}
-                      >
-                        Назад
-                      </button>
-                      <button
-                        type="button"
-                        className="pagination-btn"
-                        disabled={page * limit >= total}
-                        onClick={handleLoadMore}
-                        style={{
-                          padding: '0.5rem 1rem',
-                          cursor: page * limit >= total ? 'not-allowed' : 'pointer',
-                          opacity: page * limit >= total ? 0.5 : 1,
-                        }}
-                      >
-                        Вперёд
-                      </button>
-                    </div>
+                    <p>😔 Товары не найдены</p>
                   </motion.div>
+                ) : (
+                  <>
+                    <div className="products-grid">
+                      {products.map((product, index) => {
+                        const uniqueKey = `${product.model || 'unknown'}-${product.brand || 'no-brand'}-${product.name || index}-${index}`;
+                        const isInitial = index < 10;
+                        const delay = isInitial ? 0 : (index - 10) * 50;
+                        return isInitial ? (
+                          <ProductCard
+                            key={uniqueKey}
+                            product={product}
+                            onCardClick={handleCardClick}
+                          />
+                        ) : (
+                          <LazyProductCard
+                            key={uniqueKey}
+                            product={product}
+                            onCardClick={handleCardClick}
+                            delay={delay}
+                          />
+                        );
+                      })}
+                    </div>
+                    {total > 0 && (
+                      <motion.div
+                        className="pagination"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        style={{ marginTop: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}
+                      >
+                        <span className="pagination-info">
+                          Показано {(page - 1) * limit + 1}–{Math.min(page * limit, total)} из {total}
+                        </span>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button
+                            type="button"
+                            className="pagination-btn"
+                            disabled={page <= 1}
+                            onClick={() => updateUrl({ page: page - 1 })}
+                          >
+                            Назад
+                          </button>
+                          <button
+                            type="button"
+                            className="pagination-btn"
+                            disabled={page * limit >= total}
+                            onClick={handleLoadMore}
+                          >
+                            Вперёд
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </>
                 )}
               </>
             )}
