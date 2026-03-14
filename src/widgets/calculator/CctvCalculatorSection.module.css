@@ -1,11 +1,14 @@
 .section {
     padding: var(--gap-section) 0;
+    position: relative;
+    z-index: 1;
 }
 
 .container {
     max-width: var(--container-max);
     margin: 0 auto;
     padding: 0 var(--container-padding);
+    position: relative;
 }
 
 @media (min-width: 768px) {
@@ -105,12 +108,34 @@
     gap: 0.5rem;
 }
 
+.carEntranceDetails {
+    margin-left: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.fieldRow {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.fieldRow .input {
+    max-width: 8rem;
+}
+
 .inputLabel {
     font-size: var(--text-sm);
     font-weight: 600;
     color: var(--color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.06em;
+}
+
+.hint {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
 }
 
 .inputWrapper {
@@ -156,18 +181,488 @@
     line-height: var(--leading-normal);
 }
 
+.srOnly {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Блок камер */
+.cameraGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+@media (min-width: 640px) {
+    .cameraGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .cameraGrid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.cameraCard {
+    background: var(--card-inner-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.cameraName {
+    font-weight: 600;
+    font-size: var(--text-sm);
+    color: var(--color-text);
+}
+
+.cameraDesc {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    line-height: var(--leading-normal);
+}
+
+.cameraPrice {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--color-accent);
+}
+
+.inputRow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.inputRow .input {
+    width: 5rem;
+    text-align: center;
+}
+
+.inputSuffix {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+}
+
+.select {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    font-family: var(--font-family);
+    font-size: var(--text-base);
+    color: var(--color-text);
+    background: var(--card-inner-bg);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-button);
+    outline: none;
+    cursor: pointer;
+}
+
+.extraGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+@media (min-width: 480px) {
+    .extraGrid {
+        grid-template-columns: auto auto 1fr;
+        align-items: center;
+    }
+}
+
+.checkboxLabel {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: var(--text-base);
+    color: var(--color-text);
+    margin-top: 1rem;
+}
+
+.checkboxLabel input {
+    width: 1.125rem;
+    height: 1.125rem;
+    accent-color: var(--color-primary);
+}
+
+/* Список камер (6 строк) */
+.cameraList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.cameraRow {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.75rem 1rem;
+    align-items: center;
+}
+
+.cameraLabel {
+    font-size: var(--text-base);
+    color: var(--color-text);
+}
+
+.radioGroup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+}
+
+.radioLabel {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: var(--text-base);
+    color: var(--color-text);
+}
+
+.radioLabel input {
+    accent-color: var(--color-primary);
+}
+
+/* Предупреждения */
+.warningsBlock {
+    margin-top: 1rem;
+    padding: 1rem 1.25rem;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    border-radius: var(--radius-block);
+}
+
+.warningsTitle {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: #92400e;
+    margin-bottom: 0.5rem;
+}
+
+.warningsList {
+    margin: 0;
+    padding-left: 1.25rem;
+    font-size: var(--text-sm);
+    color: #b45309;
+}
+
+/* Разбивка монтажа */
+.installationBreakdown {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(157, 78, 221, 0.12);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+}
+
+.installationBreakdownTitle {
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.installationBreakdown ul {
+    margin: 0;
+    padding-left: 1.25rem;
+}
+
+.installationBreakdown li {
+    margin: 0.15rem 0;
+}
+
+/* Группы результата (без светлой обводки) */
+.resultGroup {
+    margin-top: 1.5rem;
+    background: var(--content-block-bg);
+    border: 1px solid rgba(157, 78, 221, 0.12);
+    border-radius: var(--radius-block);
+    padding: 1.25rem;
+    overflow-x: auto;
+}
+
+.resultGroupTitle {
+    font-family: var(--font-family-heading);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 1rem;
+}
+
+.groupSubtotal {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(157, 78, 221, 0.15);
+    font-size: var(--text-sm);
+    color: var(--color-text);
+    text-align: right;
+}
+
+.groupSubtotal strong {
+    color: var(--color-accent);
+}
+
+.rowNote {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin-top: 0.25rem;
+}
+
+.totalBlock {
+    margin-top: 1.5rem;
+    background: var(--content-block-bg);
+    border: 1px solid rgba(157, 78, 221, 0.12);
+    border-radius: var(--radius-block);
+    padding: 1.5rem 2rem;
+}
+
+.totalRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--text-base);
+    color: var(--color-text);
+    padding: 0.5rem 0;
+}
+
+.totalRowHighlight {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--text-lg);
+    color: var(--color-text);
+    padding: 1rem 0 0;
+    margin-top: 0.5rem;
+    border-top: 1px solid rgba(157, 78, 221, 0.2);
+}
+
+.totalRowHighlight strong {
+    color: var(--color-accent);
+}
+
+/* Таблица результата */
+.tableWrap {
+    margin-top: 1rem;
+    overflow-x: auto;
+    background: var(--content-block-bg);
+    border: 1px solid rgba(157, 78, 221, 0.12);
+    border-radius: var(--radius-block);
+    padding: 1rem;
+}
+
+.resultTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+}
+
+.resultTable th,
+.resultTable td {
+    padding: 0.75rem 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(157, 78, 221, 0.15);
+}
+
+.resultTable th {
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.resultTable td {
+    color: var(--color-text);
+}
+
+.rowName {
+    max-width: 220px;
+    display: inline-block;
+}
+
+.cellSum {
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.badgeInStock {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border-radius: 6px;
+    background: rgba(16, 185, 129, 0.15);
+    color: #059669;
+}
+
+.badgeOnOrder {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border-radius: 6px;
+    background: rgba(245, 158, 11, 0.2);
+    color: #b45309;
+}
+
+.priceFrom {
+    margin-top: 1rem;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    line-height: var(--leading-normal);
+}
+
+.actionsRow {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.btnPrimary {
+    padding: 0.875rem 1.75rem;
+    font-family: var(--font-family);
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    border: none;
+    border-radius: var(--radius-button);
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+}
+
+.btnPrimary:hover:not(:disabled) {
+    opacity: 0.95;
+    transform: translateY(-1px);
+}
+
+.btnPrimary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.btnSecondary {
+    padding: 0.875rem 1.25rem;
+    font-family: var(--font-family);
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--color-text);
+    background: var(--card-inner-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-button);
+    cursor: pointer;
+}
+
+.btnSecondary:hover:not(:disabled) {
+    border-color: var(--color-border-strong);
+}
+
+.btnSecondary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.contactHint {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+}
+
+.contactHint a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.contactHint a:hover {
+    text-decoration: underline;
+}
+
+/* Модальное окно */
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.modal {
+    background: var(--content-block-bg);
+    border-radius: var(--radius-block);
+    padding: 1.5rem 2rem;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modalTitle {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 0.5rem;
+}
+
+.modalDesc {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin-bottom: 1.25rem;
+    line-height: var(--leading-normal);
+}
+
+.modalForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.modalButtons {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+}
+
 /* ─── Results ─── */
-.resultsTitle {
+.pdfContentWrap {
+    background: #fff;
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius-block);
+    color: #1e293b;
+}
+
+/* На белом фоне карточки — тёмный текст для читаемости */
+.pdfContentWrap .resultsTitle {
     font-family: var(--font-family-heading);
     font-size: var(--text-2xl);
     font-weight: 700;
-    color: var(--color-text);
+    color: #1e293b;
     margin-bottom: 1.5rem;
     text-align: center;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+}
+
+.pdfContentWrap .installationBreakdown,
+.pdfContentWrap .installationBreakdownTitle {
+    color: #334155;
 }
 
 .resultsGrid {
@@ -359,4 +854,92 @@
     font-size: 3rem;
     margin-bottom: 1rem;
     opacity: 0.5;
+}
+
+/* ─── Смета ─── */
+.estimateBlock {
+    margin-top: 2rem;
+    background: var(--content-block-bg);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-block);
+    padding: 1.5rem 2rem 2rem;
+}
+
+.estimateTitle {
+    font-family: var(--font-family-heading);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 1.25rem;
+    text-align: center;
+}
+
+.estimateTable {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.estimateRow {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 1rem;
+    align-items: center;
+    font-size: var(--text-sm);
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.estimateRow:last-child {
+    border-bottom: none;
+}
+
+.estimateLabel {
+    color: var(--color-text);
+    font-weight: 600;
+}
+
+.estimateQty {
+    color: var(--color-text-muted);
+    text-align: right;
+}
+
+.estimateSum {
+    color: var(--color-text);
+    font-weight: 700;
+    min-width: 7rem;
+    text-align: right;
+}
+
+.estimateTotal {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 2px solid var(--color-border-strong);
+    font-size: var(--text-lg);
+    color: var(--color-text);
+    text-align: right;
+}
+
+.estimateTotal strong {
+    color: var(--color-accent);
+}
+
+.estimateDisclaimer {
+    margin-top: 0.75rem;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    line-height: var(--leading-normal);
+}
+
+@media (max-width: 640px) {
+    .estimateRow {
+        grid-template-columns: 1fr;
+        gap: 0.25rem;
+    }
+
+    .estimateQty,
+    .estimateSum {
+        text-align: left;
+        padding-left: 0.5rem;
+    }
 }
