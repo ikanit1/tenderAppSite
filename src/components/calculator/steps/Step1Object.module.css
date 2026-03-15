@@ -1,0 +1,125 @@
+.wrap {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.card {
+  padding: 1.5rem;
+}
+
+.title {
+  font-family: var(--calc-font-heading);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+  background: var(--calc-gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  margin: 0 0 1.5rem;
+}
+
+.field {
+  margin-bottom: 1.25rem;
+}
+
+.label {
+  display: block;
+  font-family: var(--calc-font-heading);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.slider {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--color-surface);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  cursor: pointer;
+  box-shadow: var(--calc-glow-accent);
+}
+
+.numberInput,
+.mono {
+  font-family: var(--calc-font-mono);
+  font-size: var(--text-base);
+  min-width: 4rem;
+  text-align: center;
+}
+
+.numberInput {
+  background: var(--color-surface);
+  border: 1px solid var(--calc-glass-border);
+  border-radius: var(--radius-button);
+  color: var(--color-text);
+  padding: 0.4rem 0.5rem;
+}
+
+.stepperRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.stepperRow .mono {
+  min-width: 2.5rem;
+}
+
+.toggle {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-button);
+}
+
+.toggleBtn {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--calc-font-heading);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.toggleBtn:hover {
+  color: var(--color-text);
+}
+
+.toggleBtn[aria-selected="true"] {
+  background: var(--color-primary);
+  color: var(--color-text);
+}
+
+.actions {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--calc-glass-border);
+}

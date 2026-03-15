@@ -1,7 +1,10 @@
 /**
  * Контент раздела «Цифровая экосистема дома» (из коммерческого предложения IP-домофония и видеонаблюдение).
+ * Фото в scope взяты из КП ТОО G&R Group (public/images/kp/).
  */
 export const digitalEcosystemContent = {
+  /** Ссылка на КП для кнопок «Скачать предложение» / «Получить коммерческое предложение» */
+  pdfUrl: '/docs/kommercheskoe-predlozhenie-IP-domofoniya-i-videonablyudenie.pdf',
   title: 'Цифровая экосистема дома',
   subtitle: 'IP-домофония и видеонаблюдение',
   heroTagline: 'Безопасность и комфорт в каждом подъезде. Без ваших вложений.',

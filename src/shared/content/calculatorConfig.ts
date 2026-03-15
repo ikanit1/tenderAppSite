@@ -6,7 +6,7 @@
 /** Типы камер: уличные 2MP, внутренние 2MP/4MP, АНПР */
 export const cameraTypes = {
   outdoor2mp: { label: 'Уличная цилиндрическая 2MP IPC-2122', priceKzt: 14_400 },
-  indoor2mp: { label: 'Внутренняя купольная 2MP', priceKzt: 15_500 },
+  indoor2mp: { label: 'Внутренняя купольная 2MP', priceKzt: 14_400 },
   indoor4mp: { label: 'Внутренняя купольная 4MP', priceKzt: 21_000 },
   anpr3mp: { label: 'АНПР 3MP', priceKzt: 274_300 },
 } as const;
@@ -21,8 +21,8 @@ export const cameraBitrateMbps = {
 
 /** Лифтовые камеры: отдельный SKU (антивандальный корпус), битрейт — постоянная запись */
 export const elevatorCameras = {
-  '2mp': { label: 'Лифтовая камера 2MP (антивандальная)', priceKzt: 18_500 },
-  '4mp': { label: 'Лифтовая камера 4MP (антивандальная)', priceKzt: 26_000 },
+  '2mp': { label: 'Лифтовая камера 2MP', priceKzt: 14_400 },
+  '4mp': { label: 'Лифтовая камера 4MP', priceKzt: 19_900 },
 } as const;
 
 /** Лифтовые камеры: битрейт всегда постоянная запись */
@@ -42,8 +42,8 @@ export const radioBridgeConfig = {
 
 /** Кабель UTP */
 export const cableConfig = {
-  indoor: { name: 'CAB-LC2100B-E2-IN (305м)', priceKzt: 51_000, meters: 305 },
-  outdoor: { name: 'CAB-LC2110B-IN (305м)', priceKzt: 51_700, meters: 305 },
+  indoor: { name: 'CAB-LC2100B-E2-IN 305м', priceKzt: 41_300, meters: 305 },
+  outdoor: { name: 'CAB-LC2110B-IN 305м', priceKzt: 51_700, meters: 305 },
 };
 
 export const REEL_LENGTH_METERS = 305;
@@ -79,24 +79,24 @@ export const jbodConfig = {
   slots: 24,
 } as const;
 
-/** NVR по каналам */
+/** NVR по каналам (цена ниже ИБП 120 000). NVR824 — только при включённой видеоаналитике. */
 export const nvrConfigs = [
-  { key: 'nvr_256ch', name: 'NVR824-256R', priceKzt: 4_834_500, channels: 256 },
-  { key: 'nvr_64ch', name: 'NVR308-64E', priceKzt: 850_000, channels: 64 },
-  { key: 'nvr_32ch', name: 'NVR304-32E', priceKzt: 420_000, channels: 32 },
-  { key: 'nvr_16ch', name: 'NVR302-16E', priceKzt: 195_000, channels: 16 },
+  { key: 'nvr_256ch', name: 'NVR824-256R', priceKzt: 4_834_500, channels: 256, analyticsOnly: true },
+  { key: 'nvr_64ch', name: 'NVR308-64E', priceKzt: 115_000, channels: 64, analyticsOnly: false },
+  { key: 'nvr_32ch', name: 'NVR304-32E', priceKzt: 115_000, channels: 32, analyticsOnly: false },
+  { key: 'nvr_16ch', name: 'NVR302-16E', priceKzt: 115_000, channels: 16, analyticsOnly: false },
 ] as const;
 
-/** Коммутаторы PoE */
+/** Коммутаторы PoE (управляемые 8 и 16 канальные — 90 000 тг) */
 export const switchConfigs = {
-  poe_24port: { name: 'WK-PS227GF (24 порта PoE)', priceKzt: 69_500, ports: 24, effectivePorts: 22 },
-  poe_16port: { name: 'WK-PS216GF (16 портов PoE)', priceKzt: 52_000, ports: 16 },
-  poe_8port: { name: 'WK-PS208GF (8 портов PoE)', priceKzt: 35_000, ports: 8, effectivePorts: 6 },
+  poe_24port: { name: 'WK-PS227GF 24 порта PoE', priceKzt: 69_500, ports: 24, effectivePorts: 22 },
+  poe_16port: { name: 'WK-PS216GF 16 портов PoE', priceKzt: 90_000, ports: 16 },
+  poe_8port: { name: 'WK-PS208GF 8 портов PoE', priceKzt: 90_000, ports: 8, effectivePorts: 6 },
 } as const;
 
 /** Аплинк-коммутатор (агрегация, без PoE) */
 export const uplinkSwitchConfig = {
-  name: 'Коммутатор управляемый 24п (аплинк)',
+  name: 'Коммутатор управляемый 24п',
   priceKzt: 45_000,
 };
 
@@ -107,11 +107,11 @@ export const rackConfigs = {
   rack_18u: { name: 'Шкаф 18U', priceKzt: 165_000, units: 18 },
 } as const;
 
-/** ИБП: 1000 ВА (600 Вт), 2000 ВА (1200 Вт), 3000 ВА (1800 Вт) */
+/** ИБП: 1000 ВА (600 Вт), 2000 ВА (1200 Вт), 3000 ВА (1800 Вт) — цена 120 000 тг */
 export const upsConfigs = {
-  ups_1kva: { name: 'ИБП 1 кВА (600 Вт)', priceKzt: 85_000, va: 1000, watts: 600 },
-  ups_2kva: { name: 'ИБП 2 кВА (1200 Вт)', priceKzt: 165_000, va: 2000, watts: 1200 },
-  ups_3kva: { name: 'ИБП 3 кВА (1800 Вт)', priceKzt: 247_990, va: 3000, watts: 1800 },
+  ups_1kva: { name: 'ИБП 1 кВА', priceKzt: 120_000, va: 1000, watts: 600 },
+  ups_2kva: { name: 'ИБП 2 кВА', priceKzt: 120_000, va: 2000, watts: 1200 },
+  ups_3kva: { name: 'ИБП 3 кВА', priceKzt: 120_000, va: 3000, watts: 1800 },
 } as const;
 
 /** Потребление серверного оборудования (Вт) */
@@ -132,29 +132,51 @@ export const monitorConfig = {
   priceKzt: 363_700,
 };
 
-/** Домофония */
+/** Домофония (вызывная панель IP 250 000 тг; интерком для квартир и контроллер доступа не в смете) */
 export const intercomConfig = {
-  panel: { name: 'Вызывная панель IP', priceKzt: 85_000 },
-  reader: { name: 'Считыватель карт', priceKzt: 25_000 },
-  controller: { name: 'Контроллер доступа (до 4 считывателей)', priceKzt: 35_000 },
+  panel: { name: 'Вызывная панель IP', priceKzt: 250_000 },
+  reader: { name: 'Интерком панели для квартир', priceKzt: 25_000 },
+  controller: { name: 'Контроллер доступа', priceKzt: 35_000 },
 };
+
+/** PoE-коммутатор на этаж: до 4 квартир — 4п, 5 и более — 8п */
+export const floorPoeSwitchConfig = {
+  small: { ports: 4, priceKzt: 22_000, label: 'PoE-коммутатор 4-порт этаж' },
+  large: { ports: 8, priceKzt: 35_000, label: 'PoE-коммутатор 8-порт этаж' },
+} as const;
+
+/** Вход (калитка/паркинг): панель + считыватель */
+export const entrancePanelConfig = {
+  priceKzt: 250_000,
+  label: 'Домофон для входа',
+} as const;
+
+/** Расходники домофонии: 25% от стоимости кабельной продукции (ТЗ п.2) */
+export const consumablesIntercomPercent = 0.25;
 
 export const INTERCOM_READERS_PER_CONTROLLER = 4;
 
-/** Коммутаторы домофонии (1 порт под uplink, остальные — устройства) */
+/** Коммутаторы домофонии (8 и 16 портов — 90 000 тг) */
 export const intercomSwitches = [
-  { ports: 4, usable: 3, name: 'WK-PS204GF (4 порта PoE)', priceKzt: 22_000 },
-  { ports: 8, usable: 7, name: 'WK-PS208GF (8 портов PoE)', priceKzt: 35_000 },
-  { ports: 16, usable: 15, name: 'WK-PS216GF (16 портов PoE)', priceKzt: 52_000 },
-  { ports: 32, usable: 31, name: 'WK-PS232GF (32 порта PoE)', priceKzt: 75_000 },
-  { ports: 64, usable: 63, name: 'WK-PS264GF (64 порта PoE)', priceKzt: 130_000 },
+  { ports: 4, usable: 3, name: 'WK-PS204GF 4 порта PoE', priceKzt: 22_000 },
+  { ports: 8, usable: 7, name: 'WK-PS208GF 8 портов PoE', priceKzt: 90_000 },
+  { ports: 16, usable: 15, name: 'WK-PS216GF 16 портов PoE', priceKzt: 90_000 },
+  { ports: 32, usable: 31, name: 'WK-PS232GF 32 порта PoE', priceKzt: 75_000 },
+  { ports: 64, usable: 63, name: 'WK-PS264GF 64 порта PoE', priceKzt: 130_000 },
 ] as const;
 
 /** Расходные материалы: 15% от стоимости кабеля */
 /** Расходные материалы: доля от стоимости кабеля (гофра, крепёж, клеммы, патч-корды) */
 export const consumablesCablePercent = 0.25;
 
-/** Ставки монтажа по статьям (₸) */
+/** Монтаж по ТЗ п.8: 30% от оборудования, пусконаладка 25% от монтажа, кабель 300 тг/м */
+export const installationConfig = {
+  installationRate: 0.3,
+  commissioningRate: 0.25,
+  cableInstallPerMeter: 300,
+} as const;
+
+/** Ставки монтажа по статьям (₸) — оставлены для совместимости, основной расчёт по installationConfig */
 export const installationRates = {
   cameraOutdoor: 2_500,
   cameraIndoor: 1_500,
@@ -174,3 +196,52 @@ export const calculatorContact = {
   email: 'info@grgroup.kz',
   phone: '+7 771 421 55 93',
 };
+
+/** Конфиг для PDF (ТЗ п.10): логотип, компания, контакты */
+export const pdfConfig = {
+  logoPath: '/logo.png',
+  companyName: 'G&R Group',
+  address: 'г. Алматы',
+  phone: '+7 771 421 55 93',
+  email: 'info@grgroup.kz',
+} as const;
+
+/** ——— Пересчёт сметы по результатам техаудита ——— */
+
+/** Битрейт для расчёта объёма архива 30 дней (Мбит/с): 2MP=2, 4MP=4, ANPR=6, лифт 2MP=2 */
+export const storageBitrateMbpsFor30d = {
+  outdoor2mp: 2,
+  indoor2mp: 2,
+  indoor4mp: 4,
+  anpr3mp: 6,
+  lift2mp: 2,
+  lift4mp: 4,
+} as const;
+
+/** Запас на кабель при пересчёте бухт по метражу (15%) */
+export const CABLE_RESERVE_RECALC = 1.15;
+
+/** Порог устройств домофонии для добавления L3/VLAN */
+export const INTERCOM_DEVICES_L3_THRESHOLD = 250;
+
+/** L3-коммутатор и настройка VLAN (рыночные цены, Казахстан) */
+export const auditRecalcConfig = {
+  l3Switch24: { name: 'Коммутатор L3 управляемый 24п', priceKzt: 85_000 },
+  vlanSetup: { name: 'Настройка VLAN и маршрутизации', priceKzt: 45_000 },
+  /** Абонентские устройства */
+  subscriberPanel: { name: 'Видеодомофон 7" в квартиру', priceKzt: 35_000 },
+  conciergeMonitor: { name: 'Монитор 55" 4K на пост консьержа', priceKzt: 363_700 },
+  /** Лицензии ПО (ориентир) */
+  licenseNvrPerChannel: { name: 'Лицензия NVR доп. канал', priceKzt: 2_500 },
+  licenseAnprPerCamera: { name: 'Лицензия ANPR на камеру', priceKzt: 15_000 },
+  licenseSkud: { name: 'Лицензия СКУД (контроллеры доступа)', priceKzt: 8_000 },
+} as const;
+
+/** PoE-бюджет коммутаторов (Вт) — по даташитам */
+export const switchPoEBudgetWatts = {
+  poe_24port: 380,
+  poe_16port: 250,
+  poe_8port: 65,
+  floor4port: 52,
+  floor8port: 65,
+} as const;

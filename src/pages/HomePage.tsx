@@ -5,6 +5,7 @@ import { AboutSection } from '@/widgets/about/AboutSection';
 import { ServicesSection } from '@/widgets/services/ServicesSection';
 import { PartnersSection } from '@/widgets/partners/PartnersSection';
 import { DigitalEcosystemSection } from '@/widgets/digitalEcosystem/DigitalEcosystemSection';
+import { CctvCalculatorSection } from '@/widgets/calculator/CctvCalculatorSection';
 // import { AssistantSection } from '@/widgets/assistant/AssistantSection';
 import { ContactSection } from '@/widgets/contact/ContactSection';
 // import { AssistantWidget } from '@/widgets/assistant/AssistantWidget';
@@ -19,6 +20,7 @@ export function HomePage() {
         <ServicesSection />
         <PartnersSection />
         <DigitalEcosystemSection />
+        <CctvCalculatorSection />
         {/* <AssistantSection /> */}
         <ContactSection />
       </MainContainer>

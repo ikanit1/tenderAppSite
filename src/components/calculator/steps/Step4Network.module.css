@@ -1,0 +1,10 @@
+.wrap { max-width: 700px; margin: 0 auto; }
+.title { font-family: var(--calc-font-heading); font-size: var(--text-2xl); margin: 0 0 1rem; }
+.columns { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+@media (max-width: 600px) { .columns { grid-template-columns: 1fr; } }
+.col { padding: 1.25rem; }
+.colTitle { font-size: var(--text-lg); margin: 0 0 1rem; }
+.row { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+.mono { font-family: var(--calc-font-mono); }
+.toggleRow { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; cursor: pointer; }
+.actions { display: flex; gap: 1rem; justify-content: flex-end; }

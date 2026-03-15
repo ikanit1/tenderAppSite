@@ -84,7 +84,7 @@ export function DigitalEcosystemSection() {
         </motion.p>
         <motion.div className={styles.heroCta} variants={reduceMotion ? undefined : itemVariants}>
           <a
-            href="/docs/kommercheskoe-predlozhenie-IP-domofoniya-i-videonablyudenie.pdf"
+            href={c.pdfUrl}
             target="_blank"
             rel="noopener noreferrer"
             className={styles.ctaPrimary}
@@ -295,7 +295,7 @@ export function DigitalEcosystemSection() {
         </motion.p>
         <motion.div className={styles.ctaRow} variants={reduceMotion ? undefined : itemVariants}>
           <a
-            href="/docs/kommercheskoe-predlozhenie-IP-domofoniya-i-videonablyudenie.pdf"
+            href={c.pdfUrl}
             target="_blank"
             rel="noopener noreferrer"
             className={styles.ctaPrimary}

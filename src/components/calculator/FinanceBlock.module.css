@@ -1,0 +1,182 @@
+.wrap {
+  margin: 1.5rem 0;
+}
+.card {
+  padding: 1.5rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.icon {
+  font-size: 2rem;
+}
+.title {
+  font-family: var(--calc-font-heading);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.subtitle {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-top: 0.1rem;
+}
+
+.investRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: rgba(59, 130, 246, 0.06);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.investLabel {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+.investAmount {
+  font-family: var(--calc-font-mono);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  white-space: nowrap;
+}
+
+.divider {
+  height: 1px;
+  background: var(--calc-glass-border);
+  margin: 1rem 0;
+}
+.sectionTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.03em;
+}
+
+.ratesGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.rateCard {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--calc-glass-border);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.rateIcon {
+  font-size: 1.4rem;
+}
+.rateName {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+.ratePrice {
+  font-family: var(--calc-font-mono);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+.rateDesc {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.monthlyTotal {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.monthlyRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.83rem;
+  color: var(--color-text-muted);
+}
+.monthlyTotalRow {
+  border-top: 1px solid var(--calc-glass-border);
+  padding-top: 0.4rem;
+  margin-top: 0.2rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.mono {
+  font-family: var(--calc-font-mono);
+}
+.monoAccent {
+  font-family: var(--calc-font-mono);
+  color: var(--color-accent);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.paybackRow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.paybackVal {
+  font-family: var(--calc-font-mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+.paybackYears {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+.progressTrack {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 0.35rem;
+}
+.progressBar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-accent), #8b5cf6);
+  border-radius: 99px;
+}
+.progressLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  color: var(--color-text-muted);
+}
+
+.disclaimer {
+  margin-top: 1rem;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  border-top: 1px solid var(--calc-glass-border);
+  padding-top: 0.75rem;
+}
+
+@media (max-width: 500px) {
+  .ratesGrid {
+    grid-template-columns: 1fr;
+  }
+  .investRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

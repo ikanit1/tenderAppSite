@@ -5,8 +5,6 @@
 
 import {
   cameraTypes,
-  cameraBitrateMbps,
-  liftBitrateMbps,
   elevatorCameras,
   cableMetersPerCamera,
   powerWattsPerCamera,
@@ -20,8 +18,6 @@ import {
   INTERCOM_CABLE_CAR_ENTRANCE_PER_PANEL,
   hddConfig,
   jbodConfig,
-  STORAGE_RESERVE_FACTOR,
-  NVR_MAX_HDD_SLOTS,
   nvrConfigs,
   switchConfigs,
   uplinkSwitchConfig,
@@ -29,10 +25,13 @@ import {
   upsConfigs,
   accessoriesConfig,
   intercomConfig,
+  floorPoeSwitchConfig,
+  entrancePanelConfig,
+  consumablesIntercomPercent,
+  installationConfig,
   INTERCOM_READERS_PER_CONTROLLER,
   intercomSwitches,
   consumablesCablePercent,
-  installationRates,
   powerWattsServer,
 } from '@/shared/content/calculatorConfig';
 
@@ -60,12 +59,16 @@ export interface CarEntranceSettings {
   enabled: boolean;
   gates: number;
   parking: number;
+  /** Количество входов (ТЗ п.4): панель + считыватель на каждый вход */
+  entranceCount: number;
 }
 
 export interface IntercomSettings {
   entrances: number;
   floorsPerEntrance: number;
   flatsPerFloor: number;
+  /** Доп. интерком панели для квартир, прибавляются к расчётному количеству */
+  extraCardReaders: number;
   carEntrance: CarEntranceSettings;
   hasConcierge: boolean;
 }
@@ -95,6 +98,8 @@ export interface ResultGroup {
   title: string;
   rows: LineItem[];
   subtotal: number;
+  /** Для раздельных итогов по ТЗ п.4 */
+  system?: 'cctv' | 'intercom';
 }
 
 export interface InstallationBreakdown {
@@ -105,18 +110,52 @@ export interface InstallationBreakdown {
 export interface CalculatorResult {
   groups: ResultGroup[];
   warnings: string[];
+  /** Стоимость оборудования (без расходников для отображения в итоге по ТЗ п.9) */
   equipment: number;
+  /** Расходные материалы: 25% кабель CCTV + 25% кабель домофония (ТЗ п.9) */
+  consumables: number;
   installation: {
+    work: number;
+    commissioning: number;
+    cableInstall: number;
     total: number;
     breakdown: InstallationBreakdown[];
+    /** По системам для раздельных итогов (ТЗ п.4) */
+    workCctv?: number;
+    workIntercom?: number;
+    commissioningCctv?: number;
+    commissioningIntercom?: number;
+    cableInstallCctv?: number;
+    cableInstallIntercom?: number;
   };
   grandTotal: number;
+  /** Итого по видеонаблюдению (оборудование + расходники + монтаж своей части) */
+  totalCctv?: number;
+  /** Итого по домофонии */
+  totalIntercom?: number;
   /** Для совместимости и PDF */
   totalCameras: number;
   totalCableMeters: number;
+  /** Метраж кабеля CCTV / домофония (для пересчёта по аудиту) */
+  totalMetersCctv?: number;
+  totalMetersIntercom?: number;
   totalNvrCount: number;
   totalSwitchCount: number;
   hddCount: number;
+  /** Количество квартир (для блока финансовых условий) */
+  totalFlats: number;
+  /** Абонентская модель: ставка домофония ₸/кв/мес */
+  monthlyIntercomPerFlat: number;
+  /** Абонентская модель: ставка CCTV ₸/кв/мес */
+  monthlyCctvPerFlat: number;
+  /** Домофония: totalFlats × ставка */
+  monthlyIntercomTotal: number;
+  /** CCTV: totalFlats × ставка */
+  monthlyCctvTotal: number;
+  /** Сумма абонентской платы с дома в месяц */
+  monthlyTotal: number;
+  /** Срок окупаемости (мес.) */
+  paybackMonths: number;
 }
 
 const CAMERA_KEYS = ['outdoor2mp', 'indoor2mp', 'indoor4mp', 'anpr3mp'] as const;
@@ -152,7 +191,7 @@ function calculateLifts(input: CalculatorInputs): { rows: LineItem[]; sum: numbe
   rows.push({ name: radioBridgeConfig.name, qty: n, unitPrice: radioBridgeConfig.priceKzt, sum: n * radioBridgeConfig.priceKzt });
   const switch8Count = Math.ceil(n / 4);
   rows.push({
-    name: switchConfigs.poe_8port.name + ' (для лифтов)',
+    name: switchConfigs.poe_8port.name + ' для лифтов',
     qty: switch8Count,
     unitPrice: switchConfigs.poe_8port.priceKzt,
     sum: switch8Count * switchConfigs.poe_8port.priceKzt,
@@ -161,17 +200,40 @@ function calculateLifts(input: CalculatorInputs): { rows: LineItem[]; sum: numbe
   return { rows, sum, liftCount: n };
 }
 
-/** 3. Кабель: по типам камер (outdoor2mp/anpr 120 м, indoor 60 м) + лифт + вертикаль + домофония */
+/** 3. Кабель: бухты по количеству POE-коммутаторов на этаже (по ЖК); вертикаль и метры из параметров здания (при отсутствии — из домофонии) */
 function calculateCable(
   input: CalculatorInputs,
   liftCount: number,
-): { rows: LineItem[]; sum: number; totalMeters: number } {
+): {
+  rows: LineItem[];
+  sum: number;
+  totalMeters: number;
+  totalMetersCctv: number;
+  totalMetersIntercom: number;
+  rowsCctv: LineItem[];
+  sumCctv: number;
+  rowsIntercom: LineItem[];
+  sumIntercom: number;
+  consumablesCctv: number;
+  consumablesIntercom: number;
+} {
   const rows: LineItem[] = [];
   const ct = input.cameraTypes;
+  const buildingFloors = input.cableSettings.buildingFloors > 0
+    ? input.cableSettings.buildingFloors
+    : (input.intercom.entrances * input.intercom.floorsPerEntrance) || 1;
+  const buildingRisers = input.cableSettings.buildingRisers > 0
+    ? input.cableSettings.buildingRisers
+    : input.intercom.entrances || 1;
+
   let totalMeters: number;
+  let totalMetersCctv: number;
+  let totalMetersIntercom: number;
   if (input.cableSettings.useManualLength && input.cableSettings.manualLengthPerCamera != null && input.cableSettings.manualLengthPerCamera > 0) {
     const totalCameras = ct.outdoor2mp + ct.indoor2mp + ct.indoor4mp + ct.anpr3mp + liftCount;
-    totalMeters = Math.ceil(totalCameras * input.cableSettings.manualLengthPerCamera * CABLE_RESERVE_FACTOR);
+    totalMetersCctv = Math.ceil(totalCameras * input.cableSettings.manualLengthPerCamera * CABLE_RESERVE_FACTOR);
+    totalMetersIntercom = 0;
+    totalMeters = totalMetersCctv;
   } else {
     const horizontalCameras =
       ct.outdoor2mp * cableMetersPerCamera.outdoor2mp +
@@ -179,63 +241,92 @@ function calculateCable(
       ct.indoor4mp * cableMetersPerCamera.indoor4mp +
       ct.anpr3mp * cableMetersPerCamera.anpr3mp;
     const horizontalLift = liftCount * cableMetersPerCamera.lift;
-    const verticalLength = input.cableSettings.buildingFloors * FLOOR_HEIGHT_METERS * input.cableSettings.buildingRisers;
+    const verticalLength = buildingFloors * FLOOR_HEIGHT_METERS * buildingRisers;
     const carEntranceCableMeters = input.intercom.carEntrance.enabled
       ? (1 + input.intercom.carEntrance.gates + input.intercom.carEntrance.parking) * INTERCOM_CABLE_CAR_ENTRANCE_PER_PANEL
       : 0;
     const intercomLength =
       input.intercom.entrances * input.intercom.floorsPerEntrance * INTERCOM_CABLE_METERS_PER_FLOOR + carEntranceCableMeters;
-    totalMeters = Math.ceil((horizontalCameras + horizontalLift + verticalLength + intercomLength) * CABLE_RESERVE_FACTOR);
+    totalMetersCctv = Math.ceil((horizontalCameras + horizontalLift + verticalLength) * CABLE_RESERVE_FACTOR);
+    totalMetersIntercom = Math.ceil(intercomLength * CABLE_RESERVE_FACTOR);
+    totalMeters = totalMetersCctv + totalMetersIntercom;
   }
-  if (totalMeters <= 0) return { rows, sum: 0, totalMeters: 0 };
-  const reelCount = Math.ceil(totalMeters / REEL_LENGTH_METERS);
-  const cableCost = reelCount * cableConfig.indoor.priceKzt;
-  rows.push({
-    name: cableConfig.indoor.name,
-    qty: reelCount,
-    unitPrice: cableConfig.indoor.priceKzt,
-    sum: cableCost,
-    note: `≈ ${totalMeters} м`,
-  });
-  const consumablesCost = Math.round(cableCost * consumablesCablePercent);
-  rows.push({
-    name: `Расходные материалы (${Math.round(consumablesCablePercent * 100)}% от UTP)`,
-    qty: 0,
-    unitPrice: null,
-    sum: consumablesCost,
-  });
-  return { rows, sum: cableCost + consumablesCost, totalMeters };
+  if (totalMeters <= 0) {
+    return {
+      rows,
+      sum: 0,
+      totalMeters: 0,
+      totalMetersCctv: 0,
+      totalMetersIntercom: 0,
+      rowsCctv: [],
+      sumCctv: 0,
+      rowsIntercom: [],
+      sumIntercom: 0,
+      consumablesCctv: 0,
+      consumablesIntercom: 0,
+    };
+  }
+  /** Бухты по метражу: запас 15% на повороты и провисы (не по числу этажей) */
+  const CABLE_MARGIN_REELS = 1.15;
+  const reelCctv =
+    totalMetersCctv > 0
+      ? Math.max(1, Math.ceil((totalMetersCctv * CABLE_MARGIN_REELS) / REEL_LENGTH_METERS))
+      : 0;
+  const reelIntercom =
+    totalMetersIntercom > 0
+      ? Math.max(1, Math.ceil((totalMetersIntercom * CABLE_MARGIN_REELS) / REEL_LENGTH_METERS))
+      : 0;
+  const cableCostCctv = reelCctv * cableConfig.indoor.priceKzt;
+  const cableCostIntercom = reelIntercom * cableConfig.indoor.priceKzt;
+  const consumablesCctv = Math.round(cableCostCctv * consumablesCablePercent);
+  const consumablesIntercom = Math.round(cableCostIntercom * consumablesCablePercent);
+  const rowsCctv: LineItem[] = [];
+  const rowsIntercom: LineItem[] = [];
+  if (totalMetersCctv > 0) {
+    rowsCctv.push({
+      name: cableConfig.indoor.name,
+      qty: reelCctv,
+      unitPrice: cableConfig.indoor.priceKzt,
+      sum: cableCostCctv,
+      note: `≈ ${totalMetersCctv} м`,
+    });
+    rowsCctv.push({ name: 'Расходные материалы', qty: 0, unitPrice: null, sum: consumablesCctv });
+  }
+  if (totalMetersIntercom > 0) {
+    rowsIntercom.push({
+      name: cableConfig.indoor.name,
+      qty: reelIntercom,
+      unitPrice: cableConfig.indoor.priceKzt,
+      sum: cableCostIntercom,
+      note: `≈ ${totalMetersIntercom} м`,
+    });
+    rowsIntercom.push({ name: 'Расходные материалы', qty: 0, unitPrice: null, sum: consumablesIntercom });
+  }
+  const sumCctv = cableCostCctv + consumablesCctv;
+  const sumIntercom = cableCostIntercom + consumablesIntercom;
+  rows.push(
+    ...rowsCctv,
+    ...rowsIntercom,
+  );
+  return {
+    rows,
+    sum: sumCctv + sumIntercom,
+    totalMeters,
+    totalMetersCctv,
+    totalMetersIntercom,
+    rowsCctv,
+    sumCctv,
+    rowsIntercom,
+    sumIntercom,
+    consumablesCctv,
+    consumablesIntercom,
+  };
 }
 
-/** 4. Хранение: по битрейту и типу записи. АНПР всегда continuous — пропуск кадра недопустим. */
-function calculateStorage(
-  input: CalculatorInputs,
-  liftCount: number,
-  effectiveRecordingType: 'continuous' | 'motion',
-): { rows: LineItem[]; sum: number; requiredGb: number; hddCount: number } {
-  const { months } = input.archiveSettings;
-  const ct = input.cameraTypes;
-  let totalBitrateMbps = 0;
-  for (const key of CAMERA_KEYS) {
-    const qty = ct[key];
-    if (qty <= 0) continue;
-    const br = cameraBitrateMbps[key];
-    const rate =
-      key === 'anpr3mp'
-        ? br.continuous
-        : effectiveRecordingType === 'continuous'
-          ? br.continuous
-          : br.motion;
-    totalBitrateMbps += qty * rate;
-  }
-  if (input.elevatorCameraType === '2mp') totalBitrateMbps += liftCount * liftBitrateMbps.lift2mp;
-  else totalBitrateMbps += liftCount * liftBitrateMbps.lift4mp;
-  if (totalBitrateMbps <= 0) return { rows: [], sum: 0, requiredGb: 0, hddCount: 0 };
-  const dailyGb = (totalBitrateMbps * 3600 * 24) / 8 / 1024;
-  const archiveDays = months * 30;
-  const totalArchiveGb = dailyGb * archiveDays;
-  const requiredGb = Math.ceil(totalArchiveGb * STORAGE_RESERVE_FACTOR);
-  const hddCount = Math.ceil(requiredGb / hddConfig.capacityGb);
+/** 4. Хранение: 1 HDD 10TB на каждые 10 камер (ТЗ п.7). */
+function calculateStorage(totalCamerasAll: number): { rows: LineItem[]; sum: number; hddCount: number } {
+  if (totalCamerasAll <= 0) return { rows: [], sum: 0, hddCount: 0 };
+  const hddCount = Math.ceil(totalCamerasAll / 10);
   const sum = hddCount * hddConfig.priceKzt;
   const rows: LineItem[] = [
     {
@@ -243,15 +334,18 @@ function calculateStorage(
       qty: hddCount,
       unitPrice: hddConfig.priceKzt,
       sum,
-      note: `≈ ${Math.round(totalArchiveGb)} ГБ за ${months} мес. (${effectiveRecordingType === 'continuous' ? 'постоянная' : 'по движению'})`,
+      note: `1 диск на 10 камер (всего ${totalCamerasAll} камер)`,
     },
   ];
-  return { rows, sum, requiredGb, hddCount };
+  return { rows, sum, hddCount };
 }
 
-/** 5. NVR: жадный подбор по каналам; проверка слотов HDD */
-function pickNVRs(channels: number): { channelCount: number; items: { channels: number; count: number }[] } {
-  const sizes = [256, 64, 32, 16];
+/** 5. NVR: жадный подбор по каналам из доступных размеров (с учётом analyticsOnly). */
+function pickNVRs(
+  channels: number,
+  availableSizes: number[],
+): { channelCount: number; items: { channels: number; count: number }[] } {
+  const sizes = [...availableSizes].sort((a, b) => b - a);
   let remaining = channels;
   const items: { channels: number; count: number }[] = [];
   for (const size of sizes) {
@@ -263,7 +357,7 @@ function pickNVRs(channels: number): { channelCount: number; items: { channels: 
     }
   }
   if (remaining > 0) {
-    const smallest = sizes.find((s) => s >= remaining) ?? 16;
+    const smallest = sizes.find((s) => s >= remaining) ?? sizes[sizes.length - 1];
     items.push({ channels: smallest, count: 1 });
   }
   const channelCount = items.reduce((a, i) => a + i.channels * i.count, 0);
@@ -276,22 +370,28 @@ function calculateNVR(
 ): { rows: LineItem[]; sum: number; totalNvrCount: number } {
   const rows: LineItem[] = [];
   let channelsToCover = totalChannels;
+  const availableNvrs = videoAnalytics
+    ? nvrConfigs
+    : nvrConfigs.filter((n) => !n.analyticsOnly);
+
   if (videoAnalytics) {
     const nvr256 = nvrConfigs.find((n) => n.key === 'nvr_256ch')!;
     rows.push({
-      name: `${nvr256.name} (256 кан., видеоаналитика)`,
+      name: nvr256.name + ' 256 кан. видеоаналитика',
       qty: 1,
       unitPrice: nvr256.priceKzt,
       sum: nvr256.priceKzt,
     });
     channelsToCover = Math.max(0, channelsToCover - 256);
   }
-  const { items } = pickNVRs(channelsToCover);
+
+  const availableSizes = [...new Set(availableNvrs.map((n) => n.channels))];
+  const { items } = pickNVRs(channelsToCover, availableSizes);
   for (const { channels: ch, count } of items) {
-    const nvr = nvrConfigs.find((n) => n.channels === ch)!;
+    const nvr = availableNvrs.find((n) => n.channels === ch)!;
     if (nvr && count > 0) {
       rows.push({
-        name: `${nvr.name} (${nvr.channels} кан.)`,
+        name: `${nvr.name} ${nvr.channels} кан.`,
         qty: count,
         unitPrice: nvr.priceKzt,
         sum: count * nvr.priceKzt,
@@ -448,42 +548,55 @@ function calculateUPS(
   return { rows, sum, totalWatts };
 }
 
-/** Умный подбор коммутаторов домофонии по количеству устройств (жадный, 1 порт под uplink) */
-function pickIntercomSwitches(
-  devices: number,
-  models: readonly { ports: number; usable: number; name: string; priceKzt: number }[],
-): { name: string; priceKzt: number; usable: number; count: number }[] {
-  if (devices <= 0) return [];
-  const sorted = [...models].sort((a, b) => b.usable - a.usable);
-  let remaining = devices;
-  const result: { name: string; priceKzt: number; usable: number; count: number }[] = [];
-
-  for (const model of sorted) {
-    if (remaining <= 0) break;
-    const count = Math.floor(remaining / model.usable);
-    if (count > 0) {
-      result.push({ name: model.name, priceKzt: model.priceKzt, usable: model.usable, count });
-      remaining -= count * model.usable;
-    }
+/** Подъездный коммутатор домофонии по этажам в подъезде: до 7 → 8п, 8–15 → 16п, 16–22 → 24п, >22 → каскад 24п */
+function getEntranceSwitch(
+  floorsPerEntrance: number,
+): { name: string; priceKzt: number; countPerEntrance: number } | null {
+  if (floorsPerEntrance <= 0) return null;
+  if (floorsPerEntrance <= 7) {
+    const m = intercomSwitches.find((s) => s.ports === 8)!;
+    return { name: m.name, priceKzt: m.priceKzt, countPerEntrance: 1 };
   }
-
-  if (remaining > 0) {
-    const fit = [...sorted].reverse().find((m) => m.usable >= remaining);
-    if (fit) {
-      const existing = result.find((r) => r.name === fit.name);
-      if (existing) {
-        existing.count += 1;
-      } else {
-        result.push({ name: fit.name, priceKzt: fit.priceKzt, usable: fit.usable, count: 1 });
-      }
-    }
+  if (floorsPerEntrance <= 15) {
+    const m = intercomSwitches.find((s) => s.ports === 16)!;
+    return { name: m.name, priceKzt: m.priceKzt, countPerEntrance: 1 };
   }
-
-  return result;
+  const countPerEntrance = Math.ceil(floorsPerEntrance / 22);
+  return {
+    name: switchConfigs.poe_24port.name,
+    priceKzt: switchConfigs.poe_24port.priceKzt,
+    countPerEntrance,
+  };
 }
 
-/** 9. Домофония: панели, считыватели, контроллеры, коммутаторы (умный подбор по устройствам) */
-function calculateIntercom(input: CalculatorInputs): {
+/** Магистральный коммутатор домофонии по количеству подъездов (только при entrances >= 2) */
+function getMagistrationSwitch(
+  entrances: number,
+): { name: string; priceKzt: number; count: number }[] {
+  if (entrances < 2) return [];
+  const rows: { name: string; priceKzt: number; count: number }[] = [];
+  if (entrances <= 7) {
+    const m = intercomSwitches.find((s) => s.ports === 8)!;
+    rows.push({ name: m.name, priceKzt: m.priceKzt, count: 1 });
+  } else if (entrances <= 15) {
+    const m = intercomSwitches.find((s) => s.ports === 16)!;
+    rows.push({ name: m.name, priceKzt: m.priceKzt, count: 1 });
+  } else {
+    const count = Math.ceil(entrances / 22);
+    rows.push({
+      name: switchConfigs.poe_24port.name,
+      priceKzt: switchConfigs.poe_24port.priceKzt,
+      count,
+    });
+  }
+  return rows;
+}
+
+/** 9. Домофония: панели, считыватели, контроллеры, этажные PoE (ТЗ п.3), коммутаторы, входы (ТЗ п.4), расходники (ТЗ п.2) */
+function calculateIntercom(
+  input: CalculatorInputs,
+  cableGroupSubtotal: number,
+): {
   rows: LineItem[];
   sum: number;
   panels: number;
@@ -492,111 +605,147 @@ function calculateIntercom(input: CalculatorInputs): {
   switchCount: number;
   intercomDevices: number;
 } {
-  const { entrances, floorsPerEntrance, flatsPerFloor, carEntrance, hasConcierge } = input.intercom;
+  const { entrances, floorsPerEntrance, flatsPerFloor, extraCardReaders, carEntrance, hasConcierge } = input.intercom;
   const carEntrancePanels = carEntrance.enabled ? 1 + carEntrance.gates + carEntrance.parking : 0;
-  const panels = entrances * 1 + carEntrancePanels;
+  const entranceCount = carEntrance.enabled ? carEntrance.entranceCount ?? 0 : 0;
+  const panels = entrances * 1 + carEntrancePanels + entranceCount * 1;
   const totalFlats = entrances * floorsPerEntrance * flatsPerFloor;
-  const readers = totalFlats + entrances * floorsPerEntrance + (hasConcierge ? 2 : 0);
+  const readersFromFlats = totalFlats + entrances * floorsPerEntrance + (hasConcierge ? 2 : 0);
+  const readers = readersFromFlats + (extraCardReaders ?? 0) + entranceCount;
   const controllers = Math.ceil(readers / INTERCOM_READERS_PER_CONTROLLER);
-  const intercomDevices = panels + readers + controllers;
-  const switchPicks = pickIntercomSwitches(intercomDevices, intercomSwitches);
-  const switchCount = switchPicks.reduce((a, s) => a + s.count, 0);
+  const totalFloors = entrances * floorsPerEntrance;
+  const floorSwitch = flatsPerFloor <= 4 ? floorPoeSwitchConfig.small : floorPoeSwitchConfig.large;
+  const entranceSwitch = getEntranceSwitch(floorsPerEntrance);
+  const magistrationRows = getMagistrationSwitch(entrances);
+  let switchCount = totalFloors;
+  if (entranceSwitch) switchCount += entrances * entranceSwitch.countPerEntrance;
+  switchCount += magistrationRows.reduce((a, r) => a + r.count, 0);
+  const intercomDevices = panels + readers + controllers + totalFloors;
 
   const rows: LineItem[] = [];
-  if (panels > 0) {
-    const showBreakdown = carEntrance.enabled && (carEntrance.gates > 0 || carEntrance.parking > 0);
+  if (entranceCount > 0) {
+    rows.push({
+      name: entrancePanelConfig.label,
+      qty: entranceCount,
+      unitPrice: entrancePanelConfig.priceKzt,
+      sum: entranceCount * entrancePanelConfig.priceKzt,
+    });
+  }
+  const panelsSubstairs = entrances + (carEntrance.enabled ? 1 : 0);
+  if (panelsSubstairs > 0) {
     rows.push({
       name: intercomConfig.panel.name,
-      qty: panels,
+      qty: panelsSubstairs,
       unitPrice: intercomConfig.panel.priceKzt,
-      sum: panels * intercomConfig.panel.priceKzt,
-      note: showBreakdown ? `в т.ч.: подъезды ${entrances}, калитки ${carEntrance.gates}, паркинг ${carEntrance.parking}` : undefined,
+      sum: panelsSubstairs * intercomConfig.panel.priceKzt,
+      note: entrances > 0 ? `подъезды ${entrances}` : undefined,
     });
   }
-  if (readers > 0) {
+  if (carEntrance.gates > 0) {
     rows.push({
-      name: intercomConfig.reader.name,
-      qty: readers,
-      unitPrice: intercomConfig.reader.priceKzt,
-      sum: readers * intercomConfig.reader.priceKzt,
+      name: 'Вызывная панель IP (калитка)',
+      qty: carEntrance.gates,
+      unitPrice: intercomConfig.panel.priceKzt,
+      sum: carEntrance.gates * intercomConfig.panel.priceKzt,
     });
   }
-  if (controllers > 0) {
+  if (carEntrance.parking > 0) {
     rows.push({
-      name: intercomConfig.controller.name,
-      qty: controllers,
-      unitPrice: intercomConfig.controller.priceKzt,
-      sum: controllers * intercomConfig.controller.priceKzt,
+      name: 'Вызывная панель IP (паркинг/въезд)',
+      qty: carEntrance.parking,
+      unitPrice: intercomConfig.panel.priceKzt,
+      sum: carEntrance.parking * intercomConfig.panel.priceKzt,
     });
   }
-  for (const s of switchPicks) {
+  // Интерком панели для квартир и контроллер доступа — по запросу убраны из списка сметы (учёт в switchCount/мощности сохранён)
+  if (totalFloors > 0) {
     rows.push({
-      name: s.name + ' (домофония)',
+      name: floorSwitch.label,
+      qty: totalFloors,
+      unitPrice: floorSwitch.priceKzt,
+      sum: totalFloors * floorSwitch.priceKzt,
+    });
+  }
+  if (entranceSwitch && entrances > 0) {
+    const qty = entrances * entranceSwitch.countPerEntrance;
+    rows.push({
+      name: entranceSwitch.name + ' (подъезд)',
+      qty,
+      unitPrice: entranceSwitch.priceKzt,
+      sum: qty * entranceSwitch.priceKzt,
+    });
+  }
+  for (const s of magistrationRows) {
+    rows.push({
+      name: s.name + ' (магистраль домофония)',
       qty: s.count,
       unitPrice: s.priceKzt,
       sum: s.count * s.priceKzt,
+    });
+  }
+  const consumablesIntercomSum = Math.round(cableGroupSubtotal * consumablesIntercomPercent);
+  if (consumablesIntercomSum > 0) {
+    rows.push({
+      name: 'Расходные материалы',
+      qty: 1,
+      unitPrice: consumablesIntercomSum,
+      sum: consumablesIntercomSum,
     });
   }
   const sum = rows.reduce((a, r) => a + r.sum, 0);
   return { rows, sum, panels, readers, controllers, switchCount, intercomDevices };
 }
 
-/** 10. Монтаж по статьям */
-function calculateInstallation(
-  ct: CameraCounts,
-  liftCount: number,
-  totalCableMeters: number,
-  nvrCount: number,
-  switchCountTotal: number,
-  intercomPanels: number,
-  intercomReaders: number,
-): { total: number; breakdown: InstallationBreakdown[] } {
-  const r = installationRates;
-  const breakdown: InstallationBreakdown[] = [];
-  let total = 0;
-  const outdoorCameras = ct.outdoor2mp + ct.anpr3mp;
-  const indoorCameras = ct.indoor2mp + ct.indoor4mp;
-  if (outdoorCameras > 0) {
-    const s = outdoorCameras * r.cameraOutdoor;
-    breakdown.push({ name: 'Монтаж камер уличных', sum: s });
-    total += s;
-  }
-  if (indoorCameras > 0) {
-    const s = indoorCameras * r.cameraIndoor;
-    breakdown.push({ name: 'Монтаж камер внутренних', sum: s });
-    total += s;
-  }
-  if (liftCount > 0) {
-    const s = liftCount * r.cameraLift;
-    breakdown.push({ name: 'Монтаж лифтовых камер', sum: s });
-    total += s;
-  }
-  if (totalCableMeters > 0) {
-    const s = totalCableMeters * r.cablePerMeter;
-    breakdown.push({ name: 'Кабельные работы', sum: s });
-    total += s;
-  }
-  if (nvrCount > 0) {
-    const s = nvrCount * r.nvr;
-    breakdown.push({ name: 'Монтаж NVR', sum: s });
-    total += s;
-  }
-  if (switchCountTotal > 0) {
-    const s = switchCountTotal * r.switch;
-    breakdown.push({ name: 'Монтаж коммутаторов', sum: s });
-    total += s;
-  }
-  if (intercomPanels > 0 || intercomReaders > 0) {
-    const s = intercomPanels * r.panel + intercomReaders * r.reader;
-    breakdown.push({ name: 'Монтаж домофонии', sum: s });
-    total += s;
-  }
-  return { total, breakdown };
+/** 10. Монтаж по ТЗ п.8: 30% от оборудования по системе, пусконаладка 25% от монтажа, кабель 300 тг/м — раздельно CCTV/домофония (ТЗ п.4) */
+function calculateInstallationTZ(
+  equipmentCctv: number,
+  equipmentIntercom: number,
+  totalMetersCctv: number,
+  totalMetersIntercom: number,
+): {
+  work: number;
+  commissioning: number;
+  cableInstall: number;
+  total: number;
+  breakdown: InstallationBreakdown[];
+  workCctv: number;
+  workIntercom: number;
+  commissioningCctv: number;
+  commissioningIntercom: number;
+  cableInstallCctv: number;
+  cableInstallIntercom: number;
+} {
+  const workCctv = Math.round(equipmentCctv * installationConfig.installationRate);
+  const workIntercom = Math.round(equipmentIntercom * installationConfig.installationRate);
+  const work = workCctv + workIntercom;
+  const commissioningCctv = Math.round(workCctv * installationConfig.commissioningRate);
+  const commissioningIntercom = Math.round(workIntercom * installationConfig.commissioningRate);
+  const commissioning = commissioningCctv + commissioningIntercom;
+  const cableInstallCctv = totalMetersCctv * installationConfig.cableInstallPerMeter;
+  const cableInstallIntercom = totalMetersIntercom * installationConfig.cableInstallPerMeter;
+  const cableInstall = cableInstallCctv + cableInstallIntercom;
+  const total = work + commissioning + cableInstall;
+  const breakdown: InstallationBreakdown[] = [
+    { name: 'Монтажные работы', sum: work },
+    { name: 'Пусконаладочные работы', sum: commissioning },
+    { name: 'Монтаж кабеля', sum: cableInstall },
+  ];
+  return {
+    work,
+    commissioning,
+    cableInstall,
+    total,
+    breakdown,
+    workCctv,
+    workIntercom,
+    commissioningCctv,
+    commissioningIntercom,
+    cableInstallCctv,
+    cableInstallIntercom,
+  };
 }
 
 export function calculateResult(input: CalculatorInputs): CalculatorResult | null {
-  const effectiveRecordingType = input.videoAnalytics ? 'continuous' : input.archiveSettings.recordingType;
-
   const ct = input.cameraTypes;
   const totalCamerasMain = ct.outdoor2mp + ct.indoor2mp + ct.indoor4mp + ct.anpr3mp;
   const indoorCameras = ct.indoor2mp + ct.indoor4mp;
@@ -607,56 +756,65 @@ export function calculateResult(input: CalculatorInputs): CalculatorResult | nul
   if (!hasCameras && !hasIntercom) return null;
 
   const warnings: string[] = [];
-
   const groups: ResultGroup[] = [];
 
   const cameraResult = calculateCameras(input);
   if (cameraResult.rows.length > 0) {
-    groups.push({
-      title: 'Камеры видеонаблюдения',
-      rows: cameraResult.rows,
-      subtotal: cameraResult.sum,
-    });
+    groups.push({ title: 'Камеры видеонаблюдения', rows: cameraResult.rows, subtotal: cameraResult.sum, system: 'cctv' });
   }
 
   if (liftResult.rows.length > 0) {
-    groups.push({
-      title: 'Лифтовое оборудование',
-      rows: liftResult.rows,
-      subtotal: liftResult.sum,
-    });
+    const liftRows = [...liftResult.rows];
+    let liftSubtotal = liftResult.sum;
+    const liftChannels = liftResult.liftCount;
+    if (liftChannels > 0) {
+      const nvrLift = calculateNVR(liftChannels, false);
+      liftRows.push(...nvrLift.rows);
+      liftSubtotal += nvrLift.sum;
+    }
+    groups.push({ title: 'Лифтовое оборудование', rows: liftRows, subtotal: liftSubtotal, system: 'cctv' });
   }
 
-  const intercomResult = calculateIntercom(input);
   const cableResult = calculateCable(input, liftResult.liftCount);
-  if (cableResult.rows.length > 0) {
-    groups.push({
-      title: 'Кабельная продукция',
-      rows: [...cableResult.rows],
-      subtotal: cableResult.sum,
-    });
+  if (cableResult.rowsCctv.length > 0 || cableResult.rowsIntercom.length > 0) {
+    if (cableResult.rowsCctv.length > 0) {
+      groups.push({
+        title: 'Кабельная продукция (видеонаблюдение)',
+        rows: [...cableResult.rowsCctv],
+        subtotal: cableResult.sumCctv,
+        system: 'cctv',
+      });
+    }
+    if (cableResult.rowsIntercom.length > 0) {
+      groups.push({
+        title: 'Кабельная продукция (домофония)',
+        rows: [...cableResult.rowsIntercom],
+        subtotal: cableResult.sumIntercom,
+        system: 'intercom',
+      });
+    }
   }
 
-  const storageResult = calculateStorage(input, liftResult.liftCount, effectiveRecordingType);
+  const intercomResult = calculateIntercom(input, 0);
+  if (intercomResult.rows.length > 0) {
+    groups.push({ title: 'Домофония', rows: intercomResult.rows, subtotal: intercomResult.sum, system: 'intercom' });
+    if (intercomResult.intercomDevices > 500) {
+      warnings.push(`Домофония: ${intercomResult.intercomDevices} устройств — рекомендуется разбить на подсети`);
+    }
+  }
+
+  const storageResult = calculateStorage(totalCamerasAll);
   if (storageResult.rows.length > 0) {
-    groups.push({
-      title: 'Хранение данных',
-      rows: storageResult.rows,
-      subtotal: storageResult.sum,
-    });
+    groups.push({ title: 'Хранение данных', rows: storageResult.rows, subtotal: storageResult.sum, system: 'cctv' });
   }
 
-  const totalChannels = totalCamerasAll;
-  const nvrResult = calculateNVR(totalChannels, input.videoAnalytics);
-  const maxHddSlots = nvrResult.totalNvrCount * NVR_MAX_HDD_SLOTS;
-  const extraStorageUnits =
-    storageResult.hddCount > maxHddSlots
-      ? Math.ceil((storageResult.hddCount - maxHddSlots) / jbodConfig.slots)
-      : 0;
-  if (extraStorageUnits > 0) {
-    warnings.push(`Требуется расширитель хранения: ${extraStorageUnits} ед.`);
-  }
-  if (totalChannels > 256 && !input.videoAnalytics) {
+  const totalCctvChannels = totalCamerasMain;
+  const liftChannels = liftResult.liftCount;
+  const nvrResult =
+    totalCctvChannels > 0 ? calculateNVR(totalCctvChannels, input.videoAnalytics) : { rows: [] as LineItem[], sum: 0, totalNvrCount: 0 };
+  const nvrLiftResult =
+    liftChannels > 0 ? calculateNVR(liftChannels, false) : { totalNvrCount: 0 };
+  if (totalCctvChannels > 256 && !input.videoAnalytics) {
     warnings.push('Более 256 каналов — рекомендуется включить видеоаналитику для единой точки управления');
   }
   if (cableResult.totalMeters > 0) {
@@ -666,92 +824,102 @@ export function calculateResult(input: CalculatorInputs): CalculatorResult | nul
 
   const liftSwitchCount = Math.ceil(liftResult.liftCount / 4);
   const switchResult = calculateSwitches(ct.outdoor2mp, indoorCameras, ct.anpr3mp, liftSwitchCount);
-  const totalSwitchesForInstall = switchResult.totalSwitchCount + liftSwitchCount + intercomResult.switchCount;
 
+  const totalNvrCount = nvrResult.totalNvrCount + nvrLiftResult.totalNvrCount;
   if (nvrResult.rows.length > 0 || switchResult.rows.length > 0) {
     const serverRows: LineItem[] = [...nvrResult.rows, ...switchResult.rows];
-    if (extraStorageUnits > 0) {
-      serverRows.push({
-        name: jbodConfig.label,
-        qty: extraStorageUnits,
-        unitPrice: jbodConfig.priceKzt,
-        sum: extraStorageUnits * jbodConfig.priceKzt,
-      });
-    }
-    const rackResult = calculateRack(nvrResult.totalNvrCount, switchResult.totalSwitchCount, totalCamerasAll);
+    const rackResult = calculateRack(totalNvrCount, switchResult.totalSwitchCount, totalCamerasAll);
     serverRows.push(...rackResult.rows);
     const upsResult = calculateUPS(
       ct,
       liftResult.liftCount,
-      nvrResult.totalNvrCount,
-      switchResult.totalSwitchCount + liftSwitchCount + intercomResult.switchCount,
+      totalNvrCount,
+      switchResult.totalSwitchCount + liftSwitchCount,
       intercomResult.controllers,
-      extraStorageUnits,
+      0,
     );
     serverRows.push(...upsResult.rows);
     if (upsResult.totalWatts > 5400) {
       warnings.push('Высокая нагрузка — рекомендуется резервное питание от дизель-генератора');
     }
-    const jbodSum = extraStorageUnits * jbodConfig.priceKzt;
-    const serverSubtotal = nvrResult.sum + switchResult.sum + jbodSum + rackResult.sum + upsResult.sum;
-    groups.push({
-      title: 'Серверное оборудование',
-      rows: serverRows,
-      subtotal: serverSubtotal,
-    });
+    const serverSubtotal =
+      nvrResult.sum + switchResult.sum + rackResult.sum + upsResult.sum;
+    groups.push({ title: 'Серверное оборудование', rows: serverRows, subtotal: serverSubtotal, system: 'cctv' });
   }
 
-  const patchCordCount = totalCamerasAll + nvrResult.totalNvrCount * 4;
+  const patchCordCount = totalCamerasAll + totalNvrCount * 4;
   const patchCordCost = patchCordCount * patchCordConfig.priceKzt;
-  const cableGroup = groups.find((g) => g.title === 'Кабельная продукция');
-  if (cableGroup && patchCordCount > 0) {
-    cableGroup.rows.push({
+  const cableCctvGroup = groups.find((g) => g.title === 'Кабельная продукция (видеонаблюдение)');
+  if (cableCctvGroup && patchCordCount > 0) {
+    cableCctvGroup.rows.push({
       name: patchCordConfig.label,
       qty: patchCordCount,
       unitPrice: patchCordConfig.priceKzt,
       sum: patchCordCost,
     });
-    cableGroup.subtotal += patchCordCost;
+    cableCctvGroup.subtotal += patchCordCost;
   }
 
-  if (intercomResult.rows.length > 0) {
-    groups.push({
-      title: 'Домофония',
-      rows: intercomResult.rows,
-      subtotal: intercomResult.sum,
-    });
-    if (intercomResult.intercomDevices > 500) {
-      warnings.push(
-        `Домофония: ${intercomResult.intercomDevices} устройств — рекомендуется разбить на подсети`,
-      );
-    }
-  }
+  const equipmentTotal = groups.reduce((a, g) => a + g.subtotal, 0);
+  const consumables = cableResult.consumablesCctv + cableResult.consumablesIntercom;
+  const equipment = equipmentTotal - consumables;
 
-  const equipment = groups.reduce((a, g) => a + g.subtotal, 0);
-  const installation = calculateInstallation(
-    ct,
-    liftResult.liftCount,
-    cableResult.totalMeters,
-    nvrResult.totalNvrCount,
-    totalSwitchesForInstall,
-    intercomResult.panels,
-    intercomResult.readers,
+  const equipmentCctv = groups.filter((g) => g.system === 'cctv').reduce((a, g) => a + g.subtotal, 0);
+  const equipmentIntercom = groups.filter((g) => g.system === 'intercom').reduce((a, g) => a + g.subtotal, 0);
+  const installation = calculateInstallationTZ(
+    equipmentCctv,
+    equipmentIntercom,
+    cableResult.totalMetersCctv,
+    cableResult.totalMetersIntercom,
   );
-  const grandTotal = equipment + installation.total;
+  const totalCctv = equipmentCctv + installation.workCctv + installation.commissioningCctv + installation.cableInstallCctv;
+  const totalIntercom = equipmentIntercom + installation.workIntercom + installation.commissioningIntercom + installation.cableInstallIntercom;
+  const grandTotal = equipment + consumables + installation.total;
+
+  const totalFlats =
+    input.intercom.entrances * input.intercom.floorsPerEntrance * input.intercom.flatsPerFloor || 0;
+  const INTERCOM_RATE = 700;
+  const CCTV_RATE = 900;
+  const monthlyIntercomTotal = totalFlats * INTERCOM_RATE;
+  const monthlyCctvTotal = totalFlats * CCTV_RATE;
+  const monthlyTotal = monthlyIntercomTotal + monthlyCctvTotal;
+  const paybackMonths =
+    monthlyTotal > 0 ? Math.ceil(grandTotal / monthlyTotal) : 0;
 
   return {
     groups,
     warnings,
     equipment,
+    consumables,
     installation: {
+      work: installation.work,
+      commissioning: installation.commissioning,
+      cableInstall: installation.cableInstall,
       total: installation.total,
       breakdown: installation.breakdown,
+      workCctv: installation.workCctv,
+      workIntercom: installation.workIntercom,
+      commissioningCctv: installation.commissioningCctv,
+      commissioningIntercom: installation.commissioningIntercom,
+      cableInstallCctv: installation.cableInstallCctv,
+      cableInstallIntercom: installation.cableInstallIntercom,
     },
     grandTotal,
+    totalCctv,
+    totalIntercom,
     totalCameras: totalCamerasAll,
     totalCableMeters: cableResult.totalMeters,
-    totalNvrCount: nvrResult.totalNvrCount,
+    totalMetersCctv: cableResult.totalMetersCctv,
+    totalMetersIntercom: cableResult.totalMetersIntercom,
+    totalNvrCount,
     totalSwitchCount: switchResult.totalSwitchCount,
     hddCount: storageResult.hddCount,
+    totalFlats,
+    monthlyIntercomPerFlat: INTERCOM_RATE,
+    monthlyCctvPerFlat: CCTV_RATE,
+    monthlyIntercomTotal,
+    monthlyCctvTotal,
+    monthlyTotal,
+    paybackMonths,
   };
 }

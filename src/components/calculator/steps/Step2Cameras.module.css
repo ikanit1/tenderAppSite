@@ -1,0 +1,19 @@
+.wrap { max-width: 900px; margin: 0 auto; }
+.title { font-family: var(--calc-font-heading); font-size: var(--text-2xl); margin: 0 0 1rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.card { padding: 1rem; }
+.cardTitle { font-weight: 600; margin-bottom: 0.75rem; }
+.controls { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+.mono { font-family: var(--calc-font-mono); min-width: 2rem; text-align: center; }
+.sum { font-family: var(--calc-font-mono); font-size: var(--text-sm); }
+.liftBlock { padding: 1rem; margin-bottom: 1.5rem; }
+.liftTitle { font-weight: 600; margin-bottom: 0.25rem; }
+.hint { font-size: var(--text-xs); color: var(--color-text-muted); display: block; margin-bottom: 0.75rem; }
+.row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+.row label { min-width: 120px; }
+.stepper { display: flex; align-items: center; gap: 0.5rem; }
+.toggle { display: flex; gap: 0.25rem; }
+.toggle button { padding: 0.4rem 0.75rem; border-radius: 8px; border: 1px solid var(--calc-glass-border); background: var(--color-surface); color: var(--color-text-muted); cursor: pointer; font-size: var(--text-sm); }
+.toggle button:hover { color: var(--color-text); }
+.toggleActive { background: var(--color-primary) !important; color: var(--color-text) !important; border-color: var(--color-primary) !important; }
+.actions { display: flex; gap: 1rem; justify-content: flex-end; }

@@ -1,7 +1,7 @@
 import { PageMeta } from '@/app/PageMeta';
-import { MainContainer } from '@/shared/ui/MainContainer/MainContainer';
 import { BackButton } from '@/shared/ui/BackButton/BackButton';
-import { CctvCalculatorSection } from '@/widgets/calculator/CctvCalculatorSection';
+import { CalculatorWizard } from '@/components/calculator/CalculatorWizard';
+import styles from './CalculatorPage.module.css';
 
 export function CalculatorPage() {
     return (
@@ -10,10 +10,10 @@ export function CalculatorPage() {
                 title="Калькулятор видеонаблюдения"
                 description="Онлайн-калькулятор оборудования для видеонаблюдения и домофонии. Рассчитайте камеры, кабель, NVR, коммутатор и жёсткие диски."
             />
-            <MainContainer>
+            <div className={styles.pageContent}>
                 <BackButton />
-                <CctvCalculatorSection />
-            </MainContainer>
+                <CalculatorWizard />
+            </div>
         </>
     );
 }

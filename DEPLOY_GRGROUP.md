@@ -35,16 +35,45 @@
 7. **Запуск:** `cd tenderbot && docker compose up -d`. (Альтернатива без Docker: [Часть B](tenderbot/deploy/DEPLOY_GRGROUP.md) — systemd, [tenderbot.service](tenderbot/deploy/tenderbot.service), [apisite.service](tenderbot/deploy/apisite.service).)
 8. **Проверка:** главная, `/catalog/`, `/login`, `https://grgroup.kz/catalog/api/health`.
 
-## Обновление
+## Универсальный деплой (главный сайт)
+
+Скопируй и выполни одной вставкой — обновит только маркетинговый сайт (grgroup.kz без /catalog). Подходит для постоянного использования после правок в корне проекта.
+
+```bash
+cd /opt/tenderAppSite-main && npm run build && sudo rm -rf /var/www/tenderAppSite/* && sudo cp -r dist/* /var/www/tenderAppSite/ && sudo chown -R www-data:www-data /var/www/tenderAppSite && sudo nginx -t && sudo systemctl restart nginx
+```
+
+Что делает: сборка → очистка папки сайта → копирование новой сборки → права www-data → проверка Nginx → перезапуск Nginx. После этого открывай сайт в инкогнито или с жёстким обновлением (Ctrl+Shift+R).
+
+---
+
+## Обновление (всё: сайт + каталог + Docker)
+
+Если менял каталог (tenderbot/apisite/react) или бэкенд — полный цикл:
 
 ```bash
 cd /opt/tenderAppSite-main
 git pull
-npm run build && sudo cp -r dist/* /var/www/tenderAppSite/
+npm run build && sudo rm -rf /var/www/tenderAppSite/* && sudo cp -r dist/* /var/www/tenderAppSite/ && sudo chown -R www-data:www-data /var/www/tenderAppSite
 cd tenderbot/apisite/react && npm run build
 cd /opt/tenderAppSite-main/tenderbot && docker compose down && docker compose build && docker compose up -d
+sudo nginx -t && sudo systemctl restart nginx
 ```
 (Без Docker: `sudo systemctl restart tenderbot apisite`.)
+
+### Проверка после деплоя
+
+- Копирование `dist/*` должно выполняться **на том же сервере**, где работает Nginx (если сборка на другой машине — скопировать `dist/*` на сервер через `rsync` или `scp`).
+- На сервере проверить совпадение имён скриптов и файлов:
+  ```bash
+  grep -o 'index-[^"]*\.js' /var/www/tenderAppSite/index.html
+  ls /var/www/tenderAppSite/assets/
+  ```
+  Имена JS в HTML должны совпадать с файлами в `assets/`.
+- При необходимости: `sudo chown -R www-data:www-data /var/www/tenderAppSite`, `sudo nginx -s reload`.
+- Открыть главную и `/calculator` в режиме инкогнито или с «Жёстким обновлением» (Empty Cache and Hard Reload), чтобы не видеть старую версию из кэша.
+
+Корневой сайт собирается из шаблона `index.html` с точкой входа `<script type="module" src="/src/main.tsx"></script>`; в репозитории не должны быть захардкожены имена ассетов (Vite подставляет их при сборке).
 
 ---
 

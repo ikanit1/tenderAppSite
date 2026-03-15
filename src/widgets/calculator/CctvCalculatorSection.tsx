@@ -4,6 +4,7 @@ import {
   cameraTypes,
   storageMonthsOptions,
   calculatorContact,
+  pdfConfig,
 } from '@/shared/content/calculatorConfig';
 import {
   type CalculatorInputs,
@@ -12,12 +13,84 @@ import {
   calculateResult,
 } from '@/widgets/calculator/calculatorLogic';
 import { submitLead } from '@/shared/api/leadApi';
+import { getCatalogUrl } from '@/shared/utils/catalogUrl';
+import { downloadKP } from '@/widgets/calculator/generateKP';
 import { useToast } from '@/features/toast/ToastProvider';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import styles from './CctvCalculatorSection.module.css';
 
 const formatKzt = (n: number) => n.toLocaleString('ru-RU') + ' ₸';
+
+/** Маппинг: подстрока row.name → артикул модели из portal_export. Изображения через API каталога. */
+const deviceModelMap: Record<string, string> = {
+  'Уличная цилиндрическая 2MP': 'IPC-2122-APF28',
+  'Уличная цилиндрическая': 'IPC-2122-APF28',
+  'Внутренняя купольная 2MP': 'IPC-3612-APF28-DL',
+  'Внутренняя купольная 4MP': 'IPC-3614-APF28-NB',
+  'АНПР': 'IPC-F842-IRDU',
+  'Лифтовая камера 2MP': 'IPC-3612-APF28-DL',
+  'Лифтовая камера 4MP': 'IPC-3614-APF28-NB',
+  'Лифтовая камера': 'IPC-3612-APF28-DL',
+  'WK-WB08-KIT': 'WK-WB08-KIT',
+  'WK-WB08': 'WK-WB08-KIT',
+  'WK-PS227GF': 'WK-PS227GF',
+  'WK-PS216GF': 'WK-PS216GF',
+  'WK-PS208GF': 'WK-PS208GF',
+  'PoE-коммутатор 4-порт': 'WK-PS208GF',
+  'PoE-коммутатор 8-порт': 'WK-PS208GF',
+  'PoE-коммутатор': 'WK-PS227GF',
+  'CAB-LC2100B-E2-IN': 'CAB-LC2100B-E2-IN',
+  'CAB-LC2110B': 'CAB-LC2110B-IN',
+  'CAB-LC': 'CAB-LC2100B-E2-IN',
+  'SkyHawk': 'ST8000VX010',
+  'SEAGATE SkyHawk': 'ST8000VX010',
+  'NVR824-256R': 'NVR308-64X',
+  'NVR308-64E': 'NVR308-64X',
+  'NVR304-32E': 'NVR304-32B-IQ',
+  'NVR302-16E': 'NVR302-16B-IQ',
+  'NVR824': 'NVR308-64X',
+  'NVR308': 'NVR308-64X',
+  'NVR304': 'NVR304-32B-IQ',
+  'NVR302': 'NVR302-16B-IQ',
+  'Коммутатор управляемый 24п': 'NS-1010-8GT',
+  'Вызывная панель (вход)': 'OEU-201S-HMK-W',
+  'Домофон для входа': 'OEU-201S-HMK-W',
+  'Вызывная панель': 'C313S',
+  'Вызывная панель IP': 'OEU-201S-HMK-W',
+  'Интерком панели для квартир': 'C313S',
+  'Контроллер доступа': 'GVAE11',
+  'Шкаф 18U': 'LWR3-18U66-GF',
+  'Шкаф 42U': 'LWR3-18U66-GF',
+  'SHIP 700402112T': 'SHIP 700402112T',
+  'SHIP 701402120': 'SHIP 701402120',
+  'SHIP 700508102': 'SHIP 700508102',
+  'Патч-панель 24 порта': 'PP24-1UMU',
+  'Патч-панель 48 портов': 'PP24-1UMU',
+  'ИБП 3 кВА': 'ИБП 3 кВА',
+  'ИБП 2 кВА': 'ИБП 2 кВА',
+  'ИБП 1 кВА': 'ИБП 1 кВА',
+};
+
+/** Локальные изображения из КП (приоритет над каталогом) */
+const deviceLocalImageMap: Record<string, string> = {
+  'Домофон для входа': '/oeu-301s-hmka.jpg',
+  'Вызывная панель (вход)': '/oeu-301s-hmka.jpg',
+  'Вызывная панель IP': '/oeu-301s-hmka.jpg',
+};
+
+function getDeviceImage(rowName: string): string | null {
+  for (const [key, localPath] of Object.entries(deviceLocalImageMap)) {
+    if (rowName.includes(key)) return localPath;
+  }
+  const base = getCatalogUrl();
+  for (const [key, model] of Object.entries(deviceModelMap)) {
+    if (rowName.includes(key)) {
+      return `${base.replace(/\/$/, '')}/api/products/${encodeURIComponent(model)}/image`;
+    }
+  }
+  return null;
+}
 
 const sectionVariants = {
   hidden: { opacity: 0 },
@@ -50,10 +123,12 @@ const defaultInputs: CalculatorInputs = {
     entrances: 0,
     floorsPerEntrance: 0,
     flatsPerFloor: 4,
+    extraCardReaders: 0,
     carEntrance: {
       enabled: false,
       gates: 0,
       parking: 0,
+      entranceCount: 0,
     },
     hasConcierge: false,
   },
@@ -70,7 +145,7 @@ function buildSummaryText(input: CalculatorInputs, result: CalculatorResult): st
     `Лифты: ${input.elevatorCount} шт., тип ${input.elevatorCameraType}`,
     `Видеоаналитика: ${input.videoAnalytics ? 'да' : 'нет'}`,
     `Архив: ${input.archiveSettings.months} мес., запись: ${(input.videoAnalytics ? 'continuous' : input.archiveSettings.recordingType) === 'continuous' ? 'постоянная' : 'по движению'}`,
-    `Кабель: ${input.cableSettings.useManualLength ? `ручная длина ${input.cableSettings.manualLengthPerCamera ?? 0} м/камера` : `этажей ${input.cableSettings.buildingFloors}, стояков ${input.cableSettings.buildingRisers}`}`,
+    'Кабель: по этажным POE-коммутаторам',
     `Домофония: подъездов ${input.intercom.entrances}, этажей ${input.intercom.floorsPerEntrance}, квартир на этаже ${input.intercom.flatsPerFloor}; въездная группа ${input.intercom.carEntrance.enabled ? `да (калитки ${input.intercom.carEntrance.gates}, паркинг ${input.intercom.carEntrance.parking})` : 'нет'}, консьерж ${input.intercom.hasConcierge ? 'да' : 'нет'}`,
     '',
     '── Смета по группам ──',
@@ -87,13 +162,13 @@ function buildSummaryText(input: CalculatorInputs, result: CalculatorResult): st
   if (result.warnings.length > 0) {
     lines.push('', '── Предупреждения ──', ...result.warnings);
   }
-  lines.push('', '── МОНТАЖНЫЕ РАБОТЫ ──');
+  lines.push('', '── ИТОГ ──');
+  lines.push('Оборудование: ' + formatKzt(result.equipment));
+  lines.push('Расходные материалы: ' + formatKzt(result.consumables ?? 0));
   for (const b of result.installation.breakdown) {
     lines.push(b.name + ': ' + formatKzt(b.sum));
   }
-  lines.push('Итого монтаж: ' + formatKzt(result.installation.total));
-  lines.push('', 'Общая стоимость системы: ' + formatKzt(result.equipment));
-  lines.push('ИТОГО с монтажом: ' + formatKzt(result.grandTotal));
+  lines.push('ИТОГО: ' + formatKzt(result.grandTotal));
   return lines.join('\n');
 }
 
@@ -120,14 +195,27 @@ async function downloadPdf(result: CalculatorResult, contentEl: HTMLElement | nu
   }
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth ? doc.internal.pageSize.getWidth() : doc.internal.pageSize.width;
-  let y = 20;
+  let y = 18;
   const lineHeight = 7;
-  doc.setFontSize(14);
+  doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text('Result (use browser PDF for Russian)', 14, y);
+  doc.text(pdfConfig.companyName, 14, y);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  y += lineHeight;
+  doc.text(pdfConfig.address, 14, y);
+  y += lineHeight;
+  doc.text(pdfConfig.phone + ' / ' + pdfConfig.email, 14, y);
+  y += lineHeight * 1.2;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.text('Коммерческое предложение / Смета', 14, y);
+  y += lineHeight;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.text('Дата: ' + new Date().toLocaleDateString('ru-RU'), 14, y);
   y += lineHeight * 2;
   doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
   for (const g of result.groups) {
     if (y > 270) {
       doc.addPage();
@@ -198,8 +286,11 @@ export function CctvCalculatorSection() {
   const [submitPhone, setSubmitPhone] = useState('');
   const [submitEmail, setSubmitEmail] = useState('');
   const [submitSending, setSubmitSending] = useState(false);
+  const [flatCount, setFlatCount] = useState(0);
 
   const result = useMemo(() => calculateResult(inputs), [inputs]);
+  const derivedFlats = inputs.intercom.entrances * inputs.intercom.floorsPerEntrance * inputs.intercom.flatsPerFloor || 0;
+  const perFlatMonthly = result ? Math.round(result.grandTotal / 200) : 0;
 
   const handleReset = () => {
     setInputs(defaultInputs);
@@ -245,7 +336,7 @@ export function CctvCalculatorSection() {
     >
       <motion.div ref={formTopRef} className={styles.container} variants={reduceMotion ? undefined : sectionVariants} initial="visible" animate="visible">
         <motion.h2 id="calculator-heading" className={styles.heading} variants={reduceMotion ? undefined : cardVariants} initial="visible" animate="visible">
-          Калькулятор видеонаблюдения и домофонии
+          Калькулятор систем видеонаблюдения и домофонии
         </motion.h2>
         <motion.p className={styles.subtitle} variants={reduceMotion ? undefined : cardVariants} initial="visible" animate="visible">
           Рассчитайте примерную стоимость системы по вашим параметрам
@@ -398,6 +489,17 @@ export function CctvCalculatorSection() {
                   { max: 99, emptyBlurValue: 4 })}
               />
             </div>
+            <div className={styles.inputGroup}>
+              <label htmlFor="calc-extra-readers" className={styles.inputLabel}>
+                Доп. интерком панели для квартир
+              </label>
+              <input
+                id="calc-extra-readers"
+                className={styles.input}
+                {...numericInputProps(inputs.intercom.extraCardReaders ?? 0, (val) =>
+                  setInputs((p) => ({ ...p, intercom: { ...p.intercom, extraCardReaders: val } })))}
+              />
+            </div>
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
@@ -419,6 +521,20 @@ export function CctvCalculatorSection() {
             </label>
             {inputs.intercom.carEntrance.enabled && (
               <div className={styles.carEntranceDetails}>
+                <div className={styles.fieldRow}>
+                  <label className={styles.inputLabel}>Количество входов</label>
+                  <input
+                    className={styles.input}
+                    {...numericInputProps(inputs.intercom.carEntrance.entranceCount ?? 0, (val) =>
+                      setInputs((p) => ({
+                        ...p,
+                        intercom: {
+                          ...p.intercom,
+                          carEntrance: { ...p.intercom.carEntrance, entranceCount: val },
+                        },
+                      })))}
+                  />
+                </div>
                 <div className={styles.fieldRow}>
                   <label className={styles.inputLabel}>Калитки</label>
                   <input
@@ -458,65 +574,6 @@ export function CctvCalculatorSection() {
               <span>Пост консьержа</span>
             </label>
           </div>
-        </motion.div>
-
-        {/* Блок: Кабель — здание и трассы */}
-        <motion.div className={styles.formCard} variants={reduceMotion ? undefined : cardVariants} initial="visible" animate="visible">
-          <div className={styles.formTitle}>
-            <span className={styles.formTitleIcon}>🔌</span>
-            Кабельные трассы
-          </div>
-          <label className={styles.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={inputs.cableSettings.useManualLength}
-              onChange={(e) => setInputs((p) => ({ ...p, cableSettings: { ...p.cableSettings, useManualLength: e.target.checked } }))}
-            />
-            <span>Задать длину кабеля вручную (м на камеру)</span>
-          </label>
-          {inputs.cableSettings.useManualLength ? (
-            <div className={styles.inputGroup}>
-              <label htmlFor="calc-cable-manual" className={styles.inputLabel}>
-                Метров на камеру
-              </label>
-              <input
-                id="calc-cable-manual"
-                className={styles.input}
-                {...numericInputProps(inputs.cableSettings.manualLengthPerCamera ?? 0, (val) =>
-                  setInputs((p) => ({ ...p, cableSettings: { ...p.cableSettings, manualLengthPerCamera: val } })))}
-              />
-            </div>
-          ) : (
-            <>
-              <div className={styles.inputGroup}>
-                <label htmlFor="calc-building-floors" className={styles.inputLabel}>
-                  Этажей в здании
-                </label>
-                <input
-                  id="calc-building-floors"
-                  className={styles.input}
-                  {...numericInputProps(inputs.cableSettings.buildingFloors, (val) =>
-                    setInputs((p) => ({ ...p, cableSettings: { ...p.cableSettings, buildingFloors: val } })),
-                    { max: 999 })}
-                />
-              </div>
-              <div className={styles.inputGroup}>
-                <label htmlFor="calc-building-risers" className={styles.inputLabel}>
-                  Стояков / вертикальных трасс
-                </label>
-                <input
-                  id="calc-building-risers"
-                  className={styles.input}
-                  {...numericInputProps(inputs.cableSettings.buildingRisers, (val) =>
-                    setInputs((p) => ({
-                      ...p,
-                      cableSettings: { ...p.cableSettings, buildingRisers: Math.max(1, val) },
-                    })),
-                    { max: 99, emptyBlurValue: 1 })}
-                />
-              </div>
-            </>
-          )}
         </motion.div>
 
         {/* Блок: Срок и тип записи архива */}
@@ -596,6 +653,7 @@ export function CctvCalculatorSection() {
                   <table className={styles.resultTable}>
                     <thead>
                       <tr>
+                        <th className={styles.thImage}>Фото</th>
                         <th>Наименование</th>
                         <th>Кол-во</th>
                         <th>Цена за ед.</th>
@@ -603,17 +661,27 @@ export function CctvCalculatorSection() {
                       </tr>
                     </thead>
                     <tbody>
-                      {group.rows.map((row, i) => (
-                        <tr key={i}>
-                          <td>
-                            <span className={styles.rowName}>{row.name}</span>
-                            {row.note && <div className={styles.rowNote}>{row.note}</div>}
-                          </td>
-                          <td>{row.qty > 0 ? row.qty : '—'}</td>
-                          <td>{row.unitPrice != null ? formatKzt(row.unitPrice) : '—'}</td>
-                          <td className={styles.cellSum}>{formatKzt(row.sum)}</td>
-                        </tr>
-                      ))}
+                      {group.rows.map((row, i) => {
+                        const imgSrc = getDeviceImage(row.name);
+                        return (
+                          <tr key={i}>
+                            <td className={styles.cellImage}>
+                              {imgSrc ? (
+                                <img src={imgSrc} alt="" className={styles.deviceImage} width={48} height={48} />
+                              ) : (
+                                <span className={styles.devicePlaceholder} aria-hidden>—</span>
+                              )}
+                            </td>
+                            <td>
+                              <span className={styles.rowName}>{row.name}</span>
+                              {row.note && <div className={styles.rowNote}>{row.note}</div>}
+                            </td>
+                            <td>{row.qty > 0 ? row.qty : '—'}</td>
+                            <td>{row.unitPrice != null ? formatKzt(row.unitPrice) : '—'}</td>
+                            <td className={styles.cellSum}>{formatKzt(row.sum)}</td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                   <div className={styles.groupSubtotal}>
@@ -622,32 +690,79 @@ export function CctvCalculatorSection() {
                 </motion.div>
               ))}
 
+              {(result.totalCctv != null || result.totalIntercom != null) && (
+                <motion.div className={styles.totalBlock} variants={reduceMotion ? undefined : cardVariants} initial="visible" animate="visible">
+                  {result.totalCctv != null && result.totalCctv > 0 && (
+                    <div className={styles.totalRow}>
+                      <span>Итого CCTV</span>
+                      <strong>{formatKzt(result.totalCctv)}</strong>
+                    </div>
+                  )}
+                  {result.totalIntercom != null && result.totalIntercom > 0 && (
+                    <div className={styles.totalRow}>
+                      <span>Итого Домофония</span>
+                      <strong>{formatKzt(result.totalIntercom)}</strong>
+                    </div>
+                  )}
+                </motion.div>
+              )}
               <motion.div className={styles.totalBlock} variants={reduceMotion ? undefined : cardVariants} initial="visible" animate="visible">
                 <div className={styles.totalRow}>
-                  <span>Общая стоимость системы</span>
+                  <span>Оборудование</span>
                   <strong>{formatKzt(result.equipment)}</strong>
                 </div>
-                {result.installation.breakdown.length > 0 && (
-                  <div className={styles.installationBreakdown}>
-                    <span className={styles.installationBreakdownTitle}>Монтаж по статьям:</span>
-                    <ul>
-                      {result.installation.breakdown.map((b, i) => (
-                        <li key={i}>
-                          {b.name}: <strong>{formatKzt(b.sum)}</strong>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                <div className={styles.totalRow}>
+                  <span>Расходные материалы</span>
+                  <strong>{formatKzt(result.consumables ?? 0)}</strong>
+                </div>
                 <div className={styles.totalRow}>
                   <span>Монтажные работы</span>
-                  <strong>{formatKzt(result.installation.total)}</strong>
+                  <strong>{formatKzt(result.installation.work ?? result.installation.total)}</strong>
+                </div>
+                <div className={styles.totalRow}>
+                  <span>Пусконаладка</span>
+                  <strong>{formatKzt(result.installation.commissioning ?? 0)}</strong>
+                </div>
+                <div className={styles.totalRow}>
+                  <span>Монтаж кабеля</span>
+                  <strong>{formatKzt(result.installation.cableInstall ?? 0)}</strong>
                 </div>
                 <div className={styles.totalRowHighlight}>
-                  <span>Итого с монтажом</span>
+                  <span>ИТОГО ПО ПРОЕКТУ</span>
                   <strong>{formatKzt(result.grandTotal)}</strong>
                 </div>
               </motion.div>
+
+              {result.grandTotal > 0 && (
+                <motion.div className={styles.installmentBlock} variants={reduceMotion ? undefined : cardVariants} initial="visible" animate="visible">
+                  <h4 className={styles.installmentTitle}>Рассрочка</h4>
+                  <div className={styles.inputGroup}>
+                    <label htmlFor="calc-flat-count" className={styles.inputLabel}>Количество квартир</label>
+                    <input
+                      id="calc-flat-count"
+                      type="number"
+                      min={0}
+                      className={styles.input}
+                      value={flatCount || ''}
+                      onChange={(e) => setFlatCount(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                      placeholder={derivedFlats ? String(derivedFlats) : '0'}
+                    />
+                  </div>
+                  <div className={styles.installmentCards}>
+                    {[36, 48, 60].map((months) => (
+                      <div key={months} className={styles.installmentCard}>
+                        <span className={styles.installmentMonths}>{months} мес.</span>
+                        <span className={styles.installmentPayment}>{formatKzt(Math.round(result.grandTotal / months))}</span>
+                        <span className={styles.installmentLabel}>в месяц</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className={styles.installmentPerFlat}>
+                    Ежемесячная оплата с квартиры: <strong>{formatKzt(perFlatMonthly)}</strong> (Итого/200)
+                  </p>
+                  <p className={styles.installmentDisclaimer}>Расчёт приблизительный, условия уточняйте у менеджера</p>
+                </motion.div>
+              )}
             </div>
 
             <p className={styles.estimateDisclaimer}>
@@ -655,6 +770,9 @@ export function CctvCalculatorSection() {
             </p>
 
             <motion.div className={styles.actionsRow} variants={reduceMotion ? undefined : cardVariants} initial="visible" animate="visible">
+              <button type="button" className={styles.btnPrimary} onClick={() => downloadKP(result)}>
+                Скачать КП (.docx)
+              </button>
               <button type="button" className={styles.btnPrimary} onClick={() => downloadPdf(result, pdfContentRef.current)}>
                 Скачать PDF
               </button>

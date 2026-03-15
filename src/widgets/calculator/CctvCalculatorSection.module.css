@@ -1,7 +1,10 @@
+/* Смягчённые цвета для длительного чтения: фон карточек и основной текст ~85–90% белого */
 .section {
     padding: var(--gap-section) 0;
     position: relative;
     z-index: 1;
+    --content-block-bg: #1e2139;
+    --color-text: #e2e0f0;
 }
 
 .container {
@@ -412,7 +415,8 @@
 }
 
 .groupSubtotal strong {
-    color: var(--color-accent);
+    color: #c4b5fd;
+    font-weight: 600;
 }
 
 .rowNote {
@@ -450,7 +454,68 @@
 }
 
 .totalRowHighlight strong {
-    color: var(--color-accent);
+    color: #c4b5fd;
+    font-weight: 600;
+}
+
+.installmentBlock {
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    background: var(--content-block-bg);
+    border: 1px solid rgba(157, 78, 221, 0.12);
+    border-radius: var(--radius-block);
+}
+
+.installmentTitle {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--color-text);
+}
+
+.installmentCards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.installmentCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(157, 78, 221, 0.06);
+    border-radius: var(--radius-block);
+    border: 1px solid rgba(157, 78, 221, 0.15);
+}
+
+.installmentMonths {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+}
+
+.installmentPayment {
+    font-size: var(--text-xl);
+    font-weight: 600;
+    color: #c4b5fd;
+    margin: 0.25rem 0;
+}
+
+.installmentLabel {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+}
+
+.installmentPerFlat {
+    font-size: var(--text-sm);
+    margin: 0.75rem 0 0;
+}
+
+.installmentDisclaimer {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin: 0;
 }
 
 /* Таблица результата */
@@ -476,15 +541,47 @@
     border-bottom: 1px solid rgba(157, 78, 221, 0.15);
 }
 
+.thImage {
+    width: 64px;
+}
+
+.cellImage {
+    vertical-align: middle;
+}
+
+.deviceImage {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    display: block;
+}
+
+.devicePlaceholder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: rgba(157, 78, 221, 0.08);
+    border-radius: 4px;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+}
+
 .resultTable th {
     font-weight: 600;
-    color: var(--color-text-muted);
+    font-size: 11px;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    color: #a89ec9;
 }
 
 .resultTable td {
     color: var(--color-text);
+}
+
+.resultTable tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.03);
 }
 
 .rowName {
@@ -493,8 +590,9 @@
 }
 
 .cellSum {
-    font-weight: 700;
+    font-weight: 600;
     white-space: nowrap;
+    color: #c4b5fd;
 }
 
 .badgeInStock {
@@ -921,7 +1019,8 @@
 }
 
 .estimateTotal strong {
-    color: var(--color-accent);
+    color: #c4b5fd;
+    font-weight: 600;
 }
 
 .estimateDisclaimer {

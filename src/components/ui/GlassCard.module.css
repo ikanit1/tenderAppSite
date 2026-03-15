@@ -1,0 +1,12 @@
+.card {
+  background: var(--calc-glass-bg);
+  backdrop-filter: blur(var(--calc-glass-blur));
+  -webkit-backdrop-filter: blur(var(--calc-glass-blur));
+  border: 1px solid var(--calc-glass-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.hover:hover {
+  box-shadow: var(--calc-glow-accent), var(--shadow-card);
+}

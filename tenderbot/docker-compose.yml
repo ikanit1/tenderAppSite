@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   app:
     build: .
@@ -33,13 +31,10 @@ services:
     ports:
       - "${APISITE_PORT:-8001}:8001"
     volumes:
-      - apisite_data:/app/data
-      - apisite_images:/app/images
-      - apisite_portal_export:/app/portal_export
+      - ./apisite/data:/app/data
+      - ./apisite/images:/app/images
+      - ./apisite/portal_export:/app/portal_export
 
 volumes:
   uploads:
-  apisite_data:
-  apisite_images:
-  apisite_portal_export:
   # pgdata удален, так как он больше не нужен
