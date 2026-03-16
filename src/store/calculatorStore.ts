@@ -29,6 +29,8 @@ const defaultInputs: CalculatorInputs = {
   elevatorCount: 0,
   elevatorCameraType: '2mp',
   archiveSettings: { months: 1, recordingType: 'continuous' },
+  storageDays: 30,
+  hasPatchPanel: false,
   cableSettings: {
     useManualLength: false,
     manualLengthPerCamera: undefined,
@@ -52,10 +54,7 @@ export interface CalculatorState {
   result: CalculatorResult | null;
   /** Только для UI Step1 (ЖК / Офис / Паркинг) */
   objectType: ObjectType;
-  /** Опции Step4: пересчёт по аудиту */
-  optionsL3: boolean;
-  optionsLicenses: boolean;
-  optionsSubscriber: boolean;
+  /** Для совместимости (опции Step4 удалены по ТЗ) */
   subscriberCount: number;
   /** Для 3D: число этажей здания (визуал) */
   buildingFloors: number;
@@ -71,9 +70,7 @@ export const useCalculatorStore = create<CalculatorState & {
   setIntercom: (patch: Partial<CalculatorInputs['intercom']>) => void;
   setArchive: (months: 1 | 2 | 3, recordingType?: 'continuous' | 'motion') => void;
   setVideoAnalytics: (v: boolean) => void;
-  setOptionsL3: (v: boolean) => void;
-  setOptionsLicenses: (v: boolean) => void;
-  setOptionsSubscriber: (v: boolean, count?: number) => void;
+  setStorageDays: (days: 30 | 60 | 90) => void;
   reset: () => void;
 }>((set, get) => {
   function recompute() {
@@ -88,9 +85,6 @@ export const useCalculatorStore = create<CalculatorState & {
     inputs: defaultInputs,
     result: null,
     objectType: 'residential',
-    optionsL3: false,
-    optionsLicenses: false,
-    optionsSubscriber: false,
     subscriberCount: 0,
     buildingFloors: 0,
 
@@ -182,19 +176,24 @@ export const useCalculatorStore = create<CalculatorState & {
       recompute();
     },
 
-    setOptionsL3: (optionsL3) => set({ optionsL3 }),
-    setOptionsLicenses: (optionsLicenses) => set({ optionsLicenses }),
-    setOptionsSubscriber: (optionsSubscriber, subscriberCount) =>
-      set({ optionsSubscriber, subscriberCount: subscriberCount ?? get().subscriberCount }),
+    setStorageDays: (storageDays) => {
+      const { inputs } = get();
+      const months = storageDays === 30 ? 1 : storageDays === 60 ? 2 : 3;
+      set({
+        inputs: {
+          ...inputs,
+          storageDays,
+          archiveSettings: { ...inputs.archiveSettings, months },
+        },
+      });
+      recompute();
+    },
 
     reset: () => set({
       step: 1,
       inputs: defaultInputs,
       result: null,
       objectType: 'residential',
-      optionsL3: false,
-      optionsLicenses: false,
-      optionsSubscriber: false,
       subscriberCount: 0,
       buildingFloors: 0,
     }),

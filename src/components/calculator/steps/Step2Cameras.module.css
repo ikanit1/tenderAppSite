@@ -16,4 +16,6 @@
 .toggle button { padding: 0.4rem 0.75rem; border-radius: 8px; border: 1px solid var(--calc-glass-border); background: var(--color-surface); color: var(--color-text-muted); cursor: pointer; font-size: var(--text-sm); }
 .toggle button:hover { color: var(--color-text); }
 .toggleActive { background: var(--color-primary) !important; color: var(--color-text) !important; border-color: var(--color-primary) !important; }
+.checkboxLabel { display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500; }
+.checkboxLabel input { width: 1.1rem; height: 1.1rem; accent-color: var(--color-primary); }
 .actions { display: flex; gap: 1rem; justify-content: flex-end; }

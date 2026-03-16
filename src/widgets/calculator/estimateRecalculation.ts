@@ -86,18 +86,14 @@ function requiredStorageTb(input: CalculatorInputs): number {
   return totalMbitSec * ARCHIVE_DAYS * TB_PER_CAMERA_MBIT_DAY;
 }
 
-/** Количество устройств домофонии (панели + считыватели + контроллеры + этажные коммутаторы) */
+/** Количество устройств домофонии: вызывные (подъезды + калитки) + интерком-панели (квартиры) + доп. считыватели. Паркинг не входит. */
 function intercomDevicesCount(input: CalculatorInputs): number {
-  const { entrances, floorsPerEntrance, flatsPerFloor, extraCardReaders, carEntrance, hasConcierge } = input.intercom;
-  const totalFlats = entrances * floorsPerEntrance * flatsPerFloor;
-  const readersFromFlats = totalFlats + entrances * floorsPerEntrance + (hasConcierge ? 2 : 0);
-  const entranceCount = carEntrance.enabled ? carEntrance.entranceCount ?? 0 : 0;
-  const readers = readersFromFlats + (extraCardReaders ?? 0) + entranceCount;
-  const controllers = Math.ceil(readers / 4);
-  const carPanels = carEntrance.enabled ? 1 + carEntrance.gates + carEntrance.parking : 0;
-  const panels = entrances + carPanels + entranceCount;
-  const totalFloors = entrances * floorsPerEntrance;
-  return panels + readers + controllers + totalFloors;
+  const { entrances, floorsPerEntrance, flatsPerFloor, extraCardReaders, carEntrance } = input.intercom;
+  const gates = carEntrance.enabled ? carEntrance.gates : 0;
+  const panels = entrances + gates;
+  const apartments = entrances * floorsPerEntrance * flatsPerFloor;
+  const extraReaders = extraCardReaders ?? 0;
+  return panels + apartments + extraReaders;
 }
 
 /** Извлечь текущее кол-во бухт из группы кабеля по названию строки */
@@ -272,10 +268,10 @@ export function recalculateEstimate(
     status: 22 * wattsPerCamera <= switchPoEBudgetWatts.poe_24port * 0.8 ? 'OK' : 'Проверить нагрузку',
   });
   poeBudgetTable.push({
-    name: switchConfigs.poe_8port.name,
-    budgetW: switchPoEBudgetWatts.poe_8port,
-    loadW: 6 * wattsPerCamera,
-    status: 6 * wattsPerCamera <= switchPoEBudgetWatts.poe_8port * 0.8 ? 'OK' : 'Проверить нагрузку',
+    name: switchConfigs.poe_24port.name + ' (лифты)',
+    budgetW: switchPoEBudgetWatts.poe_24port,
+    loadW: 24 * wattsPerCamera,
+    status: 24 * wattsPerCamera <= switchPoEBudgetWatts.poe_24port * 0.8 ? 'OK' : 'Проверить нагрузку',
   });
   poeBudgetTable.push({
     name: floorPoeSwitchConfig.large.label,

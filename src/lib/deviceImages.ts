@@ -10,7 +10,9 @@ export const deviceModelMap: Record<string, string> = {
   'Уличная цилиндрическая': 'IPC-2122-APF28',
   'Внутренняя купольная 2MP': 'IPC-3612-APF28-DL',
   'Внутренняя купольная 4MP': 'IPC-3614-APF28-NB',
-  'АНПР': 'IPC-F842-IRDU',
+  'Камера опознавания номерного знака 3MP': 'DHI-ITC413-PW4D-Z1',
+  'опознавания номерного знака': 'DHI-ITC413-PW4D-Z1',
+  'Камера опознавания номерного знака': 'DHI-ITC413-PW4D-Z1',
   'Лифтовая камера 2MP': 'IPC-3612-APF28-DL',
   'Лифтовая камера 4MP': 'IPC-3614-APF28-NB',
   'Лифтовая камера': 'IPC-3612-APF28-DL',
@@ -47,6 +49,7 @@ export const deviceModelMap: Record<string, string> = {
   'SHIP 700402112T': 'SHIP 700402112T',
   'SHIP 701402120': 'SHIP 701402120',
   'SHIP 700508102': 'SHIP 700508102',
+  'Патч-корд': 'PC01-C5EU-02M',
   'Патч-панель 24 порта': 'PP24-1UMU',
   'Патч-панель 48 портов': 'PP24-1UMU',
   'ИБП 3 кВА': 'ИБП 3 кВА',
@@ -68,7 +71,7 @@ export function getDeviceImage(rowName: string): string | null {
   const base = getCatalogUrl();
   for (const [key, model] of Object.entries(deviceModelMap)) {
     if (rowName.includes(key)) {
-      return `${base.replace(/\/$/, '')}/api/products/${encodeURIComponent(model)}/image`;
+      return `${base.replace(/\/$/, '')}/api/products/${encodeURIComponent(model)}/image?index=0`;
     }
   }
   return null;

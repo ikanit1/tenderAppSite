@@ -118,6 +118,33 @@
     gap: 12px;
 }
 
+/* Лифтовая камера IPC-324-PF28: изображение из каталога G&R */
+.elevatorProductFigure {
+    margin: 1.25rem 0 0;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: var(--radius-block);
+    border: 1px solid var(--color-border);
+    text-align: center;
+}
+
+.elevatorProductImage {
+    display: block;
+    max-width: 180px;
+    max-height: 140px;
+    width: auto;
+    height: auto;
+    margin: 0 auto;
+    object-fit: contain;
+}
+
+.elevatorProductCaption {
+    margin-top: 0.75rem;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-text-muted);
+}
+
 .fieldRow {
     display: flex;
     flex-direction: column;
@@ -518,6 +545,120 @@
     margin: 0;
 }
 
+/* Абонентская плата */
+.subscriptionBlock {
+    margin-top: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-block);
+}
+
+.pdfContentWrap .subscriptionBlock {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.subscriptionTitle {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+    color: #1e293b;
+}
+
+.subscriptionHint {
+    font-size: var(--text-xs);
+    color: #64748b;
+    margin: 0 0 1rem;
+}
+
+.subscriptionRates {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.subscriptionRow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: var(--text-sm);
+    color: #334155;
+}
+
+.subscriptionIcon {
+    font-size: 1.1rem;
+}
+
+.subscriptionLabel {
+    min-width: 8rem;
+}
+
+.subscriptionFormula {
+    margin-left: auto;
+    text-align: right;
+}
+
+.subscriptionDivider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 0.75rem 0;
+}
+
+.subscriptionTotalRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--text-base);
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.subscriptionPayback {
+    font-size: var(--text-sm);
+    color: #334155;
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.subscriptionPaybackYears {
+    color: #64748b;
+    font-size: var(--text-xs);
+}
+
+.installmentRef {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed #e2e8f0;
+}
+
+.installmentRefTitle {
+    font-size: var(--text-xs);
+    color: #64748b;
+    display: block;
+    margin-bottom: 0.35rem;
+}
+
+.installmentRefRow {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--text-sm);
+    color: #475569;
+}
+
+.installmentRefRow + .installmentRefRow {
+    margin-top: 0.2rem;
+}
+
+.subscriptionDisclaimer {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    margin: 1rem 0 0;
+}
+
 /* Таблица результата */
 .tableWrap {
     margin-top: 1rem;
@@ -756,6 +897,82 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+}
+
+/* Карточка «Параметры объекта» — перед таблицами сметы */
+.paramsCard {
+    margin-bottom: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--radius-block);
+    background: #f8fafc;
+}
+
+.paramsCardTitle {
+    font-family: var(--font-family-heading);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 1rem;
+}
+
+.paramsBlock {
+    margin-bottom: 1rem;
+}
+
+.paramsBlock:last-of-type {
+    margin-bottom: 0;
+}
+
+.paramsBlockTitle {
+    font-weight: 600;
+    color: #475569;
+    font-size: var(--text-sm);
+    margin-bottom: 0.35rem;
+}
+
+.paramsRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    font-size: var(--text-sm);
+    color: #334155;
+}
+
+.paramsLabel {
+    flex-shrink: 0;
+}
+
+.paramsValue,
+.paramsValueNum {
+    text-align: right;
+    min-width: 6ch;
+}
+
+.paramsValueNum {
+    font-variant-numeric: tabular-nums;
+}
+
+.paramsHint {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+}
+
+.paramsNote {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
+.paramsFooter {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    margin: 1rem 0 0;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e2e8f0;
 }
 
 .pdfContentWrap .installationBreakdown,

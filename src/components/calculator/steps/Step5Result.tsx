@@ -21,7 +21,7 @@ function buildSummaryText(input: CalculatorInputs, result: CalculatorResult): st
     'Расчёт с калькулятора видеонаблюдения и домофонии (grgroup.kz)',
     '',
     '── Параметры ──',
-    `Камеры: уличные 2MP ${ct.outdoor2mp}, внутр. 2MP ${ct.indoor2mp}, внутр. 4MP ${ct.indoor4mp}, АНПР ${ct.anpr3mp}`,
+    `Камеры: уличные 2MP ${ct.outdoor2mp}, внутр. 2MP ${ct.indoor2mp}, внутр. 4MP ${ct.indoor4mp}, опоз. номерного знака ${ct.anpr3mp}`,
     `Лифты: ${input.elevatorCount} шт., тип ${input.elevatorCameraType}`,
     `Домофония: подъездов ${input.intercom.entrances}, этажей ${input.intercom.floorsPerEntrance}, квартир на этаже ${input.intercom.flatsPerFloor}`,
     '',

@@ -3,15 +3,15 @@
  * Прайс-лист и константы по спецификации G&R Group.
  */
 
-/** Типы камер: уличные 2MP, внутренние 2MP/4MP, АНПР */
+/** Типы камер: уличные 2MP, внутренние 2MP/4MP, опознавание номерного знака */
 export const cameraTypes = {
   outdoor2mp: { label: 'Уличная цилиндрическая 2MP IPC-2122', priceKzt: 14_400 },
   indoor2mp: { label: 'Внутренняя купольная 2MP', priceKzt: 14_400 },
   indoor4mp: { label: 'Внутренняя купольная 4MP', priceKzt: 21_000 },
-  anpr3mp: { label: 'АНПР 3MP', priceKzt: 274_300 },
+  anpr3mp: { label: 'Камера опознавания номерного знака 3MP', priceKzt: 274_300 },
 } as const;
 
-/** Битрейт Мбит/с: постоянная запись / по движению. АНПР всегда постоянная. */
+/** Битрейт Мбит/с: постоянная запись / по движению. Камера опознавания номерного знака всегда постоянная. */
 export const cameraBitrateMbps = {
   outdoor2mp: { continuous: 4, motion: 1.5 },
   indoor2mp: { continuous: 4, motion: 1.5 },
@@ -19,10 +19,10 @@ export const cameraBitrateMbps = {
   anpr3mp: { continuous: 6, motion: 6 },
 } as const;
 
-/** Лифтовые камеры: отдельный SKU (антивандальный корпус), битрейт — постоянная запись */
+/** Лифтовые камеры (КП №14-26): IPC-324-PF28 купольная 4MP */
 export const elevatorCameras = {
   '2mp': { label: 'Лифтовая камера 2MP', priceKzt: 14_400 },
-  '4mp': { label: 'Лифтовая камера 4MP', priceKzt: 19_900 },
+  '4mp': { label: 'IPC-324-PF28 (лифт 4MP)', priceKzt: 19_900 },
 } as const;
 
 /** Лифтовые камеры: битрейт всегда постоянная запись */
@@ -40,26 +40,36 @@ export const radioBridgeConfig = {
   priceKzt: 24_750,
 };
 
-/** Кабель UTP */
+/** Кабель UTP (КП №14-26): внутренний / уличный, бухта 305 м */
 export const cableConfig = {
-  indoor: { name: 'CAB-LC2100B-E2-IN 305м', priceKzt: 41_300, meters: 305 },
-  outdoor: { name: 'CAB-LC2110B-IN 305м', priceKzt: 51_700, meters: 305 },
-};
+  indoor: { model: 'CAB-LC2100B-E2-IN', name: 'CAB-LC2100B-E2-IN 305м', priceKzt: 41_300, metersPerCoil: 305, meters: 305 },
+  outdoor: { model: 'CAB-LC2110B-IN', name: 'CAB-LC2110B-IN 305м', priceKzt: 51_700, metersPerCoil: 305, meters: 305 },
+} as const;
 
 export const REEL_LENGTH_METERS = 305;
-export const CABLE_RESERVE_FACTOR = 1.1;
+/** Резерв 15% на повороты и провисы (ТЗ п.8) */
+export const CABLE_RESERVE_FACTOR = 1.15;
 export const FLOOR_HEIGHT_METERS = 4;
 export const INTERCOM_CABLE_METERS_PER_FLOOR = 15;
 /** Метров кабеля на одну панель въездной группы (до серверной) */
 export const INTERCOM_CABLE_CAR_ENTRANCE_PER_PANEL = 50;
 
-/** Патч-корды (камера × 1, NVR × 4 uplink) */
+/** Патч-корды и патч-панель (ТЗ: с панелью — камера×1 + NVR×4; без — только межоборудовательные) */
 export const patchCordConfig = {
   label: 'Патч-корд 3м UTP Cat5e',
+  model: 'Патч-корд 3м UTP Cat5e',
   priceKzt: 1_500,
 } as const;
 
-/** HDD для хранения */
+/** Патч-панель 24 порта — только при hasPatchPanel = true */
+export const patchPanelConfig = {
+  label: 'Патч-панель 24 порта',
+  model: 'Патч-панель 24 порта',
+  priceKzt: 8_500,
+  ports: 24,
+} as const;
+
+/** HDD для хранения (Seagate SkyHawk AI 10TB) */
 export const hddConfig = {
   name: 'SEAGATE SkyHawk AI 10TB',
   priceKzt: 220_000,
@@ -67,8 +77,13 @@ export const hddConfig = {
   capacityGb: 10_000,
 };
 
+/** Средний битрейт на камеру для расчёта объёма архива (Мбит/с), по умолчанию 4 */
+export const STORAGE_BITRATE_MBPS_DEFAULT = 4;
+
+/** Максимум слотов HDD в одном NVR; при большем числе дисков добавляется JBOD */
+export const NVR_MAX_HDD_SLOTS = 24;
+
 export const STORAGE_RESERVE_FACTOR = 1.2;
-export const NVR_MAX_HDD_SLOTS = 8;
 export const JBOD_SLOTS = 24;
 
 /** Расширитель хранения при нехватке слотов в NVR */
@@ -79,52 +94,49 @@ export const jbodConfig = {
   slots: 24,
 } as const;
 
-/** NVR по каналам (цена ниже ИБП 120 000). NVR824 — только при включённой видеоаналитике. */
-export const nvrConfigs = [
-  { key: 'nvr_256ch', name: 'NVR824-256R', priceKzt: 4_834_500, channels: 256, analyticsOnly: true },
-  { key: 'nvr_64ch', name: 'NVR308-64E', priceKzt: 115_000, channels: 64, analyticsOnly: false },
-  { key: 'nvr_32ch', name: 'NVR304-32E', priceKzt: 115_000, channels: 32, analyticsOnly: false },
-  { key: 'nvr_16ch', name: 'NVR302-16E', priceKzt: 115_000, channels: 16, analyticsOnly: false },
+/** NVR 256 каналов — ТОЛЬКО при включённой видеоаналитике (КП №14-26) */
+export const nvr256 = { model: 'NVR824-256R', name: 'NVR824-256R', priceKzt: 4_834_500, channels: 256 } as const;
+
+/** Подбор NVR без аналитики: по минимально достаточному числу каналов (1–16 → 16, 17–32 → 32, …) */
+export const nvrTiers = [
+  { model: 'NVR316-16E', channels: 16, priceKzt: 115_000 },
+  { model: 'NVR308-32E', channels: 32, priceKzt: 115_000 },
+  { model: 'NVR308-64E', channels: 64, priceKzt: 115_000 },
+  { model: 'NVR364-128', channels: 128, priceKzt: 220_000 },
+  { model: 'NVR324-256', channels: 256, priceKzt: 350_000 },
 ] as const;
 
-/** Коммутаторы PoE (управляемые 8 и 16 канальные — 90 000 тг) */
+/** Коммутаторы PoE: только WK-PS227GF 24 порта (КП №14-26) */
 export const switchConfigs = {
-  poe_24port: { name: 'WK-PS227GF 24 порта PoE', priceKzt: 69_500, ports: 24, effectivePorts: 22 },
-  poe_16port: { name: 'WK-PS216GF 16 портов PoE', priceKzt: 90_000, ports: 16 },
-  poe_8port: { name: 'WK-PS208GF 8 портов PoE', priceKzt: 90_000, ports: 8, effectivePorts: 6 },
+  poe_24port: { name: 'WK-PS227GF', priceKzt: 69_500, ports: 24 },
 } as const;
 
-/** Аплинк-коммутатор (агрегация, без PoE) */
-export const uplinkSwitchConfig = {
-  name: 'Коммутатор управляемый 24п',
-  priceKzt: 45_000,
-};
-
-/** Серверные шкафы */
-export const rackConfigs = {
-  rack_42u: { name: 'Шкаф 42U', priceKzt: 380_000, units: 42 },
-  rack_27u: { name: 'SHIP 601S.6027.24.100 (27U)', priceKzt: 283_773, units: 27 },
-  rack_18u: { name: 'Шкаф 18U', priceKzt: 165_000, units: 18 },
+/** Серверный шкаф (КП №14-26): один на объект */
+export const rackConfig = {
+  model: 'SHIP 601S.6027.24.100',
+  name: 'SHIP 601S.6027.24.100',
+  priceKzt: 283_773,
+  units: 27,
 } as const;
 
-/** ИБП: 1000 ВА (600 Вт), 2000 ВА (1200 Вт), 3000 ВА (1800 Вт) — цена 120 000 тг */
-export const upsConfigs = {
-  ups_1kva: { name: 'ИБП 1 кВА', priceKzt: 120_000, va: 1000, watts: 600 },
-  ups_2kva: { name: 'ИБП 2 кВА', priceKzt: 120_000, va: 2000, watts: 1200 },
-  ups_3kva: { name: 'ИБП 3 кВА', priceKzt: 120_000, va: 3000, watts: 1800 },
+/** ИБП онлайн 3 кВА (КП №14-26): 1 шт на объект */
+export const upsConfig = {
+  model: 'SVC LRT-3KL-LCD',
+  name: 'SVC LRT-3KL-LCD',
+  priceKzt: 247_990,
+  kva: 3,
+  qty: 1,
 } as const;
 
 /** Потребление серверного оборудования (Вт) */
 export const powerWattsServer = { nvr: 200, switch: 30, controller: 20 } as const;
 
-/** Аксессуары для шкафа */
+/** Аксессуары для шкафа (КП №14-26): 1 вентилятор, 2 органайзера, 1 PDU на шкаф */
 export const accessoriesConfig = {
-  fanPanel: { name: 'SHIP 700402112T (вентиляторы)', priceKzt: 30_397 },
-  cableOrganizer: { name: 'SHIP 701402120 (органайзер)', priceKzt: 3_279 },
-  pdu: { name: 'SHIP 700508102 (PDU 8 розеток)', priceKzt: 12_324 },
-  patchPanel_24: { name: 'Патч-панель 24 порта', priceKzt: 8_500 },
-  patchPanel_48: { name: 'Патч-панель 48 портов', priceKzt: 14_200 },
-};
+  fanPanel: { name: 'SHIP 700402112T', priceKzt: 30_397 },
+  cableOrganizer: { name: 'SHIP 701402120', priceKzt: 3_279 },
+  pdu: { name: 'SHIP 700508102', priceKzt: 12_324 },
+} as const;
 
 /** Монитор */
 export const monitorConfig = {
@@ -188,8 +200,11 @@ export const installationRates = {
   reader: 800,
 } as const;
 
-/** Срок хранения архива (месяцы) */
+/** Срок хранения архива (месяцы) — для совместимости */
 export const storageMonthsOptions = [1, 2, 3] as const;
+
+/** Срок хранения архива в днях: 1 / 2 / 3 месяца (ТЗ п.2) */
+export const storageDaysOptions = [30, 60, 90] as const;
 
 /** Контакт для заявок */
 export const calculatorContact = {
@@ -208,7 +223,7 @@ export const pdfConfig = {
 
 /** ——— Пересчёт сметы по результатам техаудита ——— */
 
-/** Битрейт для расчёта объёма архива 30 дней (Мбит/с): 2MP=2, 4MP=4, ANPR=6, лифт 2MP=2 */
+/** Битрейт для расчёта объёма архива 30 дней (Мбит/с): 2MP=2, 4MP=4, опоз. номерного знака=6, лифт 2MP=2 */
 export const storageBitrateMbpsFor30d = {
   outdoor2mp: 2,
   indoor2mp: 2,
