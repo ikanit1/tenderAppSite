@@ -9,6 +9,7 @@ from fastapi import APIRouter, Request, Depends, File, Query, Form, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.exc import IntegrityError
 
 from config import settings
 from web.database import get_db
@@ -221,14 +222,29 @@ async def support_ticket_delete(
     ticket_id: int,
     db: Session = Depends(get_db),
 ):
-    """Удалить тикет и все сообщения (освободить место, не копить архив)."""
+    """Удалить тикет и все сообщения (освободить место, не копить архив). Любая ошибка — редирект, без 500."""
     if redir := require_admin(request):
         return redir
-    ticket = db.execute(select(SupportTicket).where(SupportTicket.id == ticket_id)).scalar_one_or_none()
-    if ticket:
+    try:
+        ticket = db.execute(
+            select(SupportTicket)
+            .options(selectinload(SupportTicket.messages))
+            .where(SupportTicket.id == ticket_id)
+        ).scalar_one_or_none()
+        if not ticket:
+            return RedirectResponse(url="/support", status_code=303)
         db.delete(ticket)
         db.commit()
-    return RedirectResponse(url="/support", status_code=302)
+        logger.info("Support ticket %s deleted via web interface", ticket_id)
+        return RedirectResponse(url="/support?success=ticket_deleted", status_code=303)
+    except IntegrityError as e:
+        db.rollback()
+        logger.exception("Integrity error deleting support ticket %s: %s", ticket_id, e)
+        return RedirectResponse(url="/support?error=delete_failed", status_code=303)
+    except Exception as e:
+        db.rollback()
+        logger.exception("Error deleting support ticket %s: %s", ticket_id, e)
+        return RedirectResponse(url="/support?error=delete_failed", status_code=303)
 
 
 # Шаблоны быстрых ответов (опционально)
