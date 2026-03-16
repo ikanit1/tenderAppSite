@@ -4,6 +4,7 @@ from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
+from aiogram.types import MenuButtonWebApp, WebAppInfo
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,7 +16,9 @@ from utils import is_admin
 from utils.chat_utils import answer_with_cleanup
 from utils.validators import parse_callback_id, parse_callback_parts
 from utils.menu_updater import send_notification_with_menu_update, refresh_user_menu_on_state_change
+from utils.fsm_clear import clear_user_fsm
 from services.user_service import UserService
+from handlers.keyboards import get_miniapp_url
 
 logger = logging.getLogger(__name__)
 
@@ -132,9 +135,35 @@ async def moderation_reject(
         old_status=old_status,
         new_status=updated_user.status,
     )
-    
+    # Сбрасываем FSM (регистрация, поддержка и т.д.), чтобы при разбане пользователь не попал в середину флоу
+    await clear_user_fsm(callback.bot, updated_user.tg_id)
+
     logger.info(f"User {user_id} rejected by admin {callback.from_user.id}")
     await callback.answer("Пользователь отклонён.")
+
+
+@router.message(Command("refresh_menu"))
+async def cmd_refresh_menu(message: Message) -> None:
+    """Обновить кнопку меню (Mini App URL) для всех пользователей после смены MINIAPP_BASE_URL."""
+    if not is_admin(message.from_user.id):
+        await message.answer("Доступ только для администратора.")
+        return
+    url = get_miniapp_url()
+    if not url:
+        await message.answer("MINIAPP_BASE_URL не задан в .env — кнопка меню не обновлена.")
+        return
+    try:
+        await message.bot.set_chat_menu_button(
+            menu_button=MenuButtonWebApp(
+                text="Открыть приложение",
+                web_app=WebAppInfo(url=url),
+            ),
+        )
+        await message.answer(f"✅ Кнопка меню обновлена: {url}")
+        logger.info("Menu button refreshed by admin: %s", url)
+    except Exception as e:
+        logger.warning("refresh_menu failed: %s", e)
+        await message.answer(f"Ошибка обновления кнопки меню: {e}")
 
 
 @router.message(F.text == "⚙️ Админ-панель")

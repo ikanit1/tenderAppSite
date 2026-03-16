@@ -297,7 +297,7 @@ async def users_export_csv(
     users = db.execute(q).scalars().all()
 
     output = io.StringIO()
-    writer = csv.writer(output)
+    writer = csv.writer(output, quoting=csv.QUOTE_ALL)
     writer.writerow(["ID", "TG_ID", "ФИО", "Роль", "Статус", "Город", "Телефон", "Навыки", "Дата регистрации"])
     for u in users:
         writer.writerow([

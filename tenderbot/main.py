@@ -27,6 +27,7 @@ from aiogram.types import MenuButtonWebApp, WebAppInfo
 from aiogram.utils.token import TokenValidationError
 
 from handlers import router
+from handlers.keyboards import get_miniapp_url
 from middlewares.db import DbSessionMiddleware
 from middlewares.fsm_cancel import FSMCancelMiddleware
 from middlewares.menu_refresh import MenuRefreshMiddleware
@@ -96,15 +97,18 @@ async def main() -> None:
     
     dp.include_router(router)
 
+    from utils.fsm_clear import set_dispatcher
+    set_dispatcher(dp)
+
     # Кнопка меню (☰): при открытии через неё Telegram передаёт initData в Mini App.
     # При открытии через Reply Keyboard initData пустой — поэтому используем Menu Button.
-    miniapp_url = (settings.MINIAPP_BASE_URL or "").rstrip("/")
+    miniapp_url = get_miniapp_url()
     if miniapp_url:
         try:
             await bot.set_chat_menu_button(
                 menu_button=MenuButtonWebApp(
                     text="Открыть приложение",
-                    web_app=WebAppInfo(url=f"{miniapp_url}/miniapp/"),
+                    web_app=WebAppInfo(url=miniapp_url),
                 ),
             )
             logger.info("Menu Button установлен: Mini App открывается с авторизацией (initData).")

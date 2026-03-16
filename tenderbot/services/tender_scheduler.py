@@ -187,19 +187,30 @@ async def tender_scheduler_loop(bot) -> None:
     logger.info("Tender scheduler started (interval: %ds)", CHECK_INTERVAL)
 
     while True:
-        try:
-            session_maker = get_async_session_maker()
-            async with session_maker() as session:
+        session_maker = get_async_session_maker()
+        async with session_maker() as session:
+            closed = reminded = no_apps_alerted = 0
+            try:
                 closed = await _auto_close_expired(session, bot)
+            except Exception as e:
+                logger.exception("Scheduler task _auto_close_expired failed: %s", e)
+            try:
                 reminded = await _send_deadline_reminders(session, bot)
+            except Exception as e:
+                logger.exception("Scheduler task _send_deadline_reminders failed: %s", e)
+            try:
                 no_apps_alerted = await _notify_idle_open_tenders(session, bot)
+            except Exception as e:
+                logger.exception("Scheduler task _notify_idle_open_tenders failed: %s", e)
+            try:
                 await session.commit()
                 if closed or reminded or no_apps_alerted:
                     logger.info(
                         "Scheduler tick: closed=%s, reminded=%s, no_apps_alerted=%s",
                         closed, reminded, no_apps_alerted,
                     )
-        except Exception as e:
-            logger.error(f"Tender scheduler error: {e}", exc_info=True)
+            except Exception as e:
+                logger.exception("Scheduler commit failed: %s", e)
+                await session.rollback()
 
         await asyncio.sleep(CHECK_INTERVAL)

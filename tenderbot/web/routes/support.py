@@ -20,21 +20,27 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 _UPLOADS_SUPPORT = Path(__file__).resolve().parent.parent / "static" / "uploads" / "support"
-_ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
-_MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
+
+from web.utils.upload_validation import validate_upload, SUPPORT_IMAGE_MIMES
 
 
 def _save_support_image(file: UploadFile) -> str | None:
+    """Сохраняет изображение поддержки: image/jpeg, image/png до 10MB, проверка magic bytes."""
     try:
-        if not file or not getattr(file, "content_type", None) or file.content_type.lower() not in _ALLOWED_IMAGE_TYPES:
+        if not file:
             return None
-        ext = ".jpg" if "jpeg" in file.content_type else ".png" if "png" in file.content_type else ".gif" if "gif" in file.content_type else ".webp"
+        content = file.file.read()
+        ok, _ = validate_upload(
+            content,
+            content_type=getattr(file, "content_type", None),
+            allowed_mimes=SUPPORT_IMAGE_MIMES,
+        )
+        if not ok:
+            return None
+        ext = ".png" if content.startswith(b"\x89PNG") else ".jpg"
         _UPLOADS_SUPPORT.mkdir(parents=True, exist_ok=True)
         name = uuid.uuid4().hex + ext
         path = _UPLOADS_SUPPORT / name
-        content = file.file.read()
-        if len(content) > _MAX_IMAGE_SIZE:
-            return None
         path.write_bytes(content)
         return f"/static/uploads/support/{name}"
     except Exception as e:

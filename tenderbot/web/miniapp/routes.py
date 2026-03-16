@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, Body,
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy import select, func, cast, String
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from config import settings
@@ -33,29 +34,27 @@ router = APIRouter(prefix="/miniapp", tags=["miniapp"])
 
 # Загрузка изображений поддержки: web/static/uploads/support/
 _UPLOADS_SUPPORT = Path(__file__).resolve().parent.parent / "static" / "uploads" / "support"
-_ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
-_MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
+from web.utils.upload_validation import validate_upload, SUPPORT_IMAGE_MIMES
 
 
 def _save_support_image(file: UploadFile) -> Optional[str]:
-    """Сохраняет загруженное изображение, возвращает URL пути."""
+    """Сохраняет загруженное изображение (image/jpeg, image/png до 10MB, проверка magic bytes)."""
     _UPLOADS_SUPPORT.mkdir(parents=True, exist_ok=True)
-    ct = (file.content_type or "").lower()
-    if ct in _ALLOWED_IMAGE_TYPES:
-        ext = ".jpg" if "jpeg" in ct else ".png" if "png" in ct else ".gif" if "gif" in ct else ".webp"
-    else:
-        # WebView может отдавать application/octet-stream — берём расширение из имени файла
-        fn = (file.filename or "").lower()
-        if fn.endswith(".png"): ext = ".png"
-        elif fn.endswith(".gif"): ext = ".gif"
-        elif fn.endswith(".webp"): ext = ".webp"
-        else: ext = ".jpg"
+    try:
+        content = file.file.read()
+    except Exception:
+        return None
+    ok, err = validate_upload(
+        content,
+        content_type=getattr(file, "content_type", None) or None,
+        allowed_mimes=SUPPORT_IMAGE_MIMES,
+    )
+    if not ok:
+        return None
+    ext = ".png" if content.startswith(b"\x89PNG") else ".jpg"
     name = uuid.uuid4().hex + ext
     path = _UPLOADS_SUPPORT / name
     try:
-        content = file.file.read()
-        if len(content) > _MAX_IMAGE_SIZE:
-            return None
         path.write_bytes(content)
         return f"/static/uploads/support/{name}"
     except Exception:
@@ -63,7 +62,7 @@ def _save_support_image(file: UploadFile) -> Optional[str]:
 
 
 def _save_support_image_base64(data: str) -> Optional[str]:
-    """Принимает data URL (data:image/...;base64,...) или сырой base64. Сохраняет файл, возвращает URL."""
+    """Принимает data URL (data:image/...;base64,...) или сырой base64. JPEG/PNG до 10MB, magic bytes."""
     raw = data.strip()
     if raw.startswith("data:"):
         idx = raw.find("base64,")
@@ -74,15 +73,10 @@ def _save_support_image_base64(data: str) -> Optional[str]:
         content = base64.b64decode(raw, validate=True)
     except Exception:
         return None
-    if len(content) > _MAX_IMAGE_SIZE:
+    ok, _ = validate_upload(content, allowed_mimes=SUPPORT_IMAGE_MIMES)
+    if not ok:
         return None
-    ext = ".jpg"
-    if content[:8] == b"\x89PNG\r\n\x1a\n":
-        ext = ".png"
-    elif content[:6] in (b"GIF87a", b"GIF89a"):
-        ext = ".gif"
-    elif content[:4] == b"RIFF" and content[8:12] == b"WEBP":
-        ext = ".webp"
+    ext = ".png" if content.startswith(b"\x89PNG\r\n\x1a\n") else ".jpg"
     _UPLOADS_SUPPORT.mkdir(parents=True, exist_ok=True)
     name = uuid.uuid4().hex + ext
     path = _UPLOADS_SUPPORT / name
@@ -290,10 +284,14 @@ def api_profile_patch(
 
 
 # ——— API: список тендеров (открытые, по городу пользователя) ———
+MAX_TENDERS_LIMIT = 50
+
+
 @router.get("/api/tenders")
 def api_tenders_list(
     city: Optional[str] = None,
     category: Optional[str] = None,
+    limit: int = Query(50, ge=1, le=MAX_TENDERS_LIMIT, description="Макс. количество тендеров (до 50)"),
     user: User = Depends(require_active),
     db: Session = Depends(get_db),
 ):
@@ -309,7 +307,7 @@ def api_tenders_list(
     if category:
         from sqlalchemy import cast, String
         q = q.where(cast(Tender.categories, String).contains(f'"{category}"'))
-    q = q.limit(50)
+    q = q.limit(limit)
     result = db.execute(q)
     tenders = result.scalars().all()
     # Проверяем, откликался ли текущий пользователь на каждый
@@ -420,7 +418,11 @@ def api_tender_apply(
         status="applied",
     )
     db.add(app)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Already applied")
     db.refresh(app)
     send_telegram_message(
         user.tg_id,

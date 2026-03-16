@@ -70,13 +70,13 @@ class Settings(BaseSettings):
     
     # Database Pool Settings
     DB_POOL_SIZE: int = Field(
-        default=5,
+        default=10,
         ge=1,
         le=50,
         description="Размер пула соединений БД (минимум постоянных соединений)",
     )
     DB_MAX_OVERFLOW: int = Field(
-        default=10,
+        default=20,
         ge=0,
         le=50,
         description="Максимальное количество временных соединений сверх pool_size",
