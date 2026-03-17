@@ -8,3 +8,12 @@
 .mono { font-family: var(--calc-font-mono); }
 .toggleRow { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; cursor: pointer; }
 .actions { display: flex; gap: 1rem; justify-content: flex-end; }
+
+.optionsCard { padding: 1.25rem; margin-bottom: 1.5rem; }
+.inputGroup { margin-bottom: 1.25rem; }
+.inputGroup:last-child { margin-bottom: 0; }
+.inputLabel { display: block; font-size: var(--text-sm); font-weight: 600; color: var(--color-text-muted); margin-bottom: 0.5rem; }
+.radioGroup { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; margin-bottom: 0.5rem; }
+.radioLabel { display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: var(--text-sm); }
+.radioLabel input { margin: 0; }
+.hint { font-size: var(--text-xs); color: var(--color-text-muted); margin: 0.25rem 0 0; }

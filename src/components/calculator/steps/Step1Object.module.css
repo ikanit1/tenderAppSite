@@ -24,8 +24,22 @@
   margin: 0 0 1.5rem;
 }
 
-.field {
+.inputGroup {
   margin-bottom: 1.25rem;
+}
+
+.totalFlatsDisplay {
+  font-family: var(--calc-font-mono);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-text);
+  padding: 0.5rem 0;
+}
+
+.hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin: 0.25rem 0 0;
 }
 
 .label {

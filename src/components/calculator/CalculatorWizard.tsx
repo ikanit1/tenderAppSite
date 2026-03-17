@@ -38,10 +38,17 @@ export function CalculatorWizard() {
       <BackgroundScene buildingFloors={buildingFloors} />
       <div className={styles.content}>
         <Stepper />
-        <main className={styles.main}>
+        <main className={styles.main} aria-live="polite">
           <Suspense fallback={<div className={styles.loading}>Загрузка…</div>}>
-            <AnimatePresence mode="wait">
-              <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={step}
+                initial={false}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                style={{ minHeight: 200 }}
+              >
                 <StepContent />
               </motion.div>
             </AnimatePresence>

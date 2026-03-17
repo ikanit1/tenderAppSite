@@ -4,7 +4,9 @@
 .card { padding: 1rem; }
 .cardTitle { font-weight: 600; margin-bottom: 0.75rem; }
 .controls { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+.controls .numberInput { width: 3.5rem; text-align: center; font-family: var(--calc-font-mono); padding: 0.35rem; border-radius: 8px; border: 1px solid var(--calc-glass-border); background: var(--color-surface); color: var(--color-text); }
 .mono { font-family: var(--calc-font-mono); min-width: 2rem; text-align: center; }
+.stepper .numberInput { width: 3.5rem; text-align: center; font-family: var(--calc-font-mono); padding: 0.35rem; border-radius: 8px; border: 1px solid var(--calc-glass-border); background: var(--color-surface); color: var(--color-text); }
 .sum { font-family: var(--calc-font-mono); font-size: var(--text-sm); }
 .liftBlock { padding: 1rem; margin-bottom: 1.5rem; }
 .liftTitle { font-weight: 600; margin-bottom: 0.25rem; }

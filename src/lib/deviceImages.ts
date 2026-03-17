@@ -14,8 +14,9 @@ export const deviceModelMap: Record<string, string> = {
   'опознавания номерного знака': 'DHI-ITC413-PW4D-Z1',
   'Камера опознавания номерного знака': 'DHI-ITC413-PW4D-Z1',
   'Лифтовая камера 2MP': 'IPC-3612-APF28-DL',
-  'Лифтовая камера 4MP': 'IPC-3614-APF28-NB',
+  'Лифтовая камера 4MP': 'IPC-324-PF28',
   'Лифтовая камера': 'IPC-3612-APF28-DL',
+  'IPC-324-PF28': 'IPC-324-PF28',
   'WK-WB08-KIT': 'WK-WB08-KIT',
   'WK-WB08': 'WK-WB08-KIT',
   'WK-PS227GF': 'WK-PS227GF',
@@ -47,7 +48,7 @@ export const deviceModelMap: Record<string, string> = {
   'Шкаф 18U': 'LWR3-18U66-GF',
   'Шкаф 42U': 'LWR3-18U66-GF',
   'SHIP 700402112T': 'SHIP 700402112T',
-  'SHIP 701402120': 'SHIP 701402120',
+  'SHIP 701402120': 'CO05-1M5RM',
   'SHIP 700508102': 'SHIP 700508102',
   'Патч-корд': 'PC01-C5EU-02M',
   'Патч-панель 24 порта': 'PP24-1UMU',
@@ -57,11 +58,14 @@ export const deviceModelMap: Record<string, string> = {
   'ИБП 1 кВА': 'ИБП 1 кВА',
 };
 
-/** Локальные изображения (приоритет над каталогом) */
+/** Локальные изображения (приоритет над каталогом). Файлы из docs/ — в public/docs/ для доступа по /docs/... */
 export const deviceLocalImageMap: Record<string, string> = {
   'Домофон для входа': '/oeu-301s-hmka.jpg',
   'Вызывная панель (вход)': '/oeu-301s-hmka.jpg',
   'Вызывная панель IP': '/oeu-301s-hmka.jpg',
+  'Стойка настенная 9U': '/docs/stoika.jpg',
+  'SHIP 700402112T': '/docs/vent.jpg',
+  'SHIP 700508102': '/docs/setevoifilt.jpg',
 };
 
 export function getDeviceImage(rowName: string): string | null {

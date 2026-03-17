@@ -9,12 +9,13 @@ import {
 import {
   type CalculatorInputs,
   type CalculatorResult,
-  type CameraCounts,
   calculateResult,
 } from '@/widgets/calculator/calculatorLogic';
 import { submitLead } from '@/shared/api/leadApi';
 import { getCatalogUrl } from '@/shared/utils/catalogUrl';
 import { downloadKP } from '@/widgets/calculator/generateKP';
+import { itemPurposes } from '@/widgets/calculator/itemPurposes';
+import { usePersistedCalculator } from '@/widgets/calculator/usePersistedCalculator';
 import { useToast } from '@/features/toast/ToastProvider';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -70,7 +71,7 @@ const deviceModelMap: Record<string, string> = {
   'Шкаф 18U': 'LWR3-18U66-GF',
   'Шкаф 42U': 'LWR3-18U66-GF',
   'SHIP 700402112T': 'SHIP 700402112T',
-  'SHIP 701402120': 'SHIP 701402120',
+  'SHIP 701402120': 'CO05-1M5RM',
   'SHIP 700508102': 'SHIP 700508102',
   'Патч-корд': 'PC01-C5EU-02M',
   'Патч-панель 24 порта': 'PP24-1UMU',
@@ -80,11 +81,14 @@ const deviceModelMap: Record<string, string> = {
   'ИБП 1 кВА': 'ИБП 1 кВА',
 };
 
-/** Локальные изображения из КП (приоритет над каталогом) */
+/** Локальные изображения из КП (приоритет над каталогом). Файлы из docs/ — в public/docs/ для доступа по /docs/... */
 const deviceLocalImageMap: Record<string, string> = {
   'Домофон для входа': '/oeu-301s-hmka.jpg',
   'Вызывная панель (вход)': '/oeu-301s-hmka.jpg',
   'Вызывная панель IP': '/oeu-301s-hmka.jpg',
+  'Стойка настенная 9U': '/docs/stoika.jpg',
+  'SHIP 700402112T': '/docs/vent.jpg',
+  'SHIP 700508102': '/docs/setevoifilt.jpg',
 };
 
 function getDeviceImage(rowName: string): string | null {
@@ -107,46 +111,6 @@ const sectionVariants = {
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 280, damping: 22 } },
-};
-
-const defaultCameraCounts: CameraCounts = {
-  outdoor2mp: 0,
-  indoor2mp: 0,
-  indoor4mp: 0,
-  anpr3mp: 0,
-};
-
-const OBJECT_TYPES = ['ЖК', 'Офис', 'Паркинг'] as const;
-
-const defaultInputs: CalculatorInputs = {
-  objectType: 'ЖК',
-  objectNameOrAddress: '',
-  cameraTypes: defaultCameraCounts,
-  elevatorCount: 0,
-  elevatorCameraType: '2mp',
-  archiveSettings: { months: 1, recordingType: 'continuous' },
-  storageDays: 30,
-  hasPatchPanel: false,
-  cableSettings: {
-    useManualLength: false,
-    manualLengthPerCamera: undefined,
-    buildingFloors: 0,
-    buildingRisers: 1,
-  },
-  intercom: {
-    entrances: 0,
-    floorsPerEntrance: 0,
-    flatsPerFloor: 4,
-    extraCardReaders: 0,
-    carEntrance: {
-      enabled: false,
-      gates: 0,
-      parking: 0,
-      entranceCount: 0,
-    },
-    hasConcierge: false,
-  },
-  videoAnalytics: false,
 };
 
 function buildSummaryText(input: CalculatorInputs, result: CalculatorResult): string {
@@ -294,7 +258,7 @@ export function CctvCalculatorSection() {
   const formTopRef = useRef<HTMLDivElement>(null);
   const pdfContentRef = useRef<HTMLDivElement>(null);
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(defaultInputs);
+  const { inputs, setInputs, reset: resetCalculator } = usePersistedCalculator();
   const [modalOpen, setModalOpen] = useState(false);
   const [submitName, setSubmitName] = useState('');
   const [submitPhone, setSubmitPhone] = useState('');
@@ -316,7 +280,7 @@ export function CctvCalculatorSection() {
   const paybackYears = paybackMonths > 0 ? Math.round((paybackMonths / 12) * 10) / 10 : 0;
 
   const handleReset = () => {
-    setInputs(defaultInputs);
+    resetCalculator();
     formTopRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
@@ -372,20 +336,6 @@ export function CctvCalculatorSection() {
             Параметры объекта
           </div>
           <div className={styles.inputsGrid}>
-            <div className={styles.inputGroup}>
-              <label htmlFor="calc-object-type" className={styles.inputLabel}>Тип объекта</label>
-              <select
-                id="calc-object-type"
-                className={styles.input}
-                value={inputs.objectType ?? 'ЖК'}
-                onChange={(e) => setInputs((p) => ({ ...p, objectType: e.target.value as typeof OBJECT_TYPES[number] | '' }))}
-              >
-                <option value="">—</option>
-                {OBJECT_TYPES.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
             <div className={styles.inputGroup}>
               <label htmlFor="calc-object-name" className={styles.inputLabel}>Адрес / Название</label>
               <input
@@ -754,6 +704,17 @@ export function CctvCalculatorSection() {
               {inputs.hasPatchPanel ? 'Патч-панели и патч-корды камера×1 + NVR×4 в смете' : 'Только межоборудовательные патч-корды (экономия)'}
             </p>
           </div>
+          <div className={styles.inputGroup}>
+            <label className={styles.radioLabel}>
+              <input
+                type="checkbox"
+                checked={inputs.hasSecurityPost ?? false}
+                onChange={(e) => setInputs((p) => ({ ...p, hasSecurityPost: e.target.checked }))}
+              />
+              <span>Есть пост охраны (монитор в смете)</span>
+            </label>
+            <p className={styles.hint}>Монитор добавляется только при включённой опции; на малых объектах обычно не требуется.</p>
+          </div>
         </motion.div>
 
         {/* Результат по группам */}
@@ -793,9 +754,21 @@ export function CctvCalculatorSection() {
                         <span className={styles.paramsValueNum}>{inputs.intercom.entrances}</span>
                       </div>
                     )}
-                    {(inputs.intercom.floorsPerEntrance > 0 && inputs.intercom.entrances > 0) && (
+                    {inputs.intercom.floorsPerEntrance > 0 && (
                       <div className={styles.paramsRow}>
-                        <span className={styles.paramsLabel}>Число этажей</span>
+                        <span className={styles.paramsLabel}>Этажей в подъезде</span>
+                        <span className={styles.paramsValueNum}>{inputs.intercom.floorsPerEntrance}</span>
+                      </div>
+                    )}
+                    {inputs.intercom.flatsPerFloor > 0 && (
+                      <div className={styles.paramsRow}>
+                        <span className={styles.paramsLabel}>Квартир на этаже</span>
+                        <span className={styles.paramsValueNum}>{inputs.intercom.flatsPerFloor}</span>
+                      </div>
+                    )}
+                    {(inputs.intercom.entrances > 0 && inputs.intercom.floorsPerEntrance > 0) && (
+                      <div className={styles.paramsRow}>
+                        <span className={styles.paramsLabel}>Этажей всего</span>
                         <span className={styles.paramsValueNum}>{inputs.intercom.entrances * inputs.intercom.floorsPerEntrance}</span>
                       </div>
                     )}
@@ -956,6 +929,9 @@ export function CctvCalculatorSection() {
                             <td>
                               <span className={styles.rowName}>{row.name}</span>
                               {row.note && <div className={styles.rowNote}>{row.note}</div>}
+                              {row.unitPrice != null && itemPurposes[row.name] && (
+                                <div className={styles.rowPurpose}>💡 {itemPurposes[row.name]}</div>
+                              )}
                             </td>
                             <td>{row.qty > 0 ? row.qty : '—'}</td>
                             <td>{row.unitPrice != null ? formatKzt(row.unitPrice) : '—'}</td>

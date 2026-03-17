@@ -16,10 +16,7 @@ const cardVariants = {
   visible: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 280, damping: 22 } },
 };
 
-export function ResultTable({ result, showInstallment = true, flatCount }: ResultTableProps) {
-  const derivedFlats = flatCount && flatCount > 0 ? flatCount : 200;
-  const perFlatMonthly = result.grandTotal > 0 ? Math.round(result.grandTotal / derivedFlats) : 0;
-
+export function ResultTable({ result, showInstallment = true }: ResultTableProps) {
   return (
     <div className={styles.wrap}>
       {result.warnings.length > 0 && (
@@ -134,9 +131,6 @@ export function ResultTable({ result, showInstallment = true, flatCount }: Resul
               </div>
             ))}
           </div>
-          <p className={styles.installmentPerFlat}>
-            Ежемесячная оплата с квартиры: <strong>{formatKzt(perFlatMonthly)}</strong> (Итого / {derivedFlats})
-          </p>
           <p className={styles.installmentDisclaimer}>Расчёт приблизительный, условия уточняйте у менеджера</p>
         </motion.div>
       )}

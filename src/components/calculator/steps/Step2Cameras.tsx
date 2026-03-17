@@ -1,5 +1,6 @@
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { cameraTypes } from '@/shared/content/calculatorConfig';
+import { stepSectionVariants } from '@/shared/animations/sectionReveal';
 import { useCalculatorStore } from '@/store/calculatorStore';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlowButton } from '@/components/ui/GlowButton';
@@ -16,8 +17,10 @@ const STORAGE_OPTIONS: { days: 30 | 60 | 90; label: string }[] = [
 ];
 
 export function Step2Cameras() {
+  const reduceMotion = useReducedMotion();
   const inputs = useCalculatorStore((s) => s.inputs);
   const setCameraCount = useCalculatorStore((s) => s.setCameraCount);
+  const setInputs = useCalculatorStore((s) => s.setInputs);
   const setElevator = useCalculatorStore((s) => s.setElevator);
   const setStep = useCalculatorStore((s) => s.setStep);
   const setVideoAnalytics = useCalculatorStore((s) => s.setVideoAnalytics);
@@ -26,8 +29,26 @@ export function Step2Cameras() {
   const storageDays = inputs.storageDays ?? 30;
   const videoAnalytics = inputs.videoAnalytics ?? false;
 
+  const handleCameraValue = (key: (typeof KEYS)[number], value: number) => {
+    const n = Math.max(0, Math.min(999, value));
+    setInputs({
+      ...inputs,
+      cameraTypes: { ...inputs.cameraTypes, [key]: n },
+    });
+  };
+
+  const handleLiftValue = (value: number) => {
+    const n = Math.max(0, Math.min(99, value));
+    setElevator(n);
+  };
+
   return (
-    <motion.div className={styles.wrap} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+    <motion.div
+      className={styles.wrap}
+      variants={reduceMotion ? undefined : stepSectionVariants}
+      initial="hidden"
+      animate="visible"
+    >
       <h2 className={styles.title}>Камеры</h2>
       <div className={styles.grid}>
         {KEYS.map((key) => {
@@ -38,7 +59,15 @@ export function Step2Cameras() {
               <div className={styles.cardTitle}>{LABELS[key]}</div>
               <div className={styles.controls}>
                 <GlowButton variant="secondary" onClick={() => setCameraCount(key, -1)}>−</GlowButton>
-                <span className={styles.mono}>{qty}</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={999}
+                  value={qty}
+                  onChange={(e) => handleCameraValue(key, Number(e.target.value) || 0)}
+                  className={styles.numberInput}
+                  aria-label={LABELS[key]}
+                />
                 <GlowButton variant="secondary" onClick={() => setCameraCount(key, 1)}>+</GlowButton>
               </div>
               <div className={styles.sum}>{formatKzt(qty * cfg.priceKzt)}</div>
@@ -53,7 +82,15 @@ export function Step2Cameras() {
           <label>Количество лифтов</label>
           <div className={styles.stepper}>
             <GlowButton variant="secondary" onClick={() => setElevator(Math.max(0, liftCount - 1))}>−</GlowButton>
-            <span className={styles.mono}>{liftCount}</span>
+            <input
+              type="number"
+              min={0}
+              max={99}
+              value={liftCount}
+              onChange={(e) => handleLiftValue(Number(e.target.value) || 0)}
+              className={styles.numberInput}
+              aria-label="Количество лифтов"
+            />
             <GlowButton variant="secondary" onClick={() => setElevator(liftCount + 1)}>+</GlowButton>
           </div>
         </div>

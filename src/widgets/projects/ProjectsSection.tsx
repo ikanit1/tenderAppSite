@@ -1,27 +1,28 @@
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { projectsList } from '@/shared/content/projects';
+import {
+  viewportReveal,
+  sectionVariants,
+  headerVariants,
+  gridVariants,
+  cardVariants,
+} from '@/shared/animations/sectionReveal';
 import styles from './ProjectsSection.module.css';
 
-const sectionVariants = {
-  hidden: { opacity: 0, y: 32 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.2 },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { type: 'spring' as const, stiffness: 280, damping: 22 },
-  },
-};
-
 const springTransition = { type: 'spring' as const, stiffness: 400, damping: 25 };
+
+const PROJECTS_EXPANDED_KEY = 'grgroup-projects-expanded';
+
+function loadExpandedId(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const id = sessionStorage.getItem(PROJECTS_EXPANDED_KEY);
+    return id && projectsList.some((p) => p.id === id) ? id : null;
+  } catch {
+    return null;
+  }
+}
 
 const expandedVariants = {
   collapsed: { height: 0, opacity: 0, transition: { type: 'spring' as const, stiffness: 300, damping: 30 } },
@@ -34,33 +35,41 @@ const expandedVariants = {
 
 export function ProjectsSection() {
   const reduceMotion = useReducedMotion();
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedId, setExpandedIdState] = useState<string | null>(loadExpandedId);
+  const setExpandedId = (id: string | null) => {
+    setExpandedIdState(id);
+    try {
+      if (id) sessionStorage.setItem(PROJECTS_EXPANDED_KEY, id);
+      else sessionStorage.removeItem(PROJECTS_EXPANDED_KEY);
+    } catch {
+      /* ignore */
+    }
+  };
 
   return (
     <motion.section
       className={styles.section}
       aria-labelledby="projects-heading"
       variants={reduceMotion ? undefined : sectionVariants}
-      initial="visible"
-      animate="visible"
+      initial="hidden"
+      whileInView="visible"
+      viewport={viewportReveal}
     >
-      <div className={styles.container}>
-        <motion.h2 id="projects-heading" className={styles.heading} variants={reduceMotion ? undefined : itemVariants}>
+      <motion.div className={styles.container} variants={reduceMotion ? undefined : sectionVariants}>
+        <motion.h2 id="projects-heading" className={styles.heading} variants={reduceMotion ? undefined : headerVariants}>
           Наши проекты
         </motion.h2>
-        <motion.p className={styles.subtitle} variants={reduceMotion ? undefined : itemVariants}>
+        <motion.p className={styles.subtitle} variants={reduceMotion ? undefined : headerVariants}>
           Реализованные решения для предприятий и организаций Казахстана
         </motion.p>
-        <motion.div className={styles.grid} variants={reduceMotion ? undefined : sectionVariants} initial="visible" animate="visible">
+        <motion.div className={styles.grid} variants={reduceMotion ? undefined : gridVariants}>
           {projectsList.map((project) => {
             const isExpanded = expandedId === project.id;
             return (
               <motion.article
                 key={project.id}
                 className={`${styles.card} ${isExpanded ? styles.cardExpanded : ''}`}
-                variants={reduceMotion ? undefined : itemVariants}
-                initial="visible"
-                animate="visible"
+                variants={reduceMotion ? undefined : cardVariants}
                 layout
                 whileHover={reduceMotion ? undefined : { y: -4, transition: springTransition }}
                 whileTap={reduceMotion ? undefined : { scale: 0.99 }}
@@ -115,7 +124,7 @@ export function ProjectsSection() {
             );
           })}
         </motion.div>
-      </div>
+      </motion.div>
     </motion.section>
   );
 }

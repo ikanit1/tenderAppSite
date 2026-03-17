@@ -25,6 +25,8 @@ import {
   upsConfig,
   accessoriesConfig,
   monitorConfig,
+  serverRoomTier1,
+  serverRoomTier2,
   intercomConfig,
   floorPoeSwitchConfig,
   entrancePanelConfig,
@@ -97,6 +99,8 @@ export interface CalculatorInputs {
   videoAnalytics: boolean;
   /** Патч-панель в стойке: true — камера×1 + NVR×4 + панели в BOM; false — только межоборудовательные (ТЗ п.1) */
   hasPatchPanel?: boolean;
+  /** Есть пост охраны — добавляет монитор в смету на уровне 3 (крупный объект) */
+  hasSecurityPost?: boolean;
 }
 
 export interface LineItem {
@@ -211,7 +215,7 @@ function calculateLifts(input: CalculatorInputs): { rows: LineItem[]; sum: numbe
   return { rows, sum, liftCount: n };
 }
 
-/** 3. Кабель: бухты по количеству POE-коммутаторов на этаже (по ЖК); вертикаль и метры из параметров здания (при отсутствии — из домофонии) */
+/** 3. Кабель: бухты по количеству POE-коммутаторов на этаже (по ЖК); вертикаль и метры из параметров здания (при отсутствии — из домофонии). CCTV-кабель только при наличии камер или лифтов. */
 function calculateCable(
   input: CalculatorInputs,
   liftCount: number,
@@ -230,6 +234,7 @@ function calculateCable(
 } {
   const rows: LineItem[] = [];
   const ct = input.cameraTypes;
+  const totalCctvDevices = ct.outdoor2mp + ct.indoor2mp + ct.indoor4mp + ct.anpr3mp + liftCount;
   const buildingFloors = input.cableSettings.buildingFloors > 0
     ? input.cableSettings.buildingFloors
     : (input.intercom.entrances * input.intercom.floorsPerEntrance) || 1;
@@ -243,15 +248,14 @@ function calculateCable(
   let metersOutdoorCctv = 0;
   let metersIndoorCctv = 0;
   if (input.cableSettings.useManualLength && input.cableSettings.manualLengthPerCamera != null && input.cableSettings.manualLengthPerCamera > 0) {
-    const totalCameras = ct.outdoor2mp + ct.indoor2mp + ct.indoor4mp + ct.anpr3mp + liftCount;
-    const totalRaw = totalCameras * input.cableSettings.manualLengthPerCamera * CABLE_RESERVE_FACTOR;
+    const totalRaw = totalCctvDevices * input.cableSettings.manualLengthPerCamera * CABLE_RESERVE_FACTOR;
     totalMetersCctv = Math.ceil(totalRaw);
     metersOutdoorCctv = 0;
     metersIndoorCctv = totalMetersCctv;
     totalMetersIntercom = 0;
     totalMeters = totalMetersCctv;
   } else {
-    const verticalLength = buildingFloors * FLOOR_HEIGHT_METERS * buildingRisers;
+    const verticalLength = totalCctvDevices > 0 ? buildingFloors * FLOOR_HEIGHT_METERS * buildingRisers : 0;
     metersOutdoorCctv = ct.outdoor2mp * cableMetersPerCamera.outdoor2mp + ct.anpr3mp * cableMetersPerCamera.anpr3mp;
     metersIndoorCctv =
       ct.indoor2mp * cableMetersPerCamera.indoor2mp +
@@ -438,9 +442,93 @@ function calculateSwitches(totalCameras: number): { rows: LineItem[]; sum: numbe
   return { rows, sum: rows[0].sum, totalSwitchCount: qty };
 }
 
-/** 7. Серверный шкаф и аксессуары (КП №14-26): 1 шкаф, 1 вентилятор, 2 органайзера, 1 PDU, 1 монитор. */
-function calculateRack(): { rows: LineItem[]; sum: number } {
+/** Уровень серверного оборудования: 1 — малый (1–20 камер, нет домофонии), 2 — средний (21–60 или домофония), 3 — крупный (60+). */
+function getServerRoomTier(totalCameras: number, hasIntercom: boolean): 1 | 2 | 3 {
+  if (totalCameras <= 20 && !hasIntercom) return 1;
+  if (totalCameras <= 60) return 2;
+  return 3;
+}
+
+/** 7–8. Серверное оборудование по уровню: стойка/аксессуары/ИБП/монитор только при наличии поста охраны. */
+function calculateServerRoom(
+  totalCameras: number,
+  hasIntercom: boolean,
+  hasSecurityPost: boolean,
+): { rows: LineItem[]; sum: number } {
   const rows: LineItem[] = [];
+  const tier = getServerRoomTier(totalCameras, hasIntercom);
+
+  if (tier === 1) {
+    rows.push({
+      name: serverRoomTier1.ups.name,
+      qty: 1,
+      unitPrice: serverRoomTier1.ups.priceKzt,
+      sum: serverRoomTier1.ups.priceKzt,
+    });
+    rows.push({
+      name: serverRoomTier1.note,
+      qty: 1,
+      unitPrice: 0,
+      sum: 0,
+    });
+    return { rows, sum: serverRoomTier1.ups.priceKzt };
+  }
+
+  if (tier === 2) {
+    if (serverRoomTier2.rack) {
+      rows.push({
+        name: serverRoomTier2.rack.name,
+        qty: 1,
+        unitPrice: serverRoomTier2.rack.priceKzt,
+        sum: serverRoomTier2.rack.priceKzt,
+      });
+    }
+    const acc = serverRoomTier2.accessories;
+    if (acc) {
+      if (acc.fan > 0) {
+        rows.push({
+          name: accessoriesConfig.fanPanel.name,
+          qty: acc.fan,
+          unitPrice: accessoriesConfig.fanPanel.priceKzt,
+          sum: acc.fan * accessoriesConfig.fanPanel.priceKzt,
+        });
+      }
+      if (acc.organizer > 0) {
+        rows.push({
+          name: accessoriesConfig.cableOrganizer.name,
+          qty: acc.organizer,
+          unitPrice: accessoriesConfig.cableOrganizer.priceKzt,
+          sum: acc.organizer * accessoriesConfig.cableOrganizer.priceKzt,
+        });
+      }
+      if (acc.pdu > 0) {
+        rows.push({
+          name: accessoriesConfig.pdu.name,
+          qty: acc.pdu,
+          unitPrice: accessoriesConfig.pdu.priceKzt,
+          sum: acc.pdu * accessoriesConfig.pdu.priceKzt,
+        });
+      }
+    }
+    rows.push({
+      name: serverRoomTier2.ups.name,
+      qty: 1,
+      unitPrice: serverRoomTier2.ups.priceKzt,
+      sum: serverRoomTier2.ups.priceKzt,
+    });
+    if (hasSecurityPost && monitorConfig) {
+      rows.push({
+        name: monitorConfig.name,
+        qty: 1,
+        unitPrice: monitorConfig.priceKzt,
+        sum: monitorConfig.priceKzt,
+      });
+    }
+    const sum = rows.reduce((a, r) => a + r.sum, 0);
+    return { rows, sum };
+  }
+
+  // Уровень 3: стойка 27U, полный набор аксессуаров, ИБП 3 кВА, монитор только при посту охраны
   rows.push({ name: rackConfig.name, qty: 1, unitPrice: rackConfig.priceKzt, sum: rackConfig.priceKzt });
   rows.push({
     name: accessoriesConfig.fanPanel.name,
@@ -461,24 +549,21 @@ function calculateRack(): { rows: LineItem[]; sum: number } {
     sum: accessoriesConfig.pdu.priceKzt,
   });
   rows.push({
-    name: monitorConfig.name,
-    qty: 1,
-    unitPrice: monitorConfig.priceKzt,
-    sum: monitorConfig.priceKzt,
-  });
-  const sum = rows.reduce((a, r) => a + r.sum, 0);
-  return { rows, sum };
-}
-
-/** 8. ИБП (КП №14-26): SVC LRT-3KL-LCD 1 шт на объект. */
-function calculateUPS(): { rows: LineItem[]; sum: number } {
-  const rows: LineItem[] = [{
     name: upsConfig.name,
     qty: upsConfig.qty,
     unitPrice: upsConfig.priceKzt,
     sum: upsConfig.qty * upsConfig.priceKzt,
-  }];
-  return { rows, sum: rows[0].sum };
+  });
+  if (hasSecurityPost) {
+    rows.push({
+      name: monitorConfig.name,
+      qty: 1,
+      unitPrice: monitorConfig.priceKzt,
+      sum: monitorConfig.priceKzt,
+    });
+  }
+  const sum = rows.reduce((a, r) => a + r.sum, 0);
+  return { rows, sum };
 }
 
 /** Подъездный коммутатор домофонии по этажам в подъезде: до 7 → 8п, 8–15 → 16п, 16–22 → 24п, >22 → каскад 24п */
@@ -777,17 +862,16 @@ export function calculateResult(input: CalculatorInputs): CalculatorResult | nul
         sum: panelCount * patchPanelConfig.priceKzt,
       });
     }
-    const rackResult = calculateRack();
-    serverRows.push(...rackResult.rows);
-    const upsResult = calculateUPS();
-    serverRows.push(...upsResult.rows);
+    const hasSecurityPost = input.hasSecurityPost ?? false;
+    const serverRoomResult = calculateServerRoom(totalCamerasAll, hasIntercom, hasSecurityPost);
+    serverRows.push(...serverRoomResult.rows);
     const serverSubtotal = serverRows.reduce((a, r) => a + r.sum, 0);
     groups.push({ title: 'Серверное оборудование', rows: serverRows, subtotal: serverSubtotal, system: 'cctv' });
   }
 
   const patchCordCost = patchCordCount * patchCordConfig.priceKzt;
   const cableCctvGroup = groups.find((g) => g.title === 'Кабельная продукция (видеонаблюдение)');
-  if (cableCctvGroup && patchCordCount > 0) {
+  if (cableCctvGroup && patchCordCount > 0 && totalCamerasAll > 0) {
     cableCctvGroup.rows.push({
       name: patchCordConfig.label,
       qty: patchCordCount,

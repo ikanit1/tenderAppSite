@@ -111,7 +111,26 @@ export const switchConfigs = {
   poe_24port: { name: 'WK-PS227GF', priceKzt: 69_500, ports: 24 },
 } as const;
 
-/** Серверный шкаф (КП №14-26): один на объект */
+/** Уровни серверного оборудования по масштабу объекта */
+
+/** Уровень 1: малый объект (1–20 камер, без домофонии) — настенный монтаж, малый ИБП */
+export const serverRoomTier1 = {
+  rack: null as { name: string; priceKzt: number } | null,
+  accessories: null as { fan: number; organizer: number; pdu: number } | null,
+  ups: { name: 'ИБП 600 ВА (настенный)', priceKzt: 40_000 },
+  monitor: null as { name: string; priceKzt: number } | null,
+  note: 'Настенный монтаж на DIN-рейку или мини-бокс',
+} as const;
+
+/** Уровень 2: средний объект (21–60 камер или есть домофония) — стойка 9U, ИБП 1.5 кВА */
+export const serverRoomTier2 = {
+  rack: { name: 'Стойка настенная 9U', priceKzt: 45_000 },
+  accessories: { fan: 1, organizer: 1, pdu: 1 },
+  ups: { name: 'ИБП 1.5 кВА', priceKzt: 95_000 },
+  monitor: null as { name: string; priceKzt: number } | null,
+} as const;
+
+/** Уровень 3: крупный объект (60+ камер) — напольная стойка 27U, ИБП 3 кВА, монитор по опции */
 export const rackConfig = {
   model: 'SHIP 601S.6027.24.100',
   name: 'SHIP 601S.6027.24.100',

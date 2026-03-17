@@ -31,6 +31,7 @@ const defaultInputs: CalculatorInputs = {
   archiveSettings: { months: 1, recordingType: 'continuous' },
   storageDays: 30,
   hasPatchPanel: false,
+  hasSecurityPost: false,
   cableSettings: {
     useManualLength: false,
     manualLengthPerCamera: undefined,
@@ -63,7 +64,7 @@ export interface CalculatorState {
 export const useCalculatorStore = create<CalculatorState & {
   setStep: (s: number) => void;
   setInputs: (inputs: CalculatorInputs) => void;
-  setObjectParams: (p: { totalFlats?: number; entrances?: number; floors?: number }) => void;
+  setObjectParams: (p: { entrances?: number; floors?: number; flatsPerFloor?: number }) => void;
   setObjectType: (t: ObjectType) => void;
   setCameraCount: (key: keyof CameraCounts, delta: number) => void;
   setElevator: (count: number, type?: '2mp' | '4mp') => void;
@@ -97,17 +98,18 @@ export const useCalculatorStore = create<CalculatorState & {
 
     setObjectParams: (p) => {
       const { inputs } = get();
-      const entrances = p.entrances ?? inputs.intercom.entrances;
-      const floors = p.floors ?? inputs.intercom.floorsPerEntrance;
-      const totalFlats = p.totalFlats ?? entrances * floors * inputs.intercom.flatsPerFloor;
-      const flatsPerFloor = entrances > 0 && floors > 0
-        ? Math.max(1, Math.round(totalFlats / (entrances * floors)))
-        : inputs.intercom.flatsPerFloor;
+      const prev = inputs.intercom;
+      const entrances = p.entrances ?? prev.entrances;
+      const floors = p.floors ?? prev.floorsPerEntrance;
+      const flatsPerFloor =
+        p.flatsPerFloor !== undefined && p.flatsPerFloor !== null
+          ? Math.max(1, Math.min(50, p.flatsPerFloor))
+          : prev.flatsPerFloor;
       set({
         inputs: {
           ...inputs,
           intercom: {
-            ...inputs.intercom,
+            ...prev,
             entrances,
             floorsPerEntrance: floors,
             flatsPerFloor,

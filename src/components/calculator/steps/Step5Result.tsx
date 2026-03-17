@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useCalculatorStore } from '@/store/calculatorStore';
+import { stepSectionVariants } from '@/shared/animations/sectionReveal';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlowButton } from '@/components/ui/GlowButton';
 import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
@@ -34,6 +35,7 @@ function buildSummaryText(input: CalculatorInputs, result: CalculatorResult): st
 }
 
 export function Step5Result() {
+  const reduceMotion = useReducedMotion();
   const result = useCalculatorStore((s) => s.result);
   const inputs = useCalculatorStore((s) => s.inputs);
   const setStep = useCalculatorStore((s) => s.setStep);
@@ -123,7 +125,13 @@ export function Step5Result() {
   };
 
   return (
-    <motion.div className={styles.wrap} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+    <motion.div
+      className={styles.wrap}
+      variants={reduceMotion ? undefined : stepSectionVariants}
+      initial="hidden"
+      animate="visible"
+      exit={{ opacity: 0 }}
+    >
       <h2 className={styles.title}>Итоговая смета</h2>
       <GlassCard className={styles.totalCard}>
         <div className={styles.totalLabel}>Итого по проекту</div>

@@ -452,6 +452,14 @@
     margin-top: 0.25rem;
 }
 
+.rowPurpose {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin-top: 0.2rem;
+    font-style: italic;
+    line-height: var(--leading-normal);
+}
+
 .totalBlock {
     margin-top: 1.5rem;
     background: var(--content-block-bg);

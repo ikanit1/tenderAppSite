@@ -2,65 +2,21 @@ import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { servicesList } from '@/shared/content/services';
 import { Button } from '@/shared/ui/Button/Button';
+import {
+  viewportReveal,
+  sectionVariants,
+  headerVariants,
+  gridVariants,
+  cardVariants,
+  itemVariants,
+} from '@/shared/animations/sectionReveal';
 import styles from './ServicesSection.module.css';
-
-const sectionVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05,
-      delayChildren: 0.05,
-    },
-  },
-};
-
-const headerVariants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { type: 'spring' as const, stiffness: 280, damping: 22 },
-  },
-};
-
-const gridVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.06,
-      delayChildren: 0.1,
-    },
-  },
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 28 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { type: 'spring' as const, stiffness: 260, damping: 22 },
-  },
-};
 
 const listVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.04,
-      delayChildren: 0.12,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, x: -12 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: { type: 'spring' as const, stiffness: 300, damping: 24 },
+    transition: { staggerChildren: 0.04, delayChildren: 0.12 },
   },
 };
 
@@ -78,7 +34,7 @@ export function ServicesSection({ fullPage }: ServicesSectionProps) {
       variants={reduceMotion ? undefined : sectionVariants}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, margin: '0px', amount: 0.05 }}
+      viewport={viewportReveal}
     >
       <motion.div className={styles.container} variants={reduceMotion ? undefined : sectionVariants}>
         <motion.h2 id="services-heading" className={styles.heading} variants={reduceMotion ? undefined : headerVariants}>
