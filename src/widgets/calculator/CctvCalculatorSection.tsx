@@ -1,13 +1,11 @@
 import { useState, useMemo, useRef } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
-  cameraTypes,
-  hddConfig,
   calculatorContact,
   pdfConfig,
 } from '@/shared/content/calculatorConfig';
 import {
-  type CalculatorInputs,
+  type BuildingParams,
   type CalculatorResult,
   calculateResult,
 } from '@/widgets/calculator/calculatorLogic';
@@ -23,12 +21,30 @@ import styles from './CctvCalculatorSection.module.css';
 
 const formatKzt = (n: number) => n.toLocaleString('ru-RU') + ' ₸';
 
-/** Тарифы абонентской платы (₸/мес с квартиры) */
-const TARIFF_INTERCOM_PER_FLAT = 700;
+/** Тариф абонентской платы видеонаблюдения (₸/мес с квартиры) */
 const TARIFF_CCTV_PER_FLAT = 900;
 
 /** Маппинг: подстрока row.name → артикул модели из portal_export. Изображения через API каталога. */
 const deviceModelMap: Record<string, string> = {
+  // Позиции калькулятора видеонаблюдения (название — модель в row.name), изображения из portal_export
+  'IPC-3612-APF28': 'IPC-3612-APF28E',
+  'IPC-2122-APF28': 'IPC-2122-APF28',
+  'PKC2630@Z28-IR-P': 'PKC2630@Z28-IR-P',
+  'IPC-324-PF28': 'IPC-324-PF28',
+  'WK-WB08-KIT': 'WK-WB08-KIT',
+  'NVR501-16B': 'NVR501-16B',
+  'NVR-302-32-IQ': 'NVR-302-32-IQ',
+  'NVR-508-48-E': 'NVR-508-64-E',
+  'NVR-508-64-E': 'NVR-508-64-E',
+  'NVR508-128E-R': 'NVR508-128E-R',
+  'NSW2100-9GT1GP-POE-IN': 'NSW2100-9GT1GP-POE-IN',
+  'WK-PS320GF': 'WK-PS320GF',
+  'WK-PS328GF': 'WK-PS328GF',
+  'WI-PCMS554F-L3 V2': 'WI-PCMS554F-L3 V2',
+  'SEAGATE HDD SkyHawkAI': 'ST10000VE000',
+  'Жёсткий диск 10 ТБ': 'ST10000VE000',
+  'Патч-панель 19"': 'PP24-1UC5EU-D05-1',
+  'Кабель UTP Cat5e': 'CAB-LC2110B-IN',
   'Уличная цилиндрическая 2MP': 'IPC-2122-APF28',
   'Уличная цилиндрическая': 'IPC-2122-APF28',
   'Внутренняя купольная 2MP': 'IPC-3612-APF28-DL',
@@ -39,8 +55,6 @@ const deviceModelMap: Record<string, string> = {
   'Лифтовая камера 2MP': 'IPC-3612-APF28-DL',
   'Лифтовая камера 4MP': 'IPC-324-PF28',
   'Лифтовая камера': 'IPC-3612-APF28-DL',
-  'IPC-324-PF28': 'IPC-324-PF28',
-  'WK-WB08-KIT': 'WK-WB08-KIT',
   'WK-WB08': 'WK-WB08-KIT',
   'WK-PS227GF': 'WK-PS227GF',
   'WK-PS216GF': 'WK-PS216GF',
@@ -87,7 +101,13 @@ const deviceLocalImageMap: Record<string, string> = {
   'Вызывная панель (вход)': '/oeu-301s-hmka.jpg',
   'Вызывная панель IP': '/oeu-301s-hmka.jpg',
   'Стойка настенная 9U': '/docs/stoika.jpg',
+  'Монтажный шкаф напольный 19" 27U': '/docs/shkaf-27u.jpg',
+  'SHIP 601S.6027.24.100': '/docs/shkaf-27u.jpg',
+  'ИБП онлайн 3000 ВА': '/docs/ibp-3kva.jpg',
+  'LRT-3KL-LCD': '/docs/ibp-3kva.jpg',
+  'Вентиляторная панель с термостатом': '/docs/vent.jpg',
   'SHIP 700402112T': '/docs/vent.jpg',
+  'SHIP 700402112Т': '/docs/vent.jpg',
   'SHIP 700508102': '/docs/setevoifilt.jpg',
 };
 
@@ -113,18 +133,14 @@ const cardVariants = {
   visible: { opacity: 1, y: 0, transition: { type: 'spring' as const, stiffness: 280, damping: 22 } },
 };
 
-function buildSummaryText(input: CalculatorInputs, result: CalculatorResult): string {
-  const ct = input.cameraTypes;
+function buildSummaryText(params: BuildingParams, result: CalculatorResult): string {
   const lines: string[] = [
-    'Расчёт с калькулятора видеонаблюдения и домофонии (grgroup.kz)',
+    'Расчёт с калькулятора видеонаблюдения (grgroup.kz)',
     '',
     '── Параметры ──',
-    `Камеры: уличные 2MP ${ct.outdoor2mp}, внутр. 2MP ${ct.indoor2mp}, внутр. 4MP ${ct.indoor4mp}, опоз. номерного знака ${ct.anpr3mp}`,
-    `Лифты: ${input.elevatorCount} шт., тип ${input.elevatorCameraType}`,
-    `Видеоаналитика: ${input.videoAnalytics ? 'да' : 'нет'}`,
-    `Архив: ${input.archiveSettings.months} мес., запись: ${(input.videoAnalytics ? 'continuous' : input.archiveSettings.recordingType) === 'continuous' ? 'постоянная' : 'по движению'}`,
-    'Кабель: по этажным POE-коммутаторам',
-    `Домофония: подъездов ${input.intercom.entrances}, этажей ${input.intercom.floorsPerEntrance}, квартир на этаже ${input.intercom.flatsPerFloor}; въездная группа ${input.intercom.carEntrance.enabled ? `да (калитки ${input.intercom.carEntrance.gates}, паркинг ${input.intercom.carEntrance.parking})` : 'нет'}, консьерж ${input.intercom.hasConcierge ? 'да' : 'нет'}`,
+    `Подъездов: ${params.entrances}, этажей: ${params.floors}, лифтов: ${params.elevators}`,
+    `Калитки: ${params.yardGates}, паркинг: ${params.hasParking ? `да, ${params.parkingGates} въезд(ов)` : 'нет'}`,
+    `Охват: ${params.coverageType === 'whole_building' ? 'весь дом' : 'только входные группы'}${params.coverageType === 'whole_building' ? `, ${params.twoCamerasPerFloor ? '2' : '1'} камеры на этаж` : ''}, камеры в лифтах: ${params.hasCamerasInLifts ? 'да' : 'нет'}`,
     '',
     '── Смета по группам ──',
   ];
@@ -258,7 +274,7 @@ export function CctvCalculatorSection() {
   const formTopRef = useRef<HTMLDivElement>(null);
   const pdfContentRef = useRef<HTMLDivElement>(null);
 
-  const { inputs, setInputs, reset: resetCalculator } = usePersistedCalculator();
+  const { params, setParams, reset: resetCalculator } = usePersistedCalculator();
   const [modalOpen, setModalOpen] = useState(false);
   const [submitName, setSubmitName] = useState('');
   const [submitPhone, setSubmitPhone] = useState('');
@@ -266,13 +282,12 @@ export function CctvCalculatorSection() {
   const [submitSending, setSubmitSending] = useState(false);
   const [flatCount, setFlatCount] = useState(0);
 
-  const result = useMemo(() => calculateResult(inputs), [inputs]);
-  const derivedFlats = inputs.intercom.entrances * inputs.intercom.floorsPerEntrance * inputs.intercom.flatsPerFloor || 0;
+  const result = useMemo(() => calculateResult(params), [params]);
+  const derivedFlats = result?.totalFlats ?? 0;
   const apartments = flatCount > 0 ? flatCount : derivedFlats;
-  const hasIntercom = (result?.totalIntercom ?? 0) > 0 || (inputs.intercom.entrances > 0 || inputs.intercom.carEntrance.enabled);
   const hasCctv = (result?.totalCameras ?? 0) > 0;
-  const intercomMonthly = hasIntercom ? apartments * TARIFF_INTERCOM_PER_FLAT : 0;
-  const cctvMonthly = hasCctv ? apartments * TARIFF_CCTV_PER_FLAT : 0;
+  const intercomMonthly = 0;
+  const cctvMonthly = hasCctv && apartments > 0 ? apartments * TARIFF_CCTV_PER_FLAT : 0;
   const totalSubscriptionMonthly = intercomMonthly + cctvMonthly;
   const paybackMonths = result && totalSubscriptionMonthly > 0
     ? Math.round((result.grandTotal / totalSubscriptionMonthly) * 10) / 10
@@ -299,7 +314,7 @@ export function CctvCalculatorSection() {
         phone,
         email: submitEmail.trim() || undefined,
         projectType: 'calculator',
-        message: buildSummaryText(inputs, result),
+        message: buildSummaryText(params, result),
       });
       show('Заявка отправлена. Мы свяжемся с вами в ближайшее время.');
       setModalOpen(false);
@@ -329,392 +344,106 @@ export function CctvCalculatorSection() {
           Рассчитайте примерную стоимость системы по вашим параметрам
         </motion.p>
 
-        {/* Параметры объекта */}
+        {/* Расчет видеонаблюдения ЖК */}
+        {/* Форма: параметры здания (BuildingParams) */}
         <motion.div className={styles.formCard} variants={reduceMotion ? undefined : cardVariants} initial="visible" animate="visible">
           <div className={styles.formTitle}>
             <span className={styles.formTitleIcon}>🏢</span>
-            Параметры объекта
+            Расчет видеонаблюдения ЖК
           </div>
           <div className={styles.inputsGrid}>
             <div className={styles.inputGroup}>
-              <label htmlFor="calc-object-name" className={styles.inputLabel}>Адрес / Название</label>
+              <label htmlFor="calc-entrances" className={styles.inputLabel}>Подъездов</label>
               <input
-                id="calc-object-name"
-                type="text"
+                id="calc-entrances"
                 className={styles.input}
-                placeholder="Необязательно"
-                value={inputs.objectNameOrAddress ?? ''}
-                onChange={(e) => setInputs((p) => ({ ...p, objectNameOrAddress: e.target.value }))}
+                {...numericInputProps(params.entrances, (val) => setParams((p) => ({ ...p, entrances: Math.max(1, val) })), { max: 50 })}
               />
             </div>
-          </div>
-        </motion.div>
-
-        {/* Блок: Камеры видеонаблюдения */}
-        <motion.div className={styles.formCard} variants={reduceMotion ? undefined : cardVariants} initial="visible" animate="visible">
-          <div className={styles.formTitle}>
-            <span className={styles.formTitleIcon}>📹</span>
-            Камеры видеонаблюдения
-          </div>
-          <div className={styles.cameraList}>
-            <div className={styles.cameraRow}>
-              <span className={styles.cameraLabel}>{cameraTypes.outdoor2mp.label}</span>
+            <div className={styles.inputGroup}>
+              <label htmlFor="calc-floors" className={styles.inputLabel}>Этажей</label>
               <input
+                id="calc-floors"
                 className={styles.input}
-                aria-label={cameraTypes.outdoor2mp.label}
-                {...numericInputProps(inputs.cameraTypes.outdoor2mp, (val) =>
-                  setInputs((p) => ({ ...p, cameraTypes: { ...p.cameraTypes, outdoor2mp: val } })),
-                  { max: 999 },
-                )}
+                {...numericInputProps(params.floors, (val) => setParams((p) => ({ ...p, floors: Math.max(1, val) })), { max: 30 })}
               />
             </div>
-            <div className={styles.cameraRow}>
-              <span className={styles.cameraLabel}>{cameraTypes.indoor2mp.label}</span>
+            <div className={styles.inputGroup}>
+              <label htmlFor="calc-elevators" className={styles.inputLabel}>Лифтов</label>
               <input
+                id="calc-elevators"
                 className={styles.input}
-                aria-label={cameraTypes.indoor2mp.label}
-                {...numericInputProps(inputs.cameraTypes.indoor2mp, (val) =>
-                  setInputs((p) => ({ ...p, cameraTypes: { ...p.cameraTypes, indoor2mp: val } })),
-                  { max: 999 },
-                )}
+                {...numericInputProps(params.elevators, (val) => setParams((p) => ({ ...p, elevators: Math.max(0, val) })), { max: 20 })}
               />
             </div>
-            <div className={styles.cameraRow}>
-              <span className={styles.cameraLabel}>{cameraTypes.indoor4mp.label}</span>
+            <div className={styles.inputGroup}>
+              <label htmlFor="calc-yard-gates" className={styles.inputLabel}>Дворовые калитки</label>
               <input
+                id="calc-yard-gates"
                 className={styles.input}
-                aria-label={cameraTypes.indoor4mp.label}
-                {...numericInputProps(inputs.cameraTypes.indoor4mp, (val) =>
-                  setInputs((p) => ({ ...p, cameraTypes: { ...p.cameraTypes, indoor4mp: val } })),
-                  { max: 999 },
-                )}
-              />
-            </div>
-            <div className={styles.cameraRow}>
-              <span className={styles.cameraLabel}>{cameraTypes.anpr3mp.label}</span>
-              <input
-                className={styles.input}
-                aria-label={cameraTypes.anpr3mp.label}
-                {...numericInputProps(inputs.cameraTypes.anpr3mp, (val) =>
-                  setInputs((p) => ({ ...p, cameraTypes: { ...p.cameraTypes, anpr3mp: val } })),
-                  { max: 999 },
-                )}
+                {...numericInputProps(params.yardGates, (val) => setParams((p) => ({ ...p, yardGates: Math.max(0, val) })), { max: 20 })}
               />
             </div>
           </div>
           <label className={styles.checkboxLabel}>
             <input
               type="checkbox"
-              checked={inputs.videoAnalytics}
-              onChange={(e) => setInputs((p) => ({ ...p, videoAnalytics: e.target.checked }))}
+              checked={params.hasParking}
+              onChange={(e) => setParams((p) => ({ ...p, hasParking: e.target.checked }))}
             />
-            <span>Видеоаналитика {inputs.videoAnalytics ? 'ВКЛ' : 'ВЫКЛ'}</span>
+            <span>Есть паркинг (въезд/шлагбаум)</span>
           </label>
-          {inputs.videoAnalytics && (
-            <p className={styles.hint}>Подключает NVR824-256R на 256 каналов (+4 834 500 ₸)</p>
+          {params.hasParking && (
+            <div className={styles.inputGroup} style={{ marginTop: 8 }}>
+              <label htmlFor="calc-parking-gates" className={styles.inputLabel}>Въездов / шлагбаумов паркинга</label>
+              <input
+                id="calc-parking-gates"
+                className={styles.input}
+                {...numericInputProps(params.parkingGates, (val) => setParams((p) => ({ ...p, parkingGates: Math.max(0, val) })), { max: 20 })}
+              />
+            </div>
           )}
-        </motion.div>
-
-        {/* Блок: Лифтовые камеры */}
-        <motion.div className={styles.formCard} variants={reduceMotion ? undefined : cardVariants} initial="visible" animate="visible">
-          <div className={styles.formTitle}>
-            <span className={styles.formTitleIcon}>🛗</span>
-            Лифтовые камеры (с радиомостом)
-          </div>
-          <div className={styles.inputsGrid}>
-            <div className={styles.inputGroup}>
-              <label htmlFor="calc-elevators" className={styles.inputLabel}>
-                Количество лифтов
+          <div className={styles.inputGroup} style={{ marginTop: 12 }}>
+            <span className={styles.inputLabel}>Охват видеонаблюдением</span>
+            <div className={styles.radioGroup}>
+              <label className={styles.radioLabel}>
+                <input
+                  type="radio"
+                  name="coverageType"
+                  checked={params.coverageType === 'entrance_only'}
+                  onChange={() => setParams((p) => ({ ...p, coverageType: 'entrance_only' }))}
+                />
+                <span>Только входные группы</span>
               </label>
-              <input
-                id="calc-elevators"
-                className={styles.input}
-                {...numericInputProps(inputs.elevatorCount, (val) =>
-                  setInputs((p) => ({ ...p, elevatorCount: val })), { max: 999 })}
-              />
-            </div>
-            <div className={styles.inputGroup}>
-              <span className={styles.inputLabel}>Тип камеры</span>
-              <div className={styles.radioGroup}>
-                <label className={styles.radioLabel}>
-                  <input
-                    type="radio"
-                    name="elevatorType"
-                    checked={inputs.elevatorCameraType === '2mp'}
-                    onChange={() => setInputs((p) => ({ ...p, elevatorCameraType: '2mp' }))}
-                  />
-                  <span>2MP</span>
-                </label>
-                <label className={styles.radioLabel}>
-                  <input
-                    type="radio"
-                    name="elevatorType"
-                    checked={inputs.elevatorCameraType === '4mp'}
-                    onChange={() => setInputs((p) => ({ ...p, elevatorCameraType: '4mp' }))}
-                  />
-                  <span>4MP</span>
-                </label>
-              </div>
+              <label className={styles.radioLabel}>
+                <input
+                  type="radio"
+                  name="coverageType"
+                  checked={params.coverageType === 'whole_building'}
+                  onChange={() => setParams((p) => ({ ...p, coverageType: 'whole_building' }))}
+                />
+                <span>Весь дом</span>
+              </label>
             </div>
           </div>
-          {inputs.elevatorCameraType === '4mp' && (
-            <figure className={styles.elevatorProductFigure}>
-              <img
-                src="https://grgroup.kz/catalog/api/products/IPC-324-PF28/image?index=0"
-                alt="IPC-324-PF28"
-                className={styles.elevatorProductImage}
-              />
-              <figcaption className={styles.elevatorProductCaption}>
-                Лифтовая камера — IPC-324-PF28 (лифт 4MP)
-              </figcaption>
-            </figure>
-          )}
-        </motion.div>
-
-        {/* Блок: Домофония */}
-        <motion.div className={styles.formCard} variants={reduceMotion ? undefined : cardVariants} initial="visible" animate="visible">
-          <div className={styles.formTitle}>
-            <span className={styles.formTitleIcon}>🚪</span>
-            Домофония
-          </div>
-          <div className={styles.inputsGrid}>
-            <div className={styles.inputGroup}>
-              <label htmlFor="calc-entrances" className={styles.inputLabel}>
-                Количество подъездов
-              </label>
-              <input
-                id="calc-entrances"
-                className={styles.input}
-                {...numericInputProps(inputs.intercom.entrances, (val) =>
-                  setInputs((p) => ({ ...p, intercom: { ...p.intercom, entrances: val } })), { max: 99 })}
-              />
-            </div>
-            <div className={styles.inputGroup}>
-              <label htmlFor="calc-floors" className={styles.inputLabel}>
-                Этажей в подъезде
-              </label>
-              <input
-                id="calc-floors"
-                className={styles.input}
-                {...numericInputProps(inputs.intercom.floorsPerEntrance, (val) =>
-                  setInputs((p) => ({ ...p, intercom: { ...p.intercom, floorsPerEntrance: val } })), { max: 99 })}
-              />
-            </div>
-            <div className={styles.inputGroup}>
-              <label htmlFor="calc-flats" className={styles.inputLabel}>
-                Квартир на этаже
-              </label>
-              <input
-                id="calc-flats"
-                className={styles.input}
-                {...numericInputProps(inputs.intercom.flatsPerFloor, (val) =>
-                  setInputs((p) => ({ ...p, intercom: { ...p.intercom, flatsPerFloor: val || 4 } })),
-                  { max: 99, emptyBlurValue: 4 })}
-              />
-            </div>
-            <div className={styles.inputGroup}>
-              <label htmlFor="calc-extra-readers" className={styles.inputLabel}>
-                Доп. интерком панели для квартир
-              </label>
-              <input
-                id="calc-extra-readers"
-                className={styles.input}
-                {...numericInputProps(inputs.intercom.extraCardReaders ?? 0, (val) =>
-                  setInputs((p) => ({ ...p, intercom: { ...p.intercom, extraCardReaders: val } })))}
-              />
-            </div>
+          {params.coverageType === 'whole_building' && (
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
-                checked={inputs.intercom.carEntrance.enabled}
-                onChange={(e) =>
-                  setInputs((p) => ({
-                    ...p,
-                    intercom: {
-                      ...p.intercom,
-                      carEntrance: {
-                        ...p.intercom.carEntrance,
-                        enabled: e.target.checked,
-                      },
-                    },
-                  }))
-                }
+                checked={params.twoCamerasPerFloor}
+                onChange={(e) => setParams((p) => ({ ...p, twoCamerasPerFloor: e.target.checked }))}
               />
-              <span>Въездная группа (домофон на шлагбаум/ворота)</span>
+              <span>2 камеры на этаж</span>
             </label>
-            {inputs.intercom.carEntrance.enabled && (
-              <div className={styles.carEntranceDetails}>
-                <div className={styles.fieldRow}>
-                  <label className={styles.inputLabel}>Количество входов</label>
-                  <input
-                    className={styles.input}
-                    {...numericInputProps(inputs.intercom.carEntrance.entranceCount ?? 0, (val) =>
-                      setInputs((p) => ({
-                        ...p,
-                        intercom: {
-                          ...p.intercom,
-                          carEntrance: { ...p.intercom.carEntrance, entranceCount: val },
-                        },
-                      })))}
-                  />
-                </div>
-                <div className={styles.fieldRow}>
-                  <label className={styles.inputLabel}>Калитки</label>
-                  <input
-                    className={styles.input}
-                    {...numericInputProps(inputs.intercom.carEntrance.gates, (val) =>
-                      setInputs((p) => ({
-                        ...p,
-                        intercom: {
-                          ...p.intercom,
-                          carEntrance: { ...p.intercom.carEntrance, gates: val },
-                        },
-                      })))}
-                  />
-                </div>
-                <div className={styles.fieldRow}>
-                  <label className={styles.inputLabel}>Въезды в паркинг</label>
-                  <input
-                    className={styles.input}
-                    {...numericInputProps(inputs.intercom.carEntrance.parking, (val) =>
-                      setInputs((p) => ({
-                        ...p,
-                        intercom: {
-                          ...p.intercom,
-                          carEntrance: { ...p.intercom.carEntrance, parking: val },
-                        },
-                      })))}
-                  />
-                </div>
-              </div>
-            )}
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={inputs.intercom.hasConcierge}
-                onChange={(e) => setInputs((p) => ({ ...p, intercom: { ...p.intercom, hasConcierge: e.target.checked } }))}
-              />
-              <span>Пост консьержа</span>
-            </label>
-          </div>
-        </motion.div>
-
-        {/* Блок: Хранение данных (ТЗ п.2 — пресеты 1/2/3 месяца) */}
-        <motion.div className={styles.formCard} variants={reduceMotion ? undefined : cardVariants} initial="visible" animate="visible">
-          <div className={styles.formTitle}>
-            <span className={styles.formTitleIcon}>📅</span>
-            Хранение архива
-          </div>
-          <div className={styles.inputGroup}>
-            <span className={styles.inputLabel}>Срок хранения</span>
-            <div className={styles.radioGroup}>
-              <label className={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="storageDays"
-                  checked={(inputs.storageDays ?? 30) === 30}
-                  onChange={() => setInputs((p) => ({ ...p, storageDays: 30, archiveSettings: { ...p.archiveSettings, months: 1 } }))}
-                />
-                <span>1 месяц</span>
-              </label>
-              <label className={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="storageDays"
-                  checked={(inputs.storageDays ?? 30) === 60}
-                  onChange={() => setInputs((p) => ({ ...p, storageDays: 60, archiveSettings: { ...p.archiveSettings, months: 2 } }))}
-                />
-                <span>2 месяца</span>
-              </label>
-              <label className={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="storageDays"
-                  checked={(inputs.storageDays ?? 30) === 90}
-                  onChange={() => setInputs((p) => ({ ...p, storageDays: 90, archiveSettings: { ...p.archiveSettings, months: 3 } }))}
-                />
-                <span>3 месяца</span>
-              </label>
-            </div>
-            {result && result.totalCameras > 0 && result.storageTotalTb != null && result.hddCount > 0 && (
-              <p className={styles.hint}>
-                Необходимо {result.storageTotalTb.toFixed(1)} ТБ → {result.hddCount} дисков × {hddConfig.priceKzt.toLocaleString('ru-RU')} ₸ = {formatKzt((result.groups.find((g) => g.title === 'Хранение данных')?.subtotal) ?? 0)}
-              </p>
-            )}
-          </div>
-          <div className={styles.inputGroup}>
-            <span className={styles.inputLabel}>Тип записи</span>
-            <div className={styles.radioGroup}>
-              <label className={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="recordingType"
-                  checked={inputs.videoAnalytics || inputs.archiveSettings.recordingType === 'continuous'}
-                  disabled={inputs.videoAnalytics}
-                  onChange={() => setInputs((p) => ({ ...p, archiveSettings: { ...p.archiveSettings, recordingType: 'continuous' } }))}
-                />
-                <span>Постоянная</span>
-              </label>
-              <label className={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="recordingType"
-                  checked={!inputs.videoAnalytics && inputs.archiveSettings.recordingType === 'motion'}
-                  disabled={inputs.videoAnalytics}
-                  onChange={() => setInputs((p) => ({ ...p, archiveSettings: { ...p.archiveSettings, recordingType: 'motion' } }))}
-                />
-                <span>По движению</span>
-              </label>
-            </div>
-            {inputs.videoAnalytics && (
-              <span className={styles.hint}>Видеоаналитика требует постоянной записи</span>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Блок: Серверное оборудование — опции (ТЗ п.1) */}
-        <motion.div className={styles.formCard} variants={reduceMotion ? undefined : cardVariants} initial="visible" animate="visible">
-          <div className={styles.formTitle}>
-            <span className={styles.formTitleIcon}>🖥️</span>
-            Серверное оборудование
-          </div>
-          <div className={styles.inputGroup}>
-            <span className={styles.inputLabel}>Патч-панель в стойке</span>
-            <div className={styles.radioGroup}>
-              <label className={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="hasPatchPanel"
-                  checked={!(inputs.hasPatchPanel ?? false)}
-                  onChange={() => setInputs((p) => ({ ...p, hasPatchPanel: false }))}
-                />
-                <span>Нет (прямое подключение)</span>
-              </label>
-              <label className={styles.radioLabel}>
-                <input
-                  type="radio"
-                  name="hasPatchPanel"
-                  checked={inputs.hasPatchPanel ?? false}
-                  onChange={() => setInputs((p) => ({ ...p, hasPatchPanel: true }))}
-                />
-                <span>Да (профессиональная инсталляция)</span>
-              </label>
-            </div>
-            <p className={styles.hint}>
-              {inputs.hasPatchPanel ? 'Патч-панели и патч-корды камера×1 + NVR×4 в смете' : 'Только межоборудовательные патч-корды (экономия)'}
-            </p>
-          </div>
-          <div className={styles.inputGroup}>
-            <label className={styles.radioLabel}>
-              <input
-                type="checkbox"
-                checked={inputs.hasSecurityPost ?? false}
-                onChange={(e) => setInputs((p) => ({ ...p, hasSecurityPost: e.target.checked }))}
-              />
-              <span>Есть пост охраны (монитор в смете)</span>
-            </label>
-            <p className={styles.hint}>Монитор добавляется только при включённой опции; на малых объектах обычно не требуется.</p>
-          </div>
+          )}
+          <label className={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              checked={params.hasCamerasInLifts}
+              onChange={(e) => setParams((p) => ({ ...p, hasCamerasInLifts: e.target.checked }))}
+            />
+            <span>Камеры в лифтах</span>
+          </label>
         </motion.div>
 
         {/* Результат по группам */}
@@ -725,164 +454,68 @@ export function CctvCalculatorSection() {
                 Результат расчёта — видеонаблюдение и домофония
               </motion.div>
 
-              {/* Карточка «Параметры объекта» */}
+              {/* Карточка «Расчет видеонаблюдения ЖК» (BuildingParams) */}
               <motion.div className={styles.paramsCard} variants={reduceMotion ? undefined : cardVariants} initial="visible" animate="visible">
-                <h3 className={styles.paramsCardTitle}>Параметры объекта</h3>
+                <h3 className={styles.paramsCardTitle}>Расчет видеонаблюдения ЖК</h3>
 
-                {/* Блок 1 — Объект */}
                 <div className={styles.paramsBlock}>
-                  <div className={styles.paramsBlockTitle}>Объект</div>
+                  <div className={styles.paramsBlockTitle}>Здание</div>
                   <div className={styles.paramsRow}>
-                    <span className={styles.paramsLabel}>Тип объекта</span>
-                    <span className={styles.paramsValueNum}>{inputs.objectType && String(inputs.objectType).trim() ? inputs.objectType : '—'}</span>
+                    <span className={styles.paramsLabel}>Подъездов</span>
+                    <span className={styles.paramsValueNum}>{params.entrances}</span>
                   </div>
-                  {(inputs.objectNameOrAddress != null && inputs.objectNameOrAddress.trim() !== '') && (
-                    <div className={styles.paramsRow}>
-                      <span className={styles.paramsLabel}>Адрес / Название</span>
-                      <span className={styles.paramsValue}>{inputs.objectNameOrAddress.trim()}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Блок 2 — Здание */}
-                {(inputs.intercom.entrances > 0 || inputs.intercom.floorsPerEntrance > 0 || inputs.intercom.flatsPerFloor > 0) && (
-                  <div className={styles.paramsBlock}>
-                    <div className={styles.paramsBlockTitle}>Здание</div>
-                    {inputs.intercom.entrances > 0 && (
-                      <div className={styles.paramsRow}>
-                        <span className={styles.paramsLabel}>Число подъездов</span>
-                        <span className={styles.paramsValueNum}>{inputs.intercom.entrances}</span>
-                      </div>
-                    )}
-                    {inputs.intercom.floorsPerEntrance > 0 && (
-                      <div className={styles.paramsRow}>
-                        <span className={styles.paramsLabel}>Этажей в подъезде</span>
-                        <span className={styles.paramsValueNum}>{inputs.intercom.floorsPerEntrance}</span>
-                      </div>
-                    )}
-                    {inputs.intercom.flatsPerFloor > 0 && (
-                      <div className={styles.paramsRow}>
-                        <span className={styles.paramsLabel}>Квартир на этаже</span>
-                        <span className={styles.paramsValueNum}>{inputs.intercom.flatsPerFloor}</span>
-                      </div>
-                    )}
-                    {(inputs.intercom.entrances > 0 && inputs.intercom.floorsPerEntrance > 0) && (
-                      <div className={styles.paramsRow}>
-                        <span className={styles.paramsLabel}>Этажей всего</span>
-                        <span className={styles.paramsValueNum}>{inputs.intercom.entrances * inputs.intercom.floorsPerEntrance}</span>
-                      </div>
-                    )}
-                    {(() => {
-                      const apartments = inputs.intercom.entrances * inputs.intercom.floorsPerEntrance * inputs.intercom.flatsPerFloor;
-                      return apartments > 0 ? (
-                        <div className={styles.paramsRow}>
-                          <span className={styles.paramsLabel}>Число квартир</span>
-                          <span className={styles.paramsValueNum}>{apartments}</span>
-                        </div>
-                      ) : null;
-                    })()}
-                    <div className={styles.paramsHint}>справочно — в смету не включаются</div>
+                  <div className={styles.paramsRow}>
+                    <span className={styles.paramsLabel}>Этажей</span>
+                    <span className={styles.paramsValueNum}>{params.floors}</span>
                   </div>
-                )}
-
-                {/* Блок 3 — Домофония */}
-                <div className={styles.paramsBlock}>
-                  <div className={styles.paramsBlockTitle}>Домофония</div>
-                  {(() => {
-                    const gates = inputs.intercom.carEntrance.enabled ? inputs.intercom.carEntrance.gates : 0;
-                    const panels = inputs.intercom.entrances + gates;
-                    if (panels > 0) {
-                      return (
-                        <div className={styles.paramsRow}>
-                          <span className={styles.paramsLabel}>Вызывных панелей</span>
-                          <span className={styles.paramsValueNum}>подъезды + калитки → {panels}</span>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
-                  {inputs.intercom.carEntrance.enabled && inputs.intercom.carEntrance.gates > 0 && (
+                  <div className={styles.paramsRow}>
+                    <span className={styles.paramsLabel}>Лифтов</span>
+                    <span className={styles.paramsValueNum}>{params.elevators}</span>
+                  </div>
+                  <div className={styles.paramsRow}>
+                    <span className={styles.paramsLabel}>Дворовые калитки</span>
+                    <span className={styles.paramsValueNum}>{params.yardGates}</span>
+                  </div>
+                  <div className={styles.paramsRow}>
+                    <span className={styles.paramsLabel}>Паркинг</span>
+                    <span className={styles.paramsValueNum}>{params.hasParking ? `да, ${params.parkingGates} въезд(ов)` : 'нет'}</span>
+                  </div>
+                  <div className={styles.paramsRow}>
+                    <span className={styles.paramsLabel}>Охват</span>
+                    <span className={styles.paramsValueNum}>{params.coverageType === 'whole_building' ? 'весь дом' : 'только входные группы'}</span>
+                  </div>
+                  {params.coverageType === 'whole_building' && (
                     <div className={styles.paramsRow}>
-                      <span className={styles.paramsLabel}>Калиток</span>
-                      <span className={styles.paramsValueNum}>{inputs.intercom.carEntrance.gates}</span>
+                      <span className={styles.paramsLabel}>Камер на этаж</span>
+                      <span className={styles.paramsValueNum}>{params.twoCamerasPerFloor ? '2' : '1'}</span>
                     </div>
                   )}
-                  {(inputs.intercom.extraCardReaders ?? 0) > 0 && (
-                    <div className={styles.paramsRow}>
-                      <span className={styles.paramsLabel}>Доп. считывателей</span>
-                      <span className={styles.paramsValueNum}>{inputs.intercom.extraCardReaders ?? 0}</span>
-                    </div>
-                  )}
-                  <div className={styles.paramsNote}>
-                    Интерком-панели в квартиры в смету не включены — приобретаются жильцами самостоятельно
+                  <div className={styles.paramsRow}>
+                    <span className={styles.paramsLabel}>Камеры в лифтах</span>
+                    <span className={styles.paramsValueNum}>{params.hasCamerasInLifts ? 'да' : 'нет'}</span>
                   </div>
                 </div>
 
-                {/* Блок 4 — Камеры */}
                 <div className={styles.paramsBlock}>
-                  <div className={styles.paramsBlockTitle}>Камеры</div>
-                  {(() => {
-                    const outdoor = inputs.cameraTypes.outdoor2mp + inputs.cameraTypes.anpr3mp;
-                    return outdoor > 0 ? (
-                      <div className={styles.paramsRow}>
-                        <span className={styles.paramsLabel}>Уличных камер</span>
-                        <span className={styles.paramsValueNum}>{outdoor}</span>
-                      </div>
-                    ) : null;
-                  })()}
-                  {(() => {
-                    const indoor = inputs.cameraTypes.indoor2mp + inputs.cameraTypes.indoor4mp;
-                    return indoor > 0 ? (
-                      <div className={styles.paramsRow}>
-                        <span className={styles.paramsLabel}>Внутренних камер</span>
-                        <span className={styles.paramsValueNum}>{indoor}</span>
-                      </div>
-                    ) : null;
-                  })()}
-                  {inputs.elevatorCount > 0 && (
-                    <div className={styles.paramsRow}>
-                      <span className={styles.paramsLabel}>Лифтовых камер</span>
-                      <span className={styles.paramsValueNum}>{inputs.elevatorCount}</span>
-                    </div>
-                  )}
+                  <div className={styles.paramsBlockTitle}>Видеонаблюдение</div>
                   {result.totalCameras > 0 && (
                     <div className={styles.paramsRow}>
                       <span className={styles.paramsLabel}>Всего камер</span>
                       <span className={styles.paramsValueNum}>{result.totalCameras}</span>
                     </div>
                   )}
-                </div>
-
-                {/* Блок 5 — Итог */}
-                <div className={styles.paramsBlock}>
-                  <div className={styles.paramsBlockTitle}>Итог</div>
-                  {(() => {
-                    const gates = inputs.intercom.carEntrance.enabled ? inputs.intercom.carEntrance.gates : 0;
-                    const apartments = inputs.intercom.entrances * inputs.intercom.floorsPerEntrance * inputs.intercom.flatsPerFloor;
-                    const intercomDevices = inputs.intercom.entrances + gates + apartments + (inputs.intercom.extraCardReaders ?? 0);
-                    return (
-                      <>
-                        {intercomDevices > 0 && (
-                          <div className={styles.paramsRow}>
-                            <span className={styles.paramsLabel}>Всего устройств домофонии</span>
-                            <span className={styles.paramsValueNum}>{intercomDevices}</span>
-                          </div>
-                        )}
-                        {result.totalCameras > 0 && (
-                          <div className={styles.paramsRow}>
-                            <span className={styles.paramsLabel}>Всего камер</span>
-                            <span className={styles.paramsValueNum}>{result.totalCameras}</span>
-                          </div>
-                        )}
-                        <div className={styles.paramsRow}>
-                          <span className={styles.paramsLabel}>Рекомендация сети</span>
-                          <span className={styles.paramsValueNum}>
-                            {intercomDevices > 500 ? 'L3+VLAN' : 'L2'}
-                          </span>
-                        </div>
-                      </>
-                    );
-                  })()}
+                  {(result.liftCameras ?? 0) > 0 && (
+                    <div className={styles.paramsRow}>
+                      <span className={styles.paramsLabel}>В т.ч. лифтовые</span>
+                      <span className={styles.paramsValueNum}>{result.liftCameras}</span>
+                    </div>
+                  )}
+                  {result.totalCableMeters != null && result.totalCableMeters > 0 && (
+                    <div className={styles.paramsRow}>
+                      <span className={styles.paramsLabel}>Кабель, м</span>
+                      <span className={styles.paramsValueNum}>{result.totalCableMeters}</span>
+                    </div>
+                  )}
                 </div>
 
                 <p className={styles.paramsFooter}>
@@ -928,7 +561,6 @@ export function CctvCalculatorSection() {
                             </td>
                             <td>
                               <span className={styles.rowName}>{row.name}</span>
-                              {row.note && <div className={styles.rowNote}>{row.note}</div>}
                               {row.unitPrice != null && itemPurposes[row.name] && (
                                 <div className={styles.rowPurpose}>💡 {itemPurposes[row.name]}</div>
                               )}
@@ -948,22 +580,6 @@ export function CctvCalculatorSection() {
               ))}
 
 
-              {(result.totalCctv != null || result.totalIntercom != null) && (
-                <motion.div className={styles.totalBlock} variants={reduceMotion ? undefined : cardVariants} initial="visible" animate="visible">
-                  {result.totalCctv != null && result.totalCctv > 0 && (
-                    <div className={styles.totalRow}>
-                      <span>Итого CCTV</span>
-                      <strong>{formatKzt(result.totalCctv)}</strong>
-                    </div>
-                  )}
-                  {result.totalIntercom != null && result.totalIntercom > 0 && (
-                    <div className={styles.totalRow}>
-                      <span>Итого Домофония</span>
-                      <strong>{formatKzt(result.totalIntercom)}</strong>
-                    </div>
-                  )}
-                </motion.div>
-              )}
               <motion.div className={styles.totalBlock} variants={reduceMotion ? undefined : cardVariants} initial="visible" animate="visible">
                 <div className={styles.totalRow}>
                   <span>Оборудование</span>
@@ -973,33 +589,19 @@ export function CctvCalculatorSection() {
                   <span>Расходные материалы</span>
                   <strong>{formatKzt(result.consumables ?? 0)}</strong>
                 </div>
-                {(result.installation.workCctv ?? 0) > 0 && (
-                  <div className={styles.totalRow}>
-                    <span>Работы CCTV</span>
-                    <strong>{formatKzt(result.installation.workCctv ?? 0)}</strong>
+                {result.installation.breakdown.map((b) => (
+                  <div key={b.name} className={styles.totalRow}>
+                    <span>{b.name}</span>
+                    <strong>{formatKzt(b.sum)}</strong>
                   </div>
-                )}
-                {(result.installation.workIntercom ?? 0) > 0 && (
-                  <div className={styles.totalRow}>
-                    <span>Работы Домофония</span>
-                    <strong>{formatKzt(result.installation.workIntercom ?? 0)}</strong>
-                  </div>
-                )}
-                <div className={styles.totalRow}>
-                  <span>Пусконаладка</span>
-                  <strong>{formatKzt(result.installation.commissioning ?? 0)}</strong>
-                </div>
-                <div className={styles.totalRow}>
-                  <span>Монтаж кабеля</span>
-                  <strong>{formatKzt(result.installation.cableInstall ?? 0)}</strong>
-                </div>
+                ))}
                 <div className={styles.totalRowHighlight}>
                   <span>ИТОГО ПО ПРОЕКТУ</span>
                   <strong>{formatKzt(result.grandTotal)}</strong>
                 </div>
               </motion.div>
 
-              {result.grandTotal > 0 && (hasIntercom || hasCctv) && (
+              {result.grandTotal > 0 && hasCctv && (
                 <motion.div className={styles.subscriptionBlock} variants={reduceMotion ? undefined : cardVariants} initial="visible" animate="visible">
                   <h4 className={styles.subscriptionTitle}>Абонентская плата</h4>
                   <p className={styles.subscriptionHint}>Расчёт только по числу квартир</p>
@@ -1017,15 +619,6 @@ export function CctvCalculatorSection() {
                   </div>
 
                   <div className={styles.subscriptionRates}>
-                    {hasIntercom && (
-                      <div className={styles.subscriptionRow}>
-                        <span className={styles.subscriptionIcon} aria-hidden>🔔</span>
-                        <span className={styles.subscriptionLabel}>Домофония</span>
-                        <span className={styles.subscriptionFormula}>
-                          {formatKzt(TARIFF_INTERCOM_PER_FLAT)} × {apartments} кв. = <strong>{formatKzt(intercomMonthly)}</strong>/мес
-                        </span>
-                      </div>
-                    )}
                     {hasCctv && (
                       <div className={styles.subscriptionRow}>
                         <span className={styles.subscriptionIcon} aria-hidden>📷</span>

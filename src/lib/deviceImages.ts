@@ -4,8 +4,27 @@
  */
 import { getCatalogUrl } from '@/shared/utils/catalogUrl';
 
-/** Подстрока row.name → артикул модели (API каталога) */
+/** Подстрока row.name → артикул модели (API каталога). Изображения из portal_export через /api/products/{model}/image */
 export const deviceModelMap: Record<string, string> = {
+  // Позиции калькулятора видеонаблюдения (название — модель в row.name)
+  'IPC-3612-APF28': 'IPC-3612-APF28E',
+  'IPC-2122-APF28': 'IPC-2122-APF28',
+  'PKC2630@Z28-IR-P': 'PKC2630@Z28-IR-P',
+  'IPC-324-PF28': 'IPC-324-PF28',
+  'WK-WB08-KIT': 'WK-WB08-KIT',
+  'NVR501-16B': 'NVR501-16B',
+  'NVR-302-32-IQ': 'NVR-302-32-IQ',
+  'NVR-508-48-E': 'NVR-508-64-E',
+  'NVR-508-64-E': 'NVR-508-64-E',
+  'NVR508-128E-R': 'NVR508-128E-R',
+  'NSW2100-9GT1GP-POE-IN': 'NSW2100-9GT1GP-POE-IN',
+  'WK-PS320GF': 'WK-PS320GF',
+  'WK-PS328GF': 'WK-PS328GF',
+  'WI-PCMS554F-L3 V2': 'WI-PCMS554F-L3 V2',
+  'SEAGATE HDD SkyHawkAI': 'ST10000VE000',
+  'Жёсткий диск 10 ТБ': 'ST10000VE000',
+  'Патч-панель 19"': 'PP24-1UC5EU-D05-1',
+  'Кабель UTP Cat5e': 'CAB-LC2110B-IN',
   'Уличная цилиндрическая 2MP': 'IPC-2122-APF28',
   'Уличная цилиндрическая': 'IPC-2122-APF28',
   'Внутренняя купольная 2MP': 'IPC-3612-APF28-DL',
@@ -16,8 +35,6 @@ export const deviceModelMap: Record<string, string> = {
   'Лифтовая камера 2MP': 'IPC-3612-APF28-DL',
   'Лифтовая камера 4MP': 'IPC-324-PF28',
   'Лифтовая камера': 'IPC-3612-APF28-DL',
-  'IPC-324-PF28': 'IPC-324-PF28',
-  'WK-WB08-KIT': 'WK-WB08-KIT',
   'WK-WB08': 'WK-WB08-KIT',
   'WK-PS227GF': 'WK-PS227GF',
   'WK-PS216GF': 'WK-PS216GF',
@@ -64,7 +81,13 @@ export const deviceLocalImageMap: Record<string, string> = {
   'Вызывная панель (вход)': '/oeu-301s-hmka.jpg',
   'Вызывная панель IP': '/oeu-301s-hmka.jpg',
   'Стойка настенная 9U': '/docs/stoika.jpg',
+  'Монтажный шкаф напольный 19" 27U': '/docs/shkaf-27u.jpg',
+  'SHIP 601S.6027.24.100': '/docs/shkaf-27u.jpg',
+  'ИБП онлайн 3000 ВА': '/docs/ibp-3kva.jpg',
+  'LRT-3KL-LCD': '/docs/ibp-3kva.jpg',
+  'Вентиляторная панель с термостатом': '/docs/vent.jpg',
   'SHIP 700402112T': '/docs/vent.jpg',
+  'SHIP 700402112Т': '/docs/vent.jpg',
   'SHIP 700508102': '/docs/setevoifilt.jpg',
 };
 
