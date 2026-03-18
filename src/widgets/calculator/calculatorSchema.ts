@@ -1,75 +1,23 @@
 /**
- * Схема и валидация входов калькулятора.
+ * Схема и валидация входов калькулятора (BuildingParams).
  * Защита при восстановлении из sessionStorage при изменении схемы.
  */
 
-import type {
-  CalculatorInputs,
-  CameraCounts,
-  CableSettings,
-  IntercomSettings,
-  CarEntranceSettings,
-  ArchiveSettings,
-  ObjectType,
-  StorageDays,
-} from '@/widgets/calculator/calculatorLogic';
+import type { BuildingParams, CoverageType } from '@/widgets/calculator/calculatorLogic';
 
-const defaultCameraCounts: CameraCounts = {
-  outdoor2mp: 0,
-  indoor2mp: 0,
-  indoor4mp: 0,
-  anpr3mp: 0,
+export const defaultParams: BuildingParams = {
+  entrances: 1,
+  floors: 1,
+  elevators: 0,
+  yardGates: 0,
+  hasParking: false,
+  parkingGates: 0,
+  coverageType: 'entrance_only',
+  twoCamerasPerFloor: false,
+  hasCamerasInLifts: false,
 };
 
-const defaultCableSettings: CableSettings = {
-  useManualLength: false,
-  manualLengthPerCamera: undefined,
-  buildingFloors: 0,
-  buildingRisers: 1,
-};
-
-const defaultCarEntrance: CarEntranceSettings = {
-  enabled: false,
-  gates: 0,
-  parking: 0,
-  entranceCount: 0,
-};
-
-const defaultIntercom: IntercomSettings = {
-  entrances: 0,
-  floorsPerEntrance: 0,
-  flatsPerFloor: 4,
-  extraCardReaders: 0,
-  carEntrance: defaultCarEntrance,
-  hasConcierge: false,
-};
-
-const defaultArchiveSettings: ArchiveSettings = {
-  months: 1,
-  recordingType: 'continuous',
-};
-
-/** Значения по умолчанию для всех полей калькулятора */
-export const defaultInputs: CalculatorInputs = {
-  objectType: 'ЖК',
-  objectNameOrAddress: '',
-  cameraTypes: defaultCameraCounts,
-  elevatorCount: 0,
-  elevatorCameraType: '2mp',
-  archiveSettings: defaultArchiveSettings,
-  storageDays: 30,
-  hasPatchPanel: false,
-  hasSecurityPost: false,
-  cableSettings: defaultCableSettings,
-  intercom: defaultIntercom,
-  videoAnalytics: false,
-};
-
-const OBJECT_TYPES: ObjectType[] = ['ЖК', 'Офис', 'Паркинг', ''];
-const STORAGE_DAYS: StorageDays[] = [30, 60, 90];
-const ELEVATOR_TYPES = ['2mp', '4mp'] as const;
-const MONTHS = [1, 2, 3] as const;
-const RECORDING_TYPES = ['continuous', 'motion'] as const;
+const COVERAGE_TYPES: CoverageType[] = ['entrance_only', 'whole_building'];
 
 function isObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -77,17 +25,6 @@ function isObject(v: unknown): v is Record<string, unknown> {
 
 function num(x: unknown, fallback: number): number {
   if (typeof x === 'number' && Number.isFinite(x)) return x;
-  return fallback;
-}
-
-function numOrUndef(x: unknown): number | undefined {
-  if (x === undefined || x === null) return undefined;
-  if (typeof x === 'number' && Number.isFinite(x)) return x;
-  return undefined;
-}
-
-function str(x: unknown, fallback: string): string {
-  if (typeof x === 'string') return x;
   return fallback;
 }
 
@@ -101,73 +38,20 @@ function oneOf<T>(x: unknown, options: readonly T[], fallback: T): T {
   return fallback;
 }
 
-function validateCameraCounts(parsed: unknown): CameraCounts {
-  if (!isObject(parsed)) return defaultCameraCounts;
-  return {
-    outdoor2mp: num(parsed.outdoor2mp, defaultCameraCounts.outdoor2mp),
-    indoor2mp: num(parsed.indoor2mp, defaultCameraCounts.indoor2mp),
-    indoor4mp: num(parsed.indoor4mp, defaultCameraCounts.indoor4mp),
-    anpr3mp: num(parsed.anpr3mp, defaultCameraCounts.anpr3mp),
-  };
-}
-
-function validateCableSettings(parsed: unknown): CableSettings {
-  if (!isObject(parsed)) return defaultCableSettings;
-  return {
-    useManualLength: bool(parsed.useManualLength, defaultCableSettings.useManualLength),
-    manualLengthPerCamera: numOrUndef(parsed.manualLengthPerCamera),
-    buildingFloors: num(parsed.buildingFloors, defaultCableSettings.buildingFloors),
-    buildingRisers: num(parsed.buildingRisers, defaultCableSettings.buildingRisers),
-  };
-}
-
-function validateCarEntrance(parsed: unknown): CarEntranceSettings {
-  if (!isObject(parsed)) return defaultCarEntrance;
-  return {
-    enabled: bool(parsed.enabled, defaultCarEntrance.enabled),
-    gates: num(parsed.gates, defaultCarEntrance.gates),
-    parking: num(parsed.parking, defaultCarEntrance.parking),
-    entranceCount: num(parsed.entranceCount, defaultCarEntrance.entranceCount),
-  };
-}
-
-function validateIntercom(parsed: unknown): IntercomSettings {
-  if (!isObject(parsed)) return defaultIntercom;
-  return {
-    entrances: num(parsed.entrances, defaultIntercom.entrances),
-    floorsPerEntrance: num(parsed.floorsPerEntrance, defaultIntercom.floorsPerEntrance),
-    flatsPerFloor: num(parsed.flatsPerFloor, defaultIntercom.flatsPerFloor),
-    extraCardReaders: num(parsed.extraCardReaders, defaultIntercom.extraCardReaders),
-    carEntrance: validateCarEntrance(parsed.carEntrance),
-    hasConcierge: bool(parsed.hasConcierge, defaultIntercom.hasConcierge),
-  };
-}
-
-function validateArchiveSettings(parsed: unknown): ArchiveSettings {
-  if (!isObject(parsed)) return defaultArchiveSettings;
-  return {
-    months: oneOf(parsed.months, MONTHS, defaultArchiveSettings.months),
-    recordingType: oneOf(parsed.recordingType, RECORDING_TYPES, defaultArchiveSettings.recordingType),
-  };
-}
-
 /**
- * Валидирует данные из sessionStorage. При несоответствии схемы подставляет defaultInputs.
+ * Валидирует данные из sessionStorage. При несоответствии схемы подставляет defaultParams.
  */
-export function validateInputs(parsed: unknown): CalculatorInputs {
-  if (!isObject(parsed)) return defaultInputs;
+export function validateParams(parsed: unknown): BuildingParams {
+  if (!isObject(parsed)) return defaultParams;
   return {
-    objectType: oneOf(parsed.objectType, OBJECT_TYPES, defaultInputs.objectType ?? 'ЖК'),
-    objectNameOrAddress: str(parsed.objectNameOrAddress, defaultInputs.objectNameOrAddress ?? ''),
-    cameraTypes: validateCameraCounts(parsed.cameraTypes),
-    elevatorCount: num(parsed.elevatorCount, defaultInputs.elevatorCount),
-    elevatorCameraType: oneOf(parsed.elevatorCameraType, ELEVATOR_TYPES, defaultInputs.elevatorCameraType),
-    archiveSettings: validateArchiveSettings(parsed.archiveSettings),
-    storageDays: oneOf(parsed.storageDays, STORAGE_DAYS, defaultInputs.storageDays ?? 30),
-    hasPatchPanel: bool(parsed.hasPatchPanel, defaultInputs.hasPatchPanel ?? false),
-    hasSecurityPost: bool(parsed.hasSecurityPost, defaultInputs.hasSecurityPost ?? false),
-    cableSettings: validateCableSettings(parsed.cableSettings),
-    intercom: validateIntercom(parsed.intercom),
-    videoAnalytics: bool(parsed.videoAnalytics, defaultInputs.videoAnalytics),
+    entrances: Math.max(0, num(parsed.entrances, defaultParams.entrances)),
+    floors: Math.max(0, num(parsed.floors, defaultParams.floors)),
+    elevators: Math.max(0, num(parsed.elevators, defaultParams.elevators)),
+    yardGates: Math.max(0, num(parsed.yardGates, defaultParams.yardGates)),
+    hasParking: bool(parsed.hasParking, defaultParams.hasParking),
+    parkingGates: Math.max(0, num(parsed.parkingGates, defaultParams.parkingGates)),
+    coverageType: oneOf(parsed.coverageType, COVERAGE_TYPES, defaultParams.coverageType),
+    twoCamerasPerFloor: bool(parsed.twoCamerasPerFloor, defaultParams.twoCamerasPerFloor),
+    hasCamerasInLifts: bool(parsed.hasCamerasInLifts, defaultParams.hasCamerasInLifts),
   };
 }
