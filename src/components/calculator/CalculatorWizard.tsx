@@ -15,7 +15,7 @@ export function CalculatorWizard() {
       <div className={styles.content}>
         <main className={styles.main} aria-live="polite">
           <div className={styles.blocksList}>
-            <section className={styles.block} aria-label="Параметры объекта">
+            <section className={styles.block} aria-label="Расчет видеонаблюдения ЖК">
               <Step1Object />
             </section>
             <section id="calculator-result" className={styles.block} aria-label="Итог расчёта">

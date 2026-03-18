@@ -85,7 +85,6 @@ export function ResultTable({
                       </td>
                       <td>
                         <span className={styles.rowName}>{row.name}</span>
-                        {row.note && <div className={styles.rowNote}>{row.note}</div>}
                       </td>
                       <td>{row.qty > 0 ? row.qty : '—'}</td>
                       <td>{row.unitPrice != null ? formatKzt(row.unitPrice) : '—'}</td>

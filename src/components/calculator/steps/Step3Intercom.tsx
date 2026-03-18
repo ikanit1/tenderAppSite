@@ -19,7 +19,7 @@ export function Step3Intercom() {
     >
       <h2 className={styles.title}>Домофония</h2>
       <GlassCard className={styles.card}>
-        <p className={styles.hint}>Параметры домофонии задаются в шаге «Параметры объекта».</p>
+        <p className={styles.hint}>Параметры домофонии задаются в шаге «Расчет видеонаблюдения ЖК».</p>
       </GlassCard>
       <div className={styles.row}>
         <GlowButton variant="secondary" onClick={() => setStep(2)}>Назад</GlowButton>

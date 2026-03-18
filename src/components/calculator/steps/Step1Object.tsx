@@ -23,7 +23,7 @@ export function Step1Object() {
       exit={{ opacity: 0, x: 20 }}
     >
       <GlassCard className={styles.card}>
-        <h2 className={styles.title}>Параметры объекта</h2>
+        <h2 className={styles.title}>Расчет видеонаблюдения ЖК</h2>
         <p className={styles.subtitle}>
           Подъезды, этажи, лифты, дворовые калитки, паркинг и охват видеонаблюдением
         </p>
