@@ -23,6 +23,9 @@ const defaultParams: BuildingParams = {
   hasCamerasInLifts: false,
 };
 
+/** Результат для дефолтных параметров — чтобы блок сметы не был пустым при первой загрузке (нет «появилось → пропало») */
+const initialResult = calculateResult(defaultParams);
+
 export interface CalculatorState {
   step: number;
   params: BuildingParams;
@@ -39,7 +42,7 @@ export const useCalculatorStore = create<CalculatorState & {
   return {
     step: 1,
     params: defaultParams,
-    result: null,
+    result: initialResult,
     buildingFloors: defaultParams.floors,
 
     setStep: (step) => set({ step }),
@@ -58,7 +61,7 @@ export const useCalculatorStore = create<CalculatorState & {
     reset: () => set({
       step: 1,
       params: defaultParams,
-      result: null,
+      result: initialResult,
       buildingFloors: defaultParams.floors,
     }),
   };

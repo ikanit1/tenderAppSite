@@ -7,8 +7,7 @@ import { GlowButton } from '@/components/ui/GlowButton';
 import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
 import { ResultTable } from '@/components/calculator/ResultTable';
 import { formatKzt } from '@/lib/calculations';
-import { exportResultToPDFDirect, type ExportMeta } from '@/lib/exportPDF';
-import { downloadKP } from '@/widgets/calculator/generateKP';
+import type { ExportMeta } from '@/lib/exportPDF';
 import { submitLead } from '@/shared/api/leadApi';
 import { useToast } from '@/features/toast/ToastProvider';
 import { calculatorContact } from '@/shared/content/calculatorConfig';
@@ -93,10 +92,11 @@ export function Step5Result() {
     }
   };
 
-  const handlePDF = () => {
+  const handlePDF = async () => {
     if (!result) return;
     setExporting('pdf');
     try {
+      const { exportResultToPDFDirect } = await import('@/lib/exportPDF');
       exportResultToPDFDirect(result, meta);
     } catch (e) {
       show('Не удалось сформировать PDF.', 'error');
@@ -109,6 +109,7 @@ export function Step5Result() {
     if (!result) return;
     setExporting('docx');
     try {
+      const { downloadKP } = await import('@/widgets/calculator/generateKP');
       await downloadKP(result);
     } finally {
       setExporting(null);
