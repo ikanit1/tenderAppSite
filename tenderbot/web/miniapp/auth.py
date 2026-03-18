@@ -1,9 +1,9 @@
 # web/miniapp/auth.py — проверка initData от Telegram Web App
 """
 Верификация initData от Telegram Mini App:
-- Подпись (hash), auth_date с ограничением возраста (MAX_AGE).
-- Защита от replay: каждый успешно проверенный initData запоминается на 1 ч;
-  повторное использование того же initData отклоняется.
+- Подпись (hash), auth_date с ограничением возраста (INIT_DATA_MAX_AGE_SEC).
+- Replay по «одноразовому» initData не делаем: клиент Mini App при каждом запросе
+  отправляет один и тот же initData, пока пользователь не перезайдёт в приложение.
 
 Для Mini App заголовок X-Telegram-Init-Data выступает и как носитель авторизации,
 и как CSRF-токен: запрос без валидного initData не принимается (см. BUG-03).
@@ -19,37 +19,6 @@ from config import settings
 
 # Максимальный возраст initData для API (1 час) — защита от долгоживущих перехваченных токенов
 INIT_DATA_MAX_AGE_SEC = 3600
-# TTL кэша «уже использованных» initData (replay protection)
-REPLAY_CACHE_TTL_SEC = 3600
-
-# In-memory кэш использованных initData: key = sha256(init_data), value = expiry timestamp
-_replay_cache: dict[str, float] = {}
-_REPLAY_MAX_ENTRIES = 50_000
-
-
-def _replay_key(init_data: str) -> str:
-    return hashlib.sha256(init_data.encode("utf-8")).hexdigest()
-
-
-def _replay_seen(init_data: str) -> bool:
-    now = time.time()
-    key = _replay_key(init_data)
-    if key not in _replay_cache:
-        return False
-    if _replay_cache[key] < now:
-        del _replay_cache[key]
-        return False
-    return True
-
-
-def _replay_record(init_data: str) -> None:
-    now = time.time()
-    if len(_replay_cache) >= _REPLAY_MAX_ENTRIES:
-        # Удаляем устаревшие
-        expired = [k for k, v in _replay_cache.items() if v < now]
-        for k in expired:
-            del _replay_cache[k]
-    _replay_cache[_replay_key(init_data)] = now + REPLAY_CACHE_TTL_SEC
 
 
 def _validate_hash(data_check: str, received_hash: str) -> bool:
@@ -119,14 +88,11 @@ def validate_init_data(init_data: str, max_age_sec: Optional[int] = 7 * 86400) -
 def get_tg_id_from_init_data(init_data: str) -> Optional[int]:
     """
     Из валидного initData извлекает Telegram ID пользователя.
-    Для API используется строгий max_age (INIT_DATA_MAX_AGE_SEC) и защита от replay.
+    Для API используется max_age = INIT_DATA_MAX_AGE_SEC (1 ч).
     """
-    if _replay_seen(init_data):
-        return None
     data = validate_init_data(init_data, max_age_sec=INIT_DATA_MAX_AGE_SEC)
     if not data:
         return None
-    _replay_record(init_data)
     user = data.get("user")
     if isinstance(user, dict) and "id" in user:
         return int(user["id"])

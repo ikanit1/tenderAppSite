@@ -415,6 +415,22 @@ sudo systemctl restart tenderbot apisite
 
 ## Обновление проекта
 
+### Быстрый деплой (всё через https://grgroup.kz)
+
+Скрипт обновляет код, выставляет `MINIAPP_BASE_URL=https://grgroup.kz` в `tenderbot/.env` и перезапускает сервисы:
+
+**На сервере:**
+```bash
+cd /opt/tenderAppSite-main/tenderbot/deploy && sudo bash deploy_grgroup.sh
+```
+
+**С локальной машины (по SSH):**
+```bash
+SERVER=user@grgroup.kz bash /path/to/tenderbot/deploy/deploy_grgroup.sh
+```
+
+После деплоя бот и Mini App работают через https://grgroup.kz (кнопка «Открыть приложение», ссылки в меню).
+
 ### Обновление кода
 
 ```bash

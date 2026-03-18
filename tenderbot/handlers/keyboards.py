@@ -10,10 +10,16 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from config import settings
 from database.models import UserRole, UserStatus, TenderStatus
 
-# URL Mini App для кнопки «Открыть приложение»
+# Единый URL для всех кнопок «Открыть приложение» (меню, Reply, Inline)
+GRGROUP_MINIAPP_URL = "https://grgroup.kz/miniapp/"
+
+
 def get_miniapp_url() -> str:
-    base = (settings.MINIAPP_BASE_URL or "").rstrip("/")
-    return f"{base}/miniapp/" if base else ""
+    """Все кнопки «Открыть приложение» ведут на https://grgroup.kz/miniapp/."""
+    base = (settings.MINIAPP_BASE_URL or "").strip().rstrip("/")
+    if base and "grgroup.kz" in base:
+        return (base + "/miniapp/") if "/miniapp" not in base else (base if base.endswith("/") else base + "/")
+    return GRGROUP_MINIAPP_URL
 
 
 def get_open_app_inline_kb() -> InlineKeyboardMarkup | None:
@@ -45,14 +51,14 @@ def get_main_menu_kb(
         # На модерации: проверить статус + приложение + помощь
         builder.button(text="🔄 Проверить статус")
         if miniapp_url:
-            builder.button(text="📱 Открыть приложение")
+            builder.button(text="📱 Открыть приложение", web_app=WebAppInfo(url=miniapp_url))
         if is_admin:
             builder.button(text="⚙️ Админ-панель")
         builder.button(text="ℹ️ Помощь")
         builder.adjust(2, 1)
     elif user_role == UserRole.EXECUTOR.value:
         if miniapp_url:
-            builder.button(text="📱 Открыть приложение")
+            builder.button(text="📱 Открыть приложение", web_app=WebAppInfo(url=miniapp_url))
         builder.button(text="💬 Поддержка")
         if is_admin:
             builder.button(text="⚙️ Админ-панель")
@@ -61,7 +67,7 @@ def get_main_menu_kb(
     else:
         builder.button(text="📝 Пройти регистрацию")
         if miniapp_url:
-            builder.button(text="📱 Открыть приложение")
+            builder.button(text="📱 Открыть приложение", web_app=WebAppInfo(url=miniapp_url))
         if is_admin:
             builder.button(text="⚙️ Админ-панель")
         builder.button(text="ℹ️ Помощь")
