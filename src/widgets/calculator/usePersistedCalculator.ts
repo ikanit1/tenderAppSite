@@ -1,26 +1,26 @@
 /**
  * Хук персистентного состояния калькулятора в sessionStorage.
  * Данные живут пока открыта вкладка. SSR-safe.
+ * Синхронизирован с BuildingParams (calculatorLogic).
  */
 
 import { useState, useCallback } from 'react';
-import type { CalculatorInputs } from '@/widgets/calculator/calculatorLogic';
-import { defaultInputs, validateInputs } from '@/widgets/calculator/calculatorSchema';
+import type { BuildingParams } from '@/widgets/calculator/calculatorLogic';
+import { defaultParams, validateParams } from '@/widgets/calculator/calculatorSchema';
 
-const STORAGE_KEY_INPUTS = 'calc-inputs';
+const STORAGE_KEY_PARAMS = 'calc-params';
 const STORAGE_KEY_STEP = 'calc-step';
 const DEFAULT_STEP = 1;
 
-function readInputs(): CalculatorInputs {
-  if (typeof window === 'undefined') return defaultInputs;
+function readParams(): BuildingParams {
+  if (typeof window === 'undefined') return defaultParams;
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY_INPUTS);
-    if (!raw) return defaultInputs;
+    const raw = sessionStorage.getItem(STORAGE_KEY_PARAMS);
+    if (!raw) return defaultParams;
     const parsed: unknown = JSON.parse(raw);
-    const validated = validateInputs(parsed);
-    return { ...defaultInputs, ...validated };
+    return validateParams(parsed);
   } catch {
-    return defaultInputs;
+    return defaultParams;
   }
 }
 
@@ -36,10 +36,10 @@ function readStep(): number {
   }
 }
 
-function writeInputs(value: CalculatorInputs): void {
+function writeParams(value: BuildingParams): void {
   if (typeof window === 'undefined') return;
   try {
-    sessionStorage.setItem(STORAGE_KEY_INPUTS, JSON.stringify(value));
+    sessionStorage.setItem(STORAGE_KEY_PARAMS, JSON.stringify(value));
   } catch {
     /* ignore */
   }
@@ -57,7 +57,7 @@ function writeStep(value: number): void {
 function clearStorage(): void {
   if (typeof window === 'undefined') return;
   try {
-    sessionStorage.removeItem(STORAGE_KEY_INPUTS);
+    sessionStorage.removeItem(STORAGE_KEY_PARAMS);
     sessionStorage.removeItem(STORAGE_KEY_STEP);
   } catch {
     /* ignore */
@@ -65,8 +65,8 @@ function clearStorage(): void {
 }
 
 export interface UsePersistedCalculatorReturn {
-  inputs: CalculatorInputs;
-  setInputs: (value: CalculatorInputs | ((prev: CalculatorInputs) => CalculatorInputs)) => void;
+  params: BuildingParams;
+  setParams: (value: BuildingParams | ((prev: BuildingParams) => BuildingParams)) => void;
   step: number;
   setStep: (value: number | ((prev: number) => number)) => void;
   reset: () => void;
@@ -76,13 +76,13 @@ export interface UsePersistedCalculatorReturn {
  * Состояние калькулятора с сохранением в sessionStorage при уходе со страницы.
  */
 export function usePersistedCalculator(): UsePersistedCalculatorReturn {
-  const [inputs, setInputsState] = useState<CalculatorInputs>(readInputs);
+  const [params, setParamsState] = useState<BuildingParams>(readParams);
   const [step, setStepState] = useState<number>(readStep);
 
-  const setInputs = useCallback((value: CalculatorInputs | ((prev: CalculatorInputs) => CalculatorInputs)) => {
-    setInputsState((prev) => {
+  const setParams = useCallback((value: BuildingParams | ((prev: BuildingParams) => BuildingParams)) => {
+    setParamsState((prev) => {
       const next = typeof value === 'function' ? value(prev) : value;
-      writeInputs(next);
+      writeParams(next);
       return next;
     });
   }, []);
@@ -97,9 +97,9 @@ export function usePersistedCalculator(): UsePersistedCalculatorReturn {
 
   const reset = useCallback(() => {
     clearStorage();
-    setInputsState(defaultInputs);
+    setParamsState(defaultParams);
     setStepState(DEFAULT_STEP);
   }, []);
 
-  return { inputs, setInputs, step, setStep, reset };
+  return { params, setParams, step, setStep, reset };
 }

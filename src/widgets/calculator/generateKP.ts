@@ -298,8 +298,7 @@ export function buildKPDocument(
   children.push(p('Итоги по смете', { bold: true, size: SIZE_12, color: HEADER_COLOR, spacingAfter: 120 }));
   children.push(p('Оборудование: ' + formatKzt(result.equipment), { spacingAfter: 50 }));
   children.push(p('Расходные материалы: ' + formatKzt(result.consumables ?? 0), { spacingAfter: 50 }));
-  children.push(p('Монтажные работы: ' + formatKzt(result.installation.work ?? result.installation.total), { spacingAfter: 50 }));
-  children.push(p('Пусконаладочные работы: ' + formatKzt(result.installation.commissioning ?? 0), { spacingAfter: 50 }));
+  children.push(p('Монтажные работы: ' + formatKzt(result.installation.cameraInstall ?? 0), { spacingAfter: 50 }));
   children.push(p('Монтаж кабеля: ' + formatKzt(result.installation.cableInstall ?? 0), { spacingAfter: 80 }));
   children.push(p('ИТОГО БЕЗ НДС: ' + formatKzt(Math.round(totalWithoutVat)), { bold: true, spacingAfter: 50 }));
   children.push(p('НДС 12%: ' + formatKzt(Math.round(vatAmount)), { bold: true, spacingAfter: 50 }));

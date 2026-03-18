@@ -350,9 +350,9 @@ export async function exportResultToDocx(
   }
 
   // ─── БЛОК ИТОГОВ ───
-  const work = result.installation?.work ?? result.installation?.total ?? 0;
-  const commissioning = result.installation?.commissioning ?? 0;
-  const cableInstall = result.installation?.cableInstall ?? 0;
+  const inst = result.installation;
+  const work = inst?.cameraInstall ?? 0;
+  const cableInstall = inst?.cableInstall ?? 0;
   const totalWithoutVat = result.grandTotal / 1.12;
   const vatAmount = result.grandTotal - totalWithoutVat;
 
@@ -360,7 +360,6 @@ export async function exportResultToDocx(
     ['Оборудование', result.equipment],
     ['Расходные материалы', result.consumables ?? 0],
     ['Монтажные работы', work],
-    ['Пусконаладочные работы', commissioning],
     ['Монтаж кабеля', cableInstall],
     ['ИТОГО БЕЗ НДС', Math.round(totalWithoutVat)],
     ['НДС 12%', Math.round(vatAmount)],
@@ -472,9 +471,10 @@ export async function exportResultToDocx(
     const perMonth = Math.round(result.grandTotal / months);
     children.push(p(`${months} мес. → ${fmt(perMonth)}/мес`, { spacingAfter: 60 }));
   }
+  const totalFlats = result.totalFlats ?? 0;
   const perFlatMonthly =
-    result.totalFlats > 0 ? Math.round(result.grandTotal / result.totalFlats) : Math.round(result.grandTotal / 200);
-  const flatsLabel = result.totalFlats > 0 ? result.totalFlats : 200;
+    totalFlats > 0 ? Math.round(result.grandTotal / totalFlats) : Math.round(result.grandTotal / 200);
+  const flatsLabel = totalFlats > 0 ? totalFlats : 200;
   children.push(
     p(`Ежемесячно с квартиры: ${fmt(perFlatMonthly)} (Итого / ${flatsLabel} кв.)`, { spacingAfter: 200 })
   );

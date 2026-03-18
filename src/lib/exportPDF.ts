@@ -176,14 +176,13 @@ export function exportResultToPDFDirect(
   checkPage(40);
   pdf.setFillColor(10, 14, 26);
   pdf.rect(margin - 2, y - 2, pageW - margin * 2 + 4, 38, 'F');
-  const work = result.installation?.work ?? result.installation?.total ?? 0;
-  const commissioning = result.installation?.commissioning ?? 0;
-  const cableInstall = result.installation?.cableInstall ?? 0;
+  const inst = result.installation;
+  const work = inst?.cameraInstall ?? 0;
+  const cableInstall = inst?.cableInstall ?? 0;
   const totals: [string, number][] = [
     ['Оборудование:', result.equipment],
     ['Расходные материалы:', result.consumables ?? 0],
     ['Монтажные работы:', work],
-    ['Пусконаладка:', commissioning],
     ['Монтаж кабеля:', cableInstall],
   ];
   pdf.setFontSize(9);

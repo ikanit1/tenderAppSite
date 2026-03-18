@@ -3,7 +3,22 @@
  * Исправления: хранение по битрейту, кабель по метражу, L3/VLAN, абонентские устройства, лицензии, PoE-бюджет.
  */
 
-import type { CalculatorInputs, CalculatorResult, LineItem, ResultGroup } from './calculatorLogic';
+import type { CalculatorResult, LineItem, ResultGroup } from './calculatorLogic';
+
+/** Форма входных данных для пересчёта (совместима со старой логикой калькулятора). */
+export interface RecalcInput {
+  cameraTypes: { outdoor2mp: number; indoor2mp: number; indoor4mp: number; anpr3mp: number };
+  elevatorCount?: number;
+  elevatorCameraType?: '2mp' | '4mp';
+  intercom: {
+    entrances: number;
+    floorsPerEntrance: number;
+    flatsPerFloor: number;
+    extraCardReaders?: number;
+    carEntrance: { enabled: boolean; entranceCount?: number; gates: number; parking: number };
+    hasConcierge?: boolean;
+  };
+}
 import {
   hddConfig,
   cableConfig,
@@ -75,19 +90,20 @@ export interface RecalcResult {
 }
 
 /** Требуемый объём хранилища (ТБ) за 30 дней по битрейту по типам камер */
-function requiredStorageTb(input: CalculatorInputs): number {
+function requiredStorageTb(input: RecalcInput): number {
   const ct = input.cameraTypes;
   const outdoor = ct.outdoor2mp * storageBitrateMbpsFor30d.outdoor2mp;
   const ind2 = ct.indoor2mp * storageBitrateMbpsFor30d.indoor2mp;
   const ind4 = ct.indoor4mp * storageBitrateMbpsFor30d.indoor4mp;
   const anpr = ct.anpr3mp * storageBitrateMbpsFor30d.anpr3mp;
-  const lift = input.elevatorCount * (input.elevatorCameraType === '2mp' ? storageBitrateMbpsFor30d.lift2mp : storageBitrateMbpsFor30d.lift4mp);
+  const liftCount = input.elevatorCount ?? 0;
+  const lift = liftCount * (input.elevatorCameraType === '4mp' ? storageBitrateMbpsFor30d.lift4mp : storageBitrateMbpsFor30d.lift2mp);
   const totalMbitSec = outdoor + ind2 + ind4 + anpr + lift;
   return totalMbitSec * ARCHIVE_DAYS * TB_PER_CAMERA_MBIT_DAY;
 }
 
 /** Количество устройств домофонии: вызывные (подъезды + калитки) + интерком-панели (квартиры) + доп. считыватели. Паркинг не входит. */
-function intercomDevicesCount(input: CalculatorInputs): number {
+function intercomDevicesCount(input: RecalcInput): number {
   const { entrances, floorsPerEntrance, flatsPerFloor, extraCardReaders, carEntrance } = input.intercom;
   const gates = carEntrance.enabled ? carEntrance.gates : 0;
   const panels = entrances + gates;
@@ -111,7 +127,7 @@ export function getGroupSubtotal(groups: ResultGroup[], titleContains: string): 
 }
 
 export function recalculateEstimate(
-  input: CalculatorInputs,
+  input: RecalcInput,
   result: CalculatorResult,
   options: RecalcOptions = {}
 ): RecalcResult {
@@ -133,7 +149,7 @@ export function recalculateEstimate(
   // ——— ИСПРАВЛЕНИЕ 1: Хранение по битрейту 30 дней ———
   const requiredTb = requiredStorageTb(input);
   const requiredHdd = Math.ceil(requiredTb / HDD_CAPACITY_TB);
-  const wasHdd = result.hddCount;
+  const wasHdd = result.hddCount ?? 0;
   const diffHdd = requiredHdd - wasHdd;
   const storageDiffKzt = diffHdd * hddConfig.priceKzt;
   if (diffHdd !== 0) {
@@ -376,8 +392,8 @@ export function recalculateEstimate(
     newGroups.push({ title: 'Лицензии и ПО', rows: licenseRows, subtotal: licensesSum });
   }
 
-  if (result.hddCount !== requiredHdd) {
-    clarificationList.push(`Хранение: пересчитано на 30 дней по битрейту. Было ${result.hddCount} HDD → требуется ${requiredHdd}.`);
+  if ((result.hddCount ?? 0) !== requiredHdd) {
+    clarificationList.push(`Хранение: пересчитано на 30 дней по битрейту. Было ${result.hddCount ?? 0} HDD → требуется ${requiredHdd}.`);
   }
   if (reelCctvNeed !== reelCctvWas || reelIntercomNeed !== reelIntercomWas) {
     clarificationList.push('Кабель: бухты пересчитаны по метражу трасс + 15% запас.');

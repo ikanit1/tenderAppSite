@@ -6,29 +6,29 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { GlowButton } from '@/components/ui/GlowButton';
 import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
 import { ResultTable } from '@/components/calculator/ResultTable';
-import { FinanceBlock } from '@/components/calculator/FinanceBlock';
 import { formatKzt } from '@/lib/calculations';
 import { exportResultToPDFDirect, type ExportMeta } from '@/lib/exportPDF';
 import { downloadKP } from '@/widgets/calculator/generateKP';
 import { submitLead } from '@/shared/api/leadApi';
 import { useToast } from '@/features/toast/ToastProvider';
 import { calculatorContact } from '@/shared/content/calculatorConfig';
-import type { CalculatorInputs, CalculatorResult } from '@/widgets/calculator/calculatorLogic';
+import type { BuildingParams, CalculatorResult } from '@/widgets/calculator/calculatorLogic';
 import styles from './Step5Result.module.css';
 
-function buildSummaryText(input: CalculatorInputs, result: CalculatorResult): string {
-  const ct = input.cameraTypes;
+function buildSummaryText(params: BuildingParams, result: CalculatorResult): string {
   const lines: string[] = [
-    'Расчёт с калькулятора видеонаблюдения и домофонии (grgroup.kz)',
+    'Расчёт с калькулятора видеонаблюдения (grgroup.kz)',
     '',
     '── Параметры ──',
-    `Камеры: уличные 2MP ${ct.outdoor2mp}, внутр. 2MP ${ct.indoor2mp}, внутр. 4MP ${ct.indoor4mp}, опоз. номерного знака ${ct.anpr3mp}`,
-    `Лифты: ${input.elevatorCount} шт., тип ${input.elevatorCameraType}`,
-    `Домофония: подъездов ${input.intercom.entrances}, этажей ${input.intercom.floorsPerEntrance}, квартир на этаже ${input.intercom.flatsPerFloor}`,
+    `Подъездов: ${params.entrances}, этажей: ${params.floors}, лифтов: ${params.elevators}`,
+    `Калитки: ${params.yardGates}, паркинг: ${params.hasParking ? `да, ${params.parkingGates} въезд(ов)` : 'нет'}`,
+    `Охват: ${params.coverageType === 'whole_building' ? 'весь дом' : 'только входные группы'}${params.coverageType === 'whole_building' ? `, ${params.twoCamerasPerFloor ? '2' : '1'} камеры на этаж` : ''}, камеры в лифтах: ${params.hasCamerasInLifts ? 'да' : 'нет'}`,
     '',
     '── ИТОГ ──',
+    `Камер: ${result.totalCameras}, кабель: ${result.totalCableMeters} м`,
     `Оборудование: ${formatKzt(result.equipment)}`,
     `Расходные материалы: ${formatKzt(result.consumables ?? 0)}`,
+    `Монтаж: ${formatKzt(result.installation.total)}`,
     `ИТОГО: ${formatKzt(result.grandTotal)}`,
   ];
   return lines.join('\n');
@@ -37,8 +37,7 @@ function buildSummaryText(input: CalculatorInputs, result: CalculatorResult): st
 export function Step5Result() {
   const reduceMotion = useReducedMotion();
   const result = useCalculatorStore((s) => s.result);
-  const inputs = useCalculatorStore((s) => s.inputs);
-  const setStep = useCalculatorStore((s) => s.setStep);
+  const params = useCalculatorStore((s) => s.params);
   const reset = useCalculatorStore((s) => s.reset);
   const { show } = useToast();
   const [flatCount, setFlatCount] = useState<number>(0);
@@ -50,14 +49,8 @@ export function Step5Result() {
   const [submitSending, setSubmitSending] = useState(false);
 
   const total = result?.grandTotal ?? 0;
-  const derivedFlats =
-    flatCount > 0
-      ? flatCount
-      : inputs.intercom.entrances * inputs.intercom.floorsPerEntrance * inputs.intercom.flatsPerFloor || 200;
-
-  const totalFlats = inputs.intercom.entrances * inputs.intercom.floorsPerEntrance * inputs.intercom.flatsPerFloor;
   const meta: ExportMeta = {
-    projectName: `ЖК — ${totalFlats || '—'} кв., ${inputs.intercom.entrances || '—'} подъездов`,
+    projectName: `Объект — ${params.entrances} подъезд., ${params.floors} этаж.`,
     date: new Date().toLocaleDateString('ru-KZ'),
     preparedBy: 'electro.kz',
   };
@@ -65,11 +58,9 @@ export function Step5Result() {
   const handleReset = () => {
     if (window.confirm('Сбросить все данные и начать заново?')) {
       reset();
-      setStep(1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
-
-  const handleBack = () => setStep(4);
 
   const handleEmail = () => setModalOpen(true);
 
@@ -88,7 +79,7 @@ export function Step5Result() {
         phone,
         email: submitEmail.trim() || undefined,
         projectType: 'calculator',
-        message: buildSummaryText(inputs, result),
+        message: buildSummaryText(params, result),
       });
       show('Заявка отправлена. Мы свяжемся с вами в ближайшее время.');
       setModalOpen(false);
@@ -142,36 +133,15 @@ export function Step5Result() {
         <ResultTable
           result={result}
           showInstallment={true}
-          flatCount={flatCount > 0 ? flatCount : derivedFlats}
+          flatCount={flatCount}
+          onFlatsChange={setFlatCount}
         />
       )}
-
-      {result && result.grandTotal > 0 && (
-        <div className={styles.installmentInput}>
-          <label htmlFor="step5-flats" className={styles.installmentInputLabel}>
-            Количество квартир для расчёта «с квартиры»
-          </label>
-          <input
-            id="step5-flats"
-            type="number"
-            min={0}
-            value={flatCount || ''}
-            onChange={(e) => setFlatCount(Math.max(0, parseInt(e.target.value, 10) || 0))}
-            placeholder={String(derivedFlats)}
-            className={styles.installmentInputField}
-          />
-        </div>
-      )}
-
-      {result && <FinanceBlock result={result} />}
 
       <div className={styles.actions}>
         <div className={styles.actionsLeft}>
           <GlowButton variant="ghost" onClick={handleReset}>
             Начать заново
-          </GlowButton>
-          <GlowButton variant="ghost" onClick={handleBack}>
-            Назад
           </GlowButton>
         </div>
         <div className={styles.actionsRight}>

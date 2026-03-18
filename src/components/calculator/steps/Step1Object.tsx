@@ -7,27 +7,11 @@ import styles from './Step1Object.module.css';
 
 export function Step1Object() {
   const reduceMotion = useReducedMotion();
-  const inputs = useCalculatorStore((s) => s.inputs);
-  const setObjectParams = useCalculatorStore((s) => s.setObjectParams);
-  const setStep = useCalculatorStore((s) => s.setStep);
+  const params = useCalculatorStore((s) => s.params);
+  const setParams = useCalculatorStore((s) => s.setParams);
 
-  const { entrances, floorsPerEntrance, flatsPerFloor } = inputs.intercom;
-  const totalFlats = (entrances || 1) * (floorsPerEntrance || 1) * (flatsPerFloor || 4);
-
-  const handleEntrances = (delta: number) => {
-    setObjectParams({ entrances: Math.max(1, Math.min(50, (entrances || 1) + delta)) });
-  };
-
-  const handleEntrancesByValue = (v: number) => {
-    setObjectParams({ entrances: Math.max(1, Math.min(50, v)) });
-  };
-
-  const handleFloors = (v: number) => {
-    setObjectParams({ floors: Math.max(1, Math.min(50, v)) });
-  };
-
-  const handleFlatsPerFloor = (v: number) => {
-    setObjectParams({ flatsPerFloor: Math.max(1, Math.min(50, v)) });
+  const scrollToResult = () => {
+    document.getElementById('calculator-result')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   return (
@@ -40,76 +24,209 @@ export function Step1Object() {
     >
       <GlassCard className={styles.card}>
         <h2 className={styles.title}>Параметры объекта</h2>
-        <p className={styles.subtitle}>Укажите количество квартир, подъездов, этажей и квартир на этаже</p>
+        <p className={styles.subtitle}>
+          Подъезды, этажи, лифты, дворовые калитки, паркинг и охват видеонаблюдением
+        </p>
 
         <div className={styles.inputGroup}>
-          <label className={styles.label}>Число квартир</label>
-          <div className={styles.totalFlatsDisplay} aria-live="polite">
-            {totalFlats}
-          </div>
-          <p className={styles.hint}>Рассчитывается: подъезды × этажи × квартир на этаже</p>
-        </div>
-
-        <div className={styles.inputGroup}>
-          <label className={styles.label}>Число подъездов</label>
+          <label className={styles.label}>Подъездов</label>
           <div className={styles.stepperRow}>
-            <GlowButton variant="secondary" onClick={() => handleEntrances(-1)} aria-label="Уменьшить">−</GlowButton>
+            <GlowButton
+              variant="secondary"
+              onClick={() => setParams({ entrances: Math.max(1, params.entrances - 1) })}
+              aria-label="Уменьшить"
+            >
+              −
+            </GlowButton>
             <input
               type="number"
               min={1}
               max={50}
-              value={entrances || 1}
-              onChange={(e) => handleEntrancesByValue(Number(e.target.value) || 1)}
+              value={params.entrances}
+              onChange={(e) => setParams({ entrances: Math.max(1, Number(e.target.value) || 1) })}
               className={styles.numberInput}
-              aria-label="Число подъездов"
+              aria-label="Подъездов"
             />
-            <GlowButton variant="secondary" onClick={() => handleEntrances(1)} aria-label="Увеличить">+</GlowButton>
+            <GlowButton
+              variant="secondary"
+              onClick={() => setParams({ entrances: Math.min(50, params.entrances + 1) })}
+              aria-label="Увеличить"
+            >
+              +
+            </GlowButton>
           </div>
         </div>
 
         <div className={styles.inputGroup}>
-          <label className={styles.label}>Число этажей</label>
+          <label className={styles.label}>Этажей</label>
           <div className={styles.sliderRow}>
             <input
               type="range"
               min={1}
               max={30}
               step={1}
-              value={floorsPerEntrance || 1}
-              onChange={(e) => handleFloors(Number(e.target.value))}
+              value={params.floors}
+              onChange={(e) => setParams({ floors: Number(e.target.value) })}
               className={styles.slider}
             />
             <input
               type="number"
               min={1}
               max={50}
-              value={floorsPerEntrance || 1}
-              onChange={(e) => handleFloors(Number(e.target.value) || 1)}
+              value={params.floors}
+              onChange={(e) => setParams({ floors: Math.max(1, Number(e.target.value) || 1) })}
               className={styles.numberInput}
-              aria-label="Число этажей"
+              aria-label="Этажей"
             />
           </div>
         </div>
 
         <div className={styles.inputGroup}>
-          <label className={styles.label}>Квартир на этаже</label>
+          <label className={styles.label}>Лифтов</label>
           <div className={styles.stepperRow}>
-            <GlowButton variant="secondary" onClick={() => handleFlatsPerFloor((flatsPerFloor || 4) - 1)} aria-label="Уменьшить">−</GlowButton>
+            <GlowButton
+              variant="secondary"
+              onClick={() => setParams({ elevators: Math.max(0, params.elevators - 1) })}
+              aria-label="Уменьшить"
+            >
+              −
+            </GlowButton>
             <input
               type="number"
-              min={1}
-              max={50}
-              value={flatsPerFloor || 4}
-              onChange={(e) => handleFlatsPerFloor(Number(e.target.value) || 4)}
+              min={0}
+              max={20}
+              value={params.elevators}
+              onChange={(e) => setParams({ elevators: Math.max(0, Number(e.target.value) || 0) })}
               className={styles.numberInput}
-              aria-label="Квартир на этаже"
+              aria-label="Лифтов"
             />
-            <GlowButton variant="secondary" onClick={() => handleFlatsPerFloor((flatsPerFloor || 4) + 1)} aria-label="Увеличить">+</GlowButton>
+            <GlowButton
+              variant="secondary"
+              onClick={() => setParams({ elevators: Math.min(20, params.elevators + 1) })}
+              aria-label="Увеличить"
+            >
+              +
+            </GlowButton>
           </div>
         </div>
 
+        <div className={styles.inputGroup}>
+          <label className={styles.label}>Дворовые калитки</label>
+          <div className={styles.stepperRow}>
+            <GlowButton
+              variant="secondary"
+              onClick={() => setParams({ yardGates: Math.max(0, params.yardGates - 1) })}
+              aria-label="Уменьшить"
+            >
+              −
+            </GlowButton>
+            <input
+              type="number"
+              min={0}
+              max={20}
+              value={params.yardGates}
+              onChange={(e) => setParams({ yardGates: Math.max(0, Number(e.target.value) || 0) })}
+              className={styles.numberInput}
+              aria-label="Калиток"
+            />
+            <GlowButton
+              variant="secondary"
+              onClick={() => setParams({ yardGates: Math.min(20, params.yardGates + 1) })}
+              aria-label="Увеличить"
+            >
+              +
+            </GlowButton>
+          </div>
+        </div>
+
+        <div className={styles.inputGroup}>
+          <label className={styles.labelCheckbox}>
+            <input
+              type="checkbox"
+              checked={params.hasParking}
+              onChange={(e) => setParams({ hasParking: e.target.checked })}
+            />
+            <span>Есть паркинг (въезд/шлагбаум)</span>
+          </label>
+        </div>
+
+        {params.hasParking && (
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Въездов / шлагбаумов паркинга</label>
+            <div className={styles.stepperRow}>
+              <GlowButton
+                variant="secondary"
+                onClick={() => setParams({ parkingGates: Math.max(0, params.parkingGates - 1) })}
+                aria-label="Уменьшить"
+              >
+                −
+              </GlowButton>
+              <input
+                type="number"
+                min={0}
+                max={20}
+                value={params.parkingGates}
+                onChange={(e) => setParams({ parkingGates: Math.max(0, Number(e.target.value) || 0) })}
+                className={styles.numberInput}
+                aria-label="Въездов паркинга"
+              />
+              <GlowButton
+                variant="secondary"
+                onClick={() => setParams({ parkingGates: Math.min(20, params.parkingGates + 1) })}
+                aria-label="Увеличить"
+              >
+                +
+              </GlowButton>
+            </div>
+          </div>
+        )}
+
+        <div className={styles.inputGroup}>
+          <label className={styles.label}>Охват видеонаблюдением</label>
+          <div className={styles.toggleRow}>
+            <button
+              type="button"
+              className={params.coverageType === 'entrance_only' ? styles.toggleActive : undefined}
+              onClick={() => setParams({ coverageType: 'entrance_only' })}
+            >
+              Только входные группы
+            </button>
+            <button
+              type="button"
+              className={params.coverageType === 'whole_building' ? styles.toggleActive : undefined}
+              onClick={() => setParams({ coverageType: 'whole_building' })}
+            >
+              Весь дом (входы + этажи)
+            </button>
+          </div>
+        </div>
+
+        {params.coverageType === 'whole_building' && (
+          <div className={styles.inputGroup}>
+            <label className={styles.labelCheckbox}>
+              <input
+                type="checkbox"
+                checked={params.twoCamerasPerFloor}
+                onChange={(e) => setParams({ twoCamerasPerFloor: e.target.checked })}
+              />
+              <span>2 камеры на этаж</span>
+            </label>
+          </div>
+        )}
+
+        <div className={styles.inputGroup}>
+          <label className={styles.labelCheckbox}>
+            <input
+              type="checkbox"
+              checked={params.hasCamerasInLifts}
+              onChange={(e) => setParams({ hasCamerasInLifts: e.target.checked })}
+            />
+            <span>Камеры в лифтах</span>
+          </label>
+        </div>
+
         <div className={styles.actions}>
-          <GlowButton onClick={() => setStep(2)}>Далее: Камеры</GlowButton>
+          <GlowButton onClick={scrollToResult}>Рассчитать смету</GlowButton>
         </div>
       </GlassCard>
     </motion.div>

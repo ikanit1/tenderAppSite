@@ -1,7 +1,6 @@
 /**
  * Вспомогательные расчёты и форматирование для калькулятора смет.
  */
-import type { CalculatorInputs } from '@/widgets/calculator/calculatorLogic';
 
 const KZT_FORMAT = new Intl.NumberFormat('ru-KZ', {
   style: 'currency',
@@ -14,8 +13,20 @@ export function formatKzt(value: number): string {
   return KZT_FORMAT.format(value);
 }
 
+/** Минимальный shape для подсчёта устройств домофонии (legacy). */
+export interface IntercomInputShape {
+  intercom: {
+    entrances: number;
+    floorsPerEntrance: number;
+    flatsPerFloor: number;
+    extraCardReaders?: number;
+    carEntrance: { enabled: boolean; entranceCount?: number; gates: number; parking: number };
+    hasConcierge: boolean;
+  };
+}
+
 /** Количество устройств домофонии для предупреждения >250 */
-export function intercomDevicesCount(input: CalculatorInputs): number {
+export function intercomDevicesCount(input: IntercomInputShape): number {
   const { entrances, floorsPerEntrance, flatsPerFloor, extraCardReaders, carEntrance, hasConcierge } = input.intercom;
   const totalFlats = entrances * floorsPerEntrance * flatsPerFloor;
   const readersFromFlats = totalFlats + entrances * floorsPerEntrance + (hasConcierge ? 2 : 0);

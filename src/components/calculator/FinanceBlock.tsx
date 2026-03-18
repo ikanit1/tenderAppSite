@@ -16,8 +16,9 @@ function fmt(n: number) {
 }
 
 export function FinanceBlock({ result }: Props) {
-  const paybackYears = (result.paybackMonths / 12).toFixed(1);
-  const progressPct = Math.min(100, Math.round((result.paybackMonths / 60) * 100));
+  const paybackMonths = result.paybackMonths ?? 0;
+  const paybackYears = (paybackMonths / 12).toFixed(1);
+  const progressPct = Math.min(100, Math.round((paybackMonths / 60) * 100));
 
   return (
     <motion.div
@@ -52,7 +53,7 @@ export function FinanceBlock({ result }: Props) {
             <span className={styles.rateIcon}>🔔</span>
             <span className={styles.rateName}>Домофония</span>
             <span className={styles.ratePrice}>
-              от {result.monthlyIntercomPerFlat.toLocaleString('ru-KZ')} ₸
+              от {(result.monthlyIntercomPerFlat ?? 0).toLocaleString('ru-KZ')} ₸
             </span>
             <span className={styles.rateDesc}>с квартиры / мес.</span>
           </div>
@@ -60,7 +61,7 @@ export function FinanceBlock({ result }: Props) {
             <span className={styles.rateIcon}>📷</span>
             <span className={styles.rateName}>Видеонаблюдение</span>
             <span className={styles.ratePrice}>
-              от {result.monthlyCctvPerFlat.toLocaleString('ru-KZ')} ₸
+              от {(result.monthlyCctvPerFlat ?? 0).toLocaleString('ru-KZ')} ₸
             </span>
             <span className={styles.rateDesc}>с квартиры / мес.</span>
           </div>
@@ -69,15 +70,15 @@ export function FinanceBlock({ result }: Props) {
         <div className={styles.monthlyTotal}>
           <div className={styles.monthlyRow}>
             <span>🔔 Домофония × {result.totalFlats ?? 0} кв.</span>
-            <span className={styles.mono}>{fmt(result.monthlyIntercomTotal)}/мес</span>
+            <span className={styles.mono}>{fmt(result.monthlyIntercomTotal ?? 0)}/мес</span>
           </div>
           <div className={styles.monthlyRow}>
             <span>📷 Видеонаблюдение × {result.totalFlats ?? 0} кв.</span>
-            <span className={styles.mono}>{fmt(result.monthlyCctvTotal)}/мес</span>
+            <span className={styles.mono}>{fmt(result.monthlyCctvTotal ?? 0)}/мес</span>
           </div>
           <div className={`${styles.monthlyRow} ${styles.monthlyTotalRow}`}>
             <span>Итого с дома в месяц</span>
-            <span className={styles.monoAccent}>{fmt(result.monthlyTotal)}</span>
+            <span className={styles.monoAccent}>{fmt(result.monthlyTotal ?? 0)}</span>
           </div>
         </div>
 
@@ -85,7 +86,7 @@ export function FinanceBlock({ result }: Props) {
 
         <div className={styles.sectionTitle}>📈 Срок окупаемости инвестиции</div>
         <div className={styles.paybackRow}>
-          <span className={styles.paybackVal}>~{result.paybackMonths} мес.</span>
+          <span className={styles.paybackVal}>~{paybackMonths} мес.</span>
           <span className={styles.paybackYears}>(~{paybackYears} лет)</span>
         </div>
         <div className={styles.progressTrack}>
