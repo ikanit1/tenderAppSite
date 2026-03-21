@@ -53,7 +53,7 @@ export function ProjectsSection() {
       variants={reduceMotion ? undefined : sectionVariants}
       initial="hidden"
       whileInView="visible"
-      viewport={viewportReveal}
+      viewport={{ ...viewportReveal, once: false, amount: 0.1 }}
     >
       <motion.div className={styles.container} variants={reduceMotion ? undefined : sectionVariants}>
         <motion.h2 id="projects-heading" className={styles.heading} variants={reduceMotion ? undefined : headerVariants}>
