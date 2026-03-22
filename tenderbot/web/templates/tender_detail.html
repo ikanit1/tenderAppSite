@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Тендер {{ tender.id }} — TenderBot Admin{% endblock %}
+{% block header_title %}Тендер{% endblock %}
+{% block body_attrs %}data-live-updates="1"{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2 class="page-title">{{ tender.title }}</h2>
+    <p class="page-subtitle">ID {{ tender.id }} · {{ tender.status|translate_status }}</p>
+</div>
+<div class="detail-actions">
+    <a href="/tenders/{{ tender.id }}/edit" class="btn btn-warning">✏️ Редактировать</a>
+    <a href="/tenders" class="btn btn-secondary">← К списку</a>
+    <form method="post" action="/tenders/{{ tender.id }}/delete" style="display: inline;" onsubmit="return confirm('Удалить тендер безвозвратно? Все отклики по нему будут удалены.');">
+        {{ csrf_hidden_input(request)|safe }}
+        <button type="submit" class="btn btn-danger">🗑 Удалить</button>
+    </form>
+</div>
+<div class="detail-info">
+    <p><strong>ID:</strong> {{ tender.id }}</p>
+    <p><strong>Статус:</strong> <span class="badge badge-neutral">{{ tender.status|translate_status }}</span></p>
+    <p><strong>Город:</strong> {{ tender.city }}</p>
+    <p><strong>Категории:</strong> {{ (tender.categories or [])|join(", ") }}</p>
+    <p><strong>Бюджет:</strong> {{ tender.budget or "—" }}</p>
+    <p><strong>Дедлайн:</strong> {% if tender.deadline %}{{ tender.deadline.strftime('%d.%m.%Y %H:%M') }}{% else %}—{% endif %}</p>
+    <p><strong>Создатель:</strong> {% if tender.creator %}<a href="/users/{{ tender.creator.id }}">{{ tender.creator.full_name }}</a> (ID {{ tender.creator.id }}){% else %}—{% endif %}</p>
+    <p><strong>Описание:</strong><br>{{ tender.description|e }}</p>
+</div>
+<div class="card">
+    <h3 class="card-title">Изменить статус</h3>
+    <form method="post" action="/tenders/{{ tender.id }}/status" class="form-inline">
+        {{ csrf_hidden_input(request)|safe }}
+        <select name="new_status" class="form-select" style="width: auto; min-width: 140px;">
+            {% for s in statuses %}
+            <option value="{{ s }}" {% if tender.status == s %}selected{% endif %}>{{ s|translate_status }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary">Изменить</button>
+    </form>
+</div>
+<div class="card">
+    <h3 class="card-title">Отклики ({{ tender.applications|length }})</h3>
+    {% if tender.applications %}
+    <form id="bulkAppsForm" method="post" action="/applications/bulk" class="form-inline" style="margin-bottom: 0.75rem;">
+        {{ csrf_hidden_input(request)|safe }}
+        <input type="hidden" name="tender_id" value="{{ tender.id }}">
+        <select name="action" class="form-select" style="width: auto; min-width: 180px;" required>
+            <option value="">Выберите действие</option>
+            <option value="select">Массово выбрать</option>
+            <option value="reject">Массово отклонить</option>
+            <option value="delete">Массово удалить</option>
+        </select>
+        <button type="submit" class="btn btn-primary" onclick="return confirm('Vypolnit massovoe deistvie po vybrannym otklikam?');">Применить</button>
+    </form>
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="checkAllApps"></th>
+                    <th>ID</th>
+                    <th>Исполнитель</th>
+                    <th>Телефон</th>
+                    <th>Город</th>
+                    <th>Статус</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in tender.applications %}
+                <tr>
+                    <td><input type="checkbox" name="application_ids" value="{{ a.id }}" class="app-check" form="bulkAppsForm"></td>
+                    <td>{{ a.id }}</td>
+                    <td><a href="/users/{{ a.user.id }}">{{ a.user.full_name }}</a></td>
+                    <td>{{ a.user.phone }}</td>
+                    <td>{{ a.user.city }}</td>
+                    <td>
+                        {% if a.status == "applied" %}<span class="badge badge-warning">⏳ Ожидает</span>{% endif %}
+                        {% if a.status == "selected" %}<span class="badge badge-success">✅ Выбран</span>{% endif %}
+                        {% if a.status == "rejected" %}<span class="badge badge-danger">❌ Отклонён</span>{% endif %}
+                    </td>
+                    <td>
+                        {% if a.status == "applied" %}
+                        <form method="post" action="/applications/{{ a.id }}/select" style="display: inline-block;">
+                            {{ csrf_hidden_input(request)|safe }}
+                            <button type="submit" class="btn btn-success btn-sm">✅ Выбрать</button>
+                        </form>
+                        <form method="post" action="/applications/{{ a.id }}/reject" style="display: inline-block;">
+                            {{ csrf_hidden_input(request)|safe }}
+                            <button type="submit" class="btn btn-danger btn-sm">❌ Отклонить</button>
+                        </form>
+                        {% endif %}
+                        <form method="post" action="/applications/{{ a.id }}/delete" style="display: inline-block;" onsubmit="return confirm('Удалить отклик?');">
+                            {{ csrf_hidden_input(request)|safe }}
+                            <button type="submit" class="btn btn-danger btn-sm">🗑</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script>
+    (function () {
+      const all = document.getElementById("checkAllApps");
+      const items = document.querySelectorAll(".app-check");
+      if (!all) return;
+      all.addEventListener("change", function () {
+        items.forEach(function (el) { el.checked = all.checked; });
+      });
+    })();
+    </script>
+    {% else %}
+    <p class="empty-state">Откликов пока нет.</p>
+    {% endif %}
+</div>
+{% endblock %}

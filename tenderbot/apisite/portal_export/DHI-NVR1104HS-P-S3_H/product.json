@@ -1,0 +1,27 @@
+{
+  "name": "DHI-NVR1104HS-P-S3_H Сетевой PoE видеорегистратор",
+  "price": 5519044152,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Dimensions (L x W x H )": "Compact 1U, 260 mm × 224.9 mm × 47.6 mm (10.2″ × 8.9″ × 1.9″)",
+    "Interface": "1x HDMI, 1x VGA, 1x RJ-45 port (10/100/1000Mbps)",
+    "Power Supply": "Single, DC48V/2A Power Consumption: NVR: <5.8W (without HDD) PoE: Max 25.5w for single port, 80w in total",
+    "Weight": "Net Weight: 0.8 kg (1.76 lb) (without HDD) Gross Weight: 1.6 kg (3.53 lb) (without HDD)",
+    "Type": "PoE NVR Switch",
+    "Port": "HDD : 1 front USB 2.0 port, 1 rear USB 2.0 port USB : 1 HDMI : 1 VGA : 1 RCA Input : 1 RCA Output : 1 Alarm : None Network : 1 RJ–45 port (10/100 Mbps), 4 RJ–45 ports with PoE power supply (10/100 Mbps)",
+    "Network Standard": "Network Protocol : HTTP, HTTPS, TCP/IP, IPv4, IPv6, RTSP, UDP, NTP, DHCP, DNS, P2P Mobile Phone Access : iDMSS(iOS), gDMSS(Android) Access Standard : ONVIF(profile T/profile S/profile G),CGI,SDK Browser : Chrome, IE9 or above, Firefox",
+    "Access Method": "Access Channel : 4 channels Network Bandwidth : 80 Mbps for access, 80 Mbps for storage and 60 Mbps for forwarding. Resolution : 8MP/5MP/4MP/3MP/1080P/720P/D1/CIF Decoding Capability : 1–ch@8MP(30FPS) or 1–ch@5MP(30FPS) or 2–ch@4MP(30FPS) or 2–ch@3MP(30FPS) or 4–ch@1080P(30FPS) Video Output : 1 VGA/1 HDMI simultaneous video output, maximum resolution 1080P Multi-screen Display : 1/4 Third Party Camera Access : Onvif, RTSP",
+    "Advanced Functions": "Multi-channel Playback : Up to 4 channels playback Record Mode : Priority of record mode: Manual recording > alarm recording > motion detection recording > timed recording Storage : Local HDD and network Backup : USB device Playback Function : 1. Play, pause, stop, fast forward, fast backward, rewind, play by frame 2. Full screen, backup (cut/file), partially enlarge, audio on/off General Alarm : Motion detection, privacy masking, video loss, PIR alarm, IPC alarm Anomaly Alarm : Front-end device going offline, storage error, full storage, IP conflict, MAC conflict, login lock, network security anomaly Alarm Linkage : Video recording, snapshot, log, preset, tour Compression Video : Smart H.265+/H.265/Smart H.264+/H.264 Audio : PCM/G711A/G711U/G726/AAC System Main Processor : Industrial-grade embedded processor Operating System : Embedded Linux Operation Interface : Web/operating in local GUI USB: 2 ports (1 Rear USB2.0, 1 Front USB2.0) Internal HDD: 1 SATA III port, up to 10 TB for a single HDD. The maximum HDD capacity varies with environment temperature Interoperability: ONVIF 2.4, SDK, CGI Compression: Smart H.265+/H.265/Smart H.264+/H.264 Resolution: 8MP/6MP/5MP/4MP/3MP/1080P/ 720P/ D1&etc. Record Rate: 80Mbps Bit Rate: 16Kbps ~ 20Mbps Per Channel",
+    "MAC Address Table": "2K",
+    "Environment": "Operating Conditions: -10°C to +55°C (+14°F to +131°F), 86–106kpa Storage Conditions: 0°C to +40°C (+32°F to +104°F), 30–85% RH"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DHI-NVR1104HS-P-S3_H",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15341",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

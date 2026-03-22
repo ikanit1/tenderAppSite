@@ -1,0 +1,35 @@
+{
+  "name": "DHI-LS550UDM-EF Профессиональный дисплей для видеостен",
+  "price": 0,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "DHI-LS550UDM-EF",
+    "Diagonal Size": "55\"(16:9)",
+    "Panel Type": "ADS",
+    "Resolution": "1920×1080 (FHD)",
+    "Bezel width": "B2B: 1.7mm (Panel Bezel to Panel Bezel), 0.8mm (T/L), 0.9mm (B/R) A2A: 2.54mm (Active area to Active area), 1.22mm (T/L), 1.32mm (B/R)",
+    "Backlight": "Direct LED",
+    "Brightness": "500 cd/m²",
+    "Contrast Ratio": "1200:1",
+    "Pixel Density": "40dpi",
+    "Viewing Angle": "H178°, V178°",
+    "Response Time (G-to-G)": "8ms",
+    "Color Depth": "8bit (16.7M)",
+    "Color Temperature": "10,000K",
+    "Surface Treatment": "Haze 25%, 3H",
+    "MTBF": "50,000h",
+    "Input": "CVBS(BNC)×1, VGA(D-Sub)×1, DVI-D×1, HDMI×1, RS232×1, USB×2, Audio×1, IR×1",
+    "Output": "CVBS(BNC)×1, RS232×1, HDMI×2, VGA×1, Audio×1"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "DHI-LS550UDM-EF",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=37790",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}

@@ -1,0 +1,24 @@
+# .env — секреты, не коммитить. .envv — шаблон в репо (виден на GitHub)
+.env
+
+# SQLite (если используете)
+*.db
+*.db-journal
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# Загрузки (поддержка)
+web/static/uploads/
+
+# IDE / Editor
+.idea/
+.vscode/
+.cursor/
+*.swp
+*.swo

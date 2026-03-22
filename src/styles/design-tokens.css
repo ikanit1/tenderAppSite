@@ -1,0 +1,42 @@
+/**
+ * Design tokens для калькулятора смет (CCTV + домофония).
+ */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap");
+
+:root {
+  --calc-font-heading: "Space Grotesk", var(--font-family-heading);
+  --calc-font-body: "Inter", var(--font-family);
+  --calc-font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --calc-glass-bg: rgba(20, 5, 47, 0.65);
+  --calc-glass-border: rgba(157, 78, 221, 0.25);
+  --calc-glass-blur: 12px;
+  --calc-grid-size: 40px;
+  --calc-grid-color: rgba(157, 78, 221, 0.06);
+  --calc-glow-accent: 0 0 24px rgba(157, 78, 221, 0.35);
+  --calc-glow-hover: 0 0 32px rgba(157, 78, 221, 0.45);
+  --calc-gradient-text: linear-gradient(135deg, #f4ecff 0%, #c8b5e8 50%, #a58bcf 100%);
+  --calc-bp-mobile: 375px;
+  --calc-bp-tablet: 768px;
+  --calc-bp-desktop: 1280px;
+  --calc-bp-wide: 1920px;
+}
+
+.calcGridBg {
+  background-image:
+    linear-gradient(var(--calc-grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--calc-grid-color) 1px, transparent 1px);
+  background-size: var(--calc-grid-size) var(--calc-grid-size);
+}
+
+.calcGlass {
+  background: var(--calc-glass-bg);
+  backdrop-filter: blur(var(--calc-glass-blur));
+  -webkit-backdrop-filter: blur(var(--calc-glass-blur));
+  border: 1px solid var(--calc-glass-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.calcGlass:hover {
+  box-shadow: var(--calc-glow-accent), var(--shadow-card);
+}

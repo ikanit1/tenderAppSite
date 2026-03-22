@@ -1,0 +1,36 @@
+{
+  "name": "WI-PE51E Wi-Tek Повторитель PoE",
+  "price": 1990012935,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "HARDWARE FEATURES": "WI-PE51E",
+    "Interface": "PoE in port： 1 x 100Mbps PoE port with 802.3bt 60W DC in port: 48-55V PoE out port: 4 x 100Mbps PoE port with 802.3at/at 30W 1 x 100Mbps PoE port",
+    "Network Media": "10BASE-T: UTP category 3, 4, 5 cable (Max 100m) EIA/TIA-568 100Ω STP (Max 100m) 100BASE-TX: UTP category 5, 5e cable (Max 100m)EIA/TIA-568 100Ω STP (Max 100m)",
+    "PoE PIN": "PoE IN: 4/5(+) 7/8(-)or 1/2(+) 3/6(-) PoE OUT: 4/5(+) 7/8(-)or 1/2(+)3/6(-)",
+    "LED Indicator": "PWR, Link",
+    "DIP Switch": "Default/Extend/VLAN",
+    "250m Long Distance": "Default/Extend/VLAN",
+    "Transmission Method": "Store-And-Forward",
+    "Advanced Functions": "Mac Address Auto-Learning And Auto-Aging Store and forward IEEE 802.3x ﬂow control for Full-duplex Mode Backpressure for Half-duplex Mode",
+    "Certification": "CE, FCC, RoHS",
+    "Package Dimension": "193×95×32mm",
+    "Switch Dimension": "140×80×27mm",
+    "Gross Weight": "0.32kg",
+    "Net Weight": "0.28kg",
+    "Operating Temperature": "0°C~40°C",
+    "Package Contents": "1 x PoE Extender 1*Installation Guide"
+  },
+  "tabs": {},
+  "images_count": 6,
+  "model": "WI-PE51E",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15185",
+  "images": [
+    "image_01.png",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png",
+    "image_05.png",
+    "image_06.png"
+  ]
+}

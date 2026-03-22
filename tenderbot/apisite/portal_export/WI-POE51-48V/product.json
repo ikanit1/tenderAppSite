@@ -1,0 +1,39 @@
+{
+  "name": "WI-POE51-48V Wi-Tek PoE-инжектор",
+  "price": 113007345,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "HARDWARE FEATURES": "WI-POE51-48V",
+    "Interface": "1 10/1000Mbps PoE RJ45 Port 1 10/1000Mbps Ethernet Port",
+    "Network Media": "10BASE-T: UTP category 3, 4, 5 cable (Max 100m) EIA/TIA-568 100Ω STP (Max 100m) 100BASE-TX: UTP category 5, 5e cable (Max 100m) EIA/TIA-568 100Ω STP (Max 100m)",
+    "Power Supply": "AC IN 100-240V",
+    "Data In/Out": "1 x 10/1000Mbps Data In",
+    "Power In/Out Port": "1 x 802.3af/at PoE Out",
+    "PoE PIN": "4/5(+) 7/8(-) or 1/2(+) 3/6(-)",
+    "PoE Consumption": "48V 24W",
+    "LED Indicator": "PWR-Power",
+    "DIP Switch": "N/A",
+    "Background Bandwidth": "2Gbps",
+    "Transmission Method": "Store-And-Forward",
+    "Protection Level": "6kV Lightning protection 6kV ESD Contact discharge",
+    "Advanced Functions": "Mac Address Auto-Learning And Auto-Aging Store and forward IEEE 802.3x flow control for Full-duplex Mode Backpressure for Half-duplex Mode",
+    "Certification": "CE, FCC, RoHS",
+    "Package Dimension": "205×134×47mm",
+    "DeviceDimension": "113×48×30mm",
+    "Gross Weight": "0.3kg",
+    "Net Weight": "0.12kg",
+    "Package Contents": "1 x PoE Switch 1 x Power Cord 1 x Quick Installation Guide",
+    "Operating Temperature": "-10°C~55°C"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "WI-POE51-48V",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15182",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}

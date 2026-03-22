@@ -1,0 +1,26 @@
+{
+  "name": "FR1500 Считыватель",
+  "price": 6670060900,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Рабочая температура": "-10 ~ 45 °C",
+    "Влажность": "20 ~ 95%",
+    "Размеры": "121.3 × 77.3 × 38 мм",
+    "Алгоритм идентификации": "ZKFinger v10.0",
+    "Питание": "DC 12В",
+    "Потребляемая мощность в режиме ожидания": "0.72 Вт",
+    "Пиковый потребляемый ток при сканировании": "140 мA",
+    "Платформа": ""
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "FR1500",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=36846",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}

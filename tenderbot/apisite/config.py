@@ -1,0 +1,84 @@
+"""Конфигурация приложения"""
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+# Загружаем .env из папки apisite (рядом с config.py)
+load_dotenv(Path(__file__).resolve().parent / ".env")
+
+# API настройки
+B2B_API_URL = "https://complex.com.kz/index.php?route=api/b2b/products_json"
+B2B_API_XML_URL = "https://complex.com.kz/index.php?route=api/b2b/download"
+B2B_API_BASE_URL = "https://complex.com.kz"
+# Если переменная окружения API_KEY задана, но пустая (часто бывает в .env),
+# os.getenv вернёт "" и это сломает загрузку товаров. Поэтому используем fallback.
+_API_KEY_DEFAULT = "67b947f52e43a1fcd96cba842d77be0ce3fc3126f8c08310742b638b9b1f725f"
+API_KEY = (os.getenv("API_KEY") or "").strip() or _API_KEY_DEFAULT
+
+# Пути для изображений (возможные варианты)
+IMAGE_PATHS = [
+    "/image/catalog/products/",
+    "/image/catalog/data/",  # Предсказуемый путь по бренду
+    "/images/products/",
+    "/catalog/products/",
+    "/upload/products/",
+]
+
+# Google Custom Search API
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "AIzaSyBtVMTD2scFSTxXyqTgGOZkjYttOxpGJcI")
+GOOGLE_CSE_ID = os.getenv("GOOGLE_CSE_ID", "5198f2f4048814c52")
+
+# Настройки скрейпинга
+SCRAPING_ENABLED = os.getenv("SCRAPING_ENABLED", "true").lower() == "true"
+SCRAPING_DELAY = float(os.getenv("SCRAPING_DELAY", "1.0"))  # Задержка между запросами
+
+# Настройки обновления
+UPDATE_INTERVAL_MINUTES = 10
+CACHE_FILE = Path(__file__).parent / "data" / "products_cache.json"
+XML_CACHE_FILE = Path(__file__).parent / "data" / "xml_cache.json"  # Опциональный локальный кэш XML
+LOCAL_XML_FILE = Path(__file__).parent / "products.xml"  # Локальный XML файл в корне проекта
+
+# Настройки парсера изображений
+IMAGE_PARSER_ENABLED = os.getenv("IMAGE_PARSER_ENABLED", "true").lower() == "true"
+IMAGE_PARSER_MAX_PAGES = int(os.getenv("IMAGE_PARSER_MAX_PAGES", "0"))  # 0 = все страницы, None = все
+IMAGE_PARSER_STARTUP_DELAY = int(os.getenv("IMAGE_PARSER_STARTUP_DELAY", "30"))  # Задержка перед запуском (секунды)
+
+# Настройки сервера
+HOST = os.getenv("HOST", "0.0.0.0")
+PORT = int(os.getenv("PORT", 8001))
+UVICORN_WORKERS = int(os.getenv("UVICORN_WORKERS", "1"))  # Production: 2+
+
+# CORS настройки
+# Для production можно ограничить до конкретного домена: CORS_ORIGINS=https://grgroup.kz
+# Для dev оставить пустым или указать * для разрешения всех источников
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*")
+
+# LLM API: приоритет у OpenAI, если задан OPENAI_API_KEY; иначе OpenRouter
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
+
+# Отправка заказов на email админа (checkout)
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "").strip()
+SMTP_HOST = os.getenv("SMTP_HOST", "mail.grgroup.kz")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
+SMTP_USER = os.getenv("SMTP_USER", "").strip()
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+SMTP_USE_TLS = os.getenv("SMTP_USE_TLS", "false").lower() == "true"
+SMTP_USE_SSL = os.getenv("SMTP_USE_SSL", "true").lower() == "true"  # Для порта 465 используется SSL
+
+# Аутентификация админки каталога
+ADMIN_LOGIN = os.getenv("ADMIN_LOGIN", "admin").strip()
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123").strip()
+
+# Базовый URL сайта для sitemap.xml (без слэша в конце)
+SITEMAP_BASE_URL = (os.getenv("SITEMAP_BASE_URL", "https://grgroup.kz")).rstrip("/")
+
+# SATU.KZ Public API (выгрузка товаров на маркетплейс)
+SATU_API_BASE_URL = (os.getenv("SATU_API_BASE_URL", "https://my.satu.kz/api/v1")).rstrip("/")
+SATU_API_TOKEN = (os.getenv("SATU_API_TOKEN") or "").strip()
+
+# Создаем директорию для данных
+CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)

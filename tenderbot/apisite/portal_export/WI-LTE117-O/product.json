@@ -1,0 +1,40 @@
+{
+  "name": "Wi-Tek WI-LTE117-O 300 Мбит/с Беспроводной 4G LTE роутер",
+  "price": 5170033605,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "WI-LTE117-O",
+    "Hardware version": "v1",
+    "Interface": "(2)10/100M Base-T Ethernet Ports",
+    "Signal Rate": "300 Mbps at 2.4 GHz",
+    "Wi-Fi Antenna": "5dBi",
+    "Power Supply": "48V PoE IN or DC 48-54V / 2A Max",
+    "PoE Port": "Up to 2 * PoE OUT",
+    "Power Consumption": "< 5W",
+    "External buttons": "reset button (long press for 8 seconds to restore the factory default configuration)",
+    "Transmit Power": "20dBm",
+    "Supported bands": "EU",
+    "CN": "LTE FDD：B1/B3/B5/B8 LTE TDD: B34/B38/B39/B40/B41 WCDMA: B1/B5/B8 GSM: B3/B8",
+    "LTE Category": "Cat4",
+    "4G/ETH Failover": "Yes",
+    "Weatherproof Enclosure": "IP65",
+    "Software Features": "3G/4G Router, Wireless Router, Eth-First Router, 4G-First Router",
+    "Dimensions": "152mm x 78mm x 35mm",
+    "Environment": "Working Temp: -40 ~ 70°C Storage Temp: -40 ~85°C Working Humidity: 10%~95% (non-condensing)"
+  },
+  "tabs": {},
+  "images_count": 8,
+  "model": "WI-LTE117-O",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=23182",
+  "images": [
+    "image_01.png",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png",
+    "image_05.png",
+    "image_06.png",
+    "image_07.png",
+    "image_08.png"
+  ]
+}

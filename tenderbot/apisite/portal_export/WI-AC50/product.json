@@ -1,0 +1,30 @@
+{
+  "name": "WI-AC50 Wi-Tek Контроллер точки доступа",
+  "price": 1590010335,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Interface": "2*10/100 Base-T Ethernet ports 1* 2.0 USB Port ( reserved In-advance ) 1* micro USB (power) 1* 2.4GHz Wireless interface",
+    "AP Unified Configuration": "50APs",
+    "Power supply": "802. 3af/at PoE in Micro-USB 5V 1A",
+    "Power consumption": "<2W",
+    "Network Access": "DHCP, static IP",
+    "Cloud Access": "Yes",
+    "L3 Management": "Yes",
+    "Main Function": "Auto AP Discovery RF optimization Batch configuration Overview View multi-SSID configuration SSID hiding, channel setting Tx power setting AP online upgrade STA blacklist and whitelist Captive Portal Configuration",
+    "Environment": "Operating Temperature: -40°C ~ 55°C Storage Temperature: -40°C~70°C Operating Humidity: 5% ~ 95% (non-condensing) Storage Humidity: 5% ~ 95% (non-condensing)",
+    "Dimensions": "58mm*58mm*25mm"
+  },
+  "tabs": {},
+  "images_count": 6,
+  "model": "WI-AC50",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=23277",
+  "images": [
+    "image_01.png",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png",
+    "image_05.png",
+    "image_06.png"
+  ]
+}

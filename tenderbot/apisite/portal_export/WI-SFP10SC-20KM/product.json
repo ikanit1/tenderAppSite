@@ -1,0 +1,32 @@
+{
+  "name": "WI-SFP10SC-20KM Wi-Tek SFP модуль",
+  "price": 133008645,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Скорость": "1Гбит/с",
+    "Питание": "3.3В",
+    "Тип оптического волокна": "SMF",
+    "Длина волны": "A: Tx1310nm/Rx1550nm B: Tx1550nm/Rx1310nm",
+    "Максимальное расстояние": "20км",
+    "Разъём": "SC",
+    "DDM": "поддерживается",
+    "Температура и влажность": "Рабочая температура： 0℃～70℃ Температура хранения： -40℃～80℃ Влажность при эксплуатации: 10%～90% без конденсата"
+  },
+  "tabs": {},
+  "images_count": 10,
+  "model": "WI-SFP10SC-20KM",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=23246",
+  "images": [
+    "image_01.png",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png",
+    "image_05.png",
+    "image_06.png",
+    "image_07.png",
+    "image_08.png",
+    "image_09.png",
+    "image_10.png"
+  ]
+}

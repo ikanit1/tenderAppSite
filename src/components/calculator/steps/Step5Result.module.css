@@ -1,0 +1,472 @@
+.wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.title {
+  font-family: var(--calc-font-heading);
+  font-size: var(--text-2xl);
+  margin: 0 0 1rem;
+  background: var(--calc-gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.totalCard {
+  padding: 1.5rem 2rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ─── Сводный итог по проекту ─── */
+.grandSummaryCard {
+  padding: 1.5rem 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.grandSummaryTitle {
+  font-family: var(--font-heading, inherit);
+  font-size: var(--text-base);
+  font-weight: 700;
+  margin: 0 0 1rem;
+  color: var(--color-text);
+}
+
+.grandSummaryTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.grandSummaryTable td {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid rgba(157, 78, 221, 0.1);
+  color: var(--color-text-muted);
+}
+
+.grandSummarySection {
+  padding-top: 0.9rem !important;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-accent) !important;
+  border-bottom: none !important;
+}
+
+.grandSummaryName {
+  color: var(--color-text-muted);
+}
+
+.grandSummarySum {
+  text-align: right;
+  font-family: var(--font-mono, monospace);
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.grandSummarySubrow td {
+  font-weight: 600;
+  color: var(--color-text) !important;
+  border-bottom: 2px solid rgba(157, 78, 221, 0.25) !important;
+}
+
+.grandSummarySub {
+  text-align: right;
+  font-family: var(--font-mono, monospace);
+  white-space: nowrap;
+}
+
+.grandSummaryTotalRow td {
+  padding-top: 0.8rem !important;
+  border-bottom: none !important;
+}
+
+.grandSummaryTotalLabel {
+  font-weight: 700;
+  font-size: var(--text-base);
+  color: var(--color-text) !important;
+}
+
+.grandSummaryTotalVal {
+  text-align: right;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--color-accent) !important;
+  font-family: var(--font-mono, monospace);
+  white-space: nowrap;
+}
+
+/* ─── Общий итог — split ─── */
+.totalSplit {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.totalSplitItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.totalSplitLabel {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.totalSplitValue {
+  font-family: var(--calc-font-mono);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.totalSplitDivider {
+  font-size: var(--text-2xl);
+  color: var(--color-text-muted);
+  font-weight: 300;
+  line-height: 1;
+  padding-top: 1rem;
+}
+
+.totalSplitGrand {
+  padding-left: 0.5rem;
+}
+
+.totalLabel {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.totalValue {
+  font-size: var(--text-3xl);
+  font-weight: 700;
+}
+
+/* ─── Два столбца смет ─── */
+.twoColumns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+  margin-bottom: 1.5rem;
+}
+
+.oneColumn {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  align-items: start;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .twoColumns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.column {
+  min-width: 0;
+}
+
+.columnTitle {
+  font-family: var(--calc-font-heading);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--calc-glass-border);
+}
+
+.emptyHint {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  padding: 1rem 0;
+}
+
+/* ─── Смета домофонии ─── */
+.intercomSmeta {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.intercomGroup {
+  background: var(--calc-glass-bg);
+  border: 1px solid var(--calc-glass-border);
+  border-radius: var(--radius-card);
+  padding: 1.25rem;
+  overflow-x: auto;
+}
+
+.intercomGroupTitle {
+  font-family: var(--calc-font-heading);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 1rem;
+}
+
+.intercomTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.intercomTable th,
+.intercomTable td {
+  padding: 0.6rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(157, 78, 221, 0.15);
+}
+
+.intercomTable th {
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.intercomTable td {
+  color: var(--color-text);
+}
+
+.intercomTable tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.intercomCellSum {
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--color-accent);
+}
+
+.intercomThImg {
+  width: 56px;
+}
+
+.intercomCellImg {
+  vertical-align: middle;
+  width: 56px;
+}
+
+.intercomDeviceImg {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  display: block;
+  border-radius: 4px;
+}
+
+.intercomDevicePlaceholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: rgba(157, 78, 221, 0.08);
+  border-radius: 4px;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.intercomSubtotal {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(157, 78, 221, 0.15);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  text-align: right;
+}
+
+.intercomSubtotal strong {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.tableCard {
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--calc-glass-border);
+}
+
+.table th {
+  font-family: var(--calc-font-heading);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.mono {
+  font-family: var(--calc-font-mono);
+}
+
+.installmentInput {
+  margin-bottom: 1.5rem;
+}
+
+.installmentInputLabel {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.installmentInputField {
+  width: 120px;
+  padding: 0.5rem 0.75rem;
+  font-family: var(--calc-font-mono);
+  font-size: var(--text-base);
+  background: var(--color-surface);
+  border: 1px solid var(--calc-glass-border);
+  border-radius: var(--radius-button);
+  color: var(--color-text);
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--calc-glass-border);
+}
+
+.actionsLeft {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.actionsRight {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.downloadLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-btn, 8px);
+  border: 1px solid var(--color-accent, #7c3aed);
+  color: var(--color-accent, #7c3aed);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+
+.downloadLink:hover {
+  background: var(--color-accent, #7c3aed);
+  color: #fff;
+}
+
+@media (max-width: 600px) {
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .actionsLeft,
+  .actionsRight {
+    flex-direction: column;
+  }
+}
+
+/* Модальное окно — отправка на почту */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--calc-glass-border);
+  border-radius: var(--radius-block);
+  padding: 1.5rem 2rem;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+}
+
+.modalTitle {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
+}
+
+.modalDesc {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-bottom: 1.25rem;
+  line-height: var(--leading-normal);
+}
+
+.modalForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.inputLabel {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.modalInput {
+  padding: 0.5rem 0.75rem;
+  font-size: var(--text-base);
+  background: var(--color-surface);
+  border: 1px solid var(--calc-glass-border);
+  border-radius: var(--radius-button);
+  color: var(--color-text);
+}
+
+.modalInput::placeholder {
+  color: var(--color-text-light);
+}
+
+.modalButtons {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}

@@ -1,0 +1,191 @@
+# database/models.py — модели SQLAlchemy
+from datetime import date, datetime, timezone
+from enum import Enum
+from typing import Any, Optional
+
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, BigInteger, UniqueConstraint, Index
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.types import JSON, Date
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class UserStatus(str, Enum):
+    PENDING_MODERATION = "pending_moderation"
+    ACTIVE = "active"
+    BANNED = "banned"
+
+
+class UserRole(str, Enum):
+    EXECUTOR = "executor"
+    CUSTOMER = "customer"
+    BOTH = "both"
+
+
+class TenderStatus(str, Enum):
+    DRAFT = "draft"
+    OPEN = "open"
+    IN_PROGRESS = "in_progress"
+    CLOSED = "closed"
+    CANCELLED = "cancelled"
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    tg_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=False, index=True)
+    role: Mapped[str] = mapped_column(String(32), nullable=True, server_default="executor", index=True)
+    full_name: Mapped[str] = mapped_column(String(256), nullable=False)
+    birth_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    city: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
+    phone: Mapped[str] = mapped_column(String(64), nullable=False)
+    skills: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)  # список строк
+    status: Mapped[str] = mapped_column(String(32), nullable=False, server_default=UserStatus.PENDING_MODERATION.value, index=True)
+    documents: Mapped[Optional[dict | list]] = mapped_column(JSON, nullable=True)  # список {type, file_id, file_name?, mime_type?} или legacy dict
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    tenders_created: Mapped[list["Tender"]] = relationship(
+        "Tender", back_populates="creator", foreign_keys="Tender.created_by_user_id"
+    )
+    applications: Mapped[list["TenderApplication"]] = relationship(
+        "TenderApplication", back_populates="user"
+    )
+    support_tickets: Mapped[list["SupportTicket"]] = relationship(
+        "SupportTicket", back_populates="user"
+    )
+
+
+class Tender(Base):
+    __tablename__ = "tenders"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(String(256), nullable=False)
+    categories: Mapped[list] = mapped_column(JSON, nullable=False)  # список категорий (навыков)
+    city: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
+    budget: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, server_default=TenderStatus.DRAFT.value, index=True)
+    deadline: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    created_by_user_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    created_by_tg_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    creator: Mapped[Optional["User"]] = relationship(
+        "User", back_populates="tenders_created", foreign_keys=[created_by_user_id]
+    )
+    applications: Mapped[list["TenderApplication"]] = relationship(
+        "TenderApplication", back_populates="tender", cascade="all, delete-orphan"
+    )
+
+
+class ApplicationStatus(str, Enum):
+    APPLIED = "applied"
+    SELECTED = "selected"
+    REJECTED = "rejected"
+
+
+class TenderApplication(Base):
+    __tablename__ = "tender_applications"
+    __table_args__ = (
+        UniqueConstraint("tender_id", "user_id", name="uq_tender_user"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    tender_id: Mapped[int] = mapped_column(Integer, ForeignKey("tenders.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, server_default=ApplicationStatus.APPLIED.value, index=True)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    tender: Mapped["Tender"] = relationship("Tender", back_populates="applications")
+    user: Mapped["User"] = relationship("User", back_populates="applications")
+
+
+class Review(Base):
+    __tablename__ = "reviews"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    tender_id: Mapped[int] = mapped_column(Integer, ForeignKey("tenders.id", ondelete="CASCADE"), nullable=False)
+    application_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("tender_applications.id", ondelete="CASCADE"), nullable=False
+    )
+    from_user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    to_user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    rating: Mapped[int] = mapped_column(Integer, nullable=False)
+    comment: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+
+class TicketStatus(str, Enum):
+    NEW = "new"           # админ ещё не ответил
+    IN_PROGRESS = "in_progress"  # идёт диалог
+    CLOSED = "closed"     # архив
+
+
+class SupportTicket(Base):
+    __tablename__ = "support_tickets"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(
+        String(32), nullable=False, server_default=TicketStatus.NEW.value, index=True
+    )
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    user: Mapped["User"] = relationship("User", back_populates="support_tickets")
+    messages: Mapped[list["SupportMessage"]] = relationship(
+        "SupportMessage", back_populates="ticket", cascade="all, delete-orphan"
+    )
+
+
+class SupportMessage(Base):
+    __tablename__ = "support_messages"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ticket_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("support_tickets.id", ondelete="CASCADE"), nullable=False
+    )
+    author: Mapped[str] = mapped_column(String(16), nullable=False)  # "user" | "admin"
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    image_url: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)  # URL картинки в сообщении
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    ticket: Mapped["SupportTicket"] = relationship("SupportTicket", back_populates="messages")
+
+
+class AuditLog(Base):
+    """Audit log for tracking admin actions."""
+    __tablename__ = "audit_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    action: Mapped[str] = mapped_column(String(64), nullable=False, index=True)  # e.g. "user.approve", "tender.create"
+    entity_type: Mapped[str] = mapped_column(String(32), nullable=False)  # "user", "tender", "application", etc.
+    entity_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    admin_user: Mapped[str] = mapped_column(String(128), nullable=False)  # admin username or TG ID
+    details: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON or text details
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)

@@ -1,0 +1,36 @@
+{
+  "name": "DH-SD5A232GB-HNR IP видеокамера PTZ",
+  "price": 0,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Image Sensor": "1/2.8\" CMOS",
+    "Pixel": "2 MP",
+    "Max. Resolution": "1920 (H) × 1080 (V)",
+    "ROM": "4 GB",
+    "RAM": "1 GB",
+    "Electronic Shutter Speed": "1/1 s–1/30,000 s",
+    "Scanning System": "Progressive",
+    "Min. Illumination": "Color: 0.005 lux@F1.6 B/W: 0.0005 lux@F1.6 0 lux (IR light on)",
+    "Illumination Distance": "150 m (492.13 ft)",
+    "Illuminator On/Off Control": "Zoom Prio; Manual; Smart IR; Off",
+    "Illuminator Number": "4 (IR)",
+    "Focal Length": "4.5 mm–144 mm",
+    "Max. Aperture": "F1.6–F4.0",
+    "Field of View": "H: 58.4°–3.0°; V: 33.4°–1.7°; D: 66.4°–3.4°",
+    "Optical Zoom": "32×",
+    "Focus Control": "Auto; semi-auto; manual",
+    "Close Focus Distance": "0.1 m–1.5 m (0.33 ft–4.92 ft)",
+    "Iris Control": "Auto; manual"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "DH-SD5A232GB-HNR",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=37914",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}

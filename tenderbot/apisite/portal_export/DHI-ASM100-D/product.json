@@ -1,0 +1,27 @@
+{
+  "name": "DHI-ASM100-D Контрольный считыватель карт",
+  "price": 2870022960,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Mode": "ASM100",
+    "Main Processor": "32 Bit",
+    "Read Format": "13.56MHz",
+    "Read Range": "3--6cm (max.)",
+    "Communication": "USB to PC",
+    "Beep Tone": "Buzzer",
+    "Power Supply": "5VDC/100mA",
+    "Working Environment": "-30°C-+60°C",
+    "Working Humidity": "≤95%",
+    "Dimension(W×D×H)": "105mm*75mm*20mm",
+    "Weight": "0.18Kg"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DHI-ASM100-D",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15559",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

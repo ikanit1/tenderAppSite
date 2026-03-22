@@ -1,0 +1,14 @@
+{% if page_info and page_info.total_pages > 1 %}
+<nav class="pagination" aria-label="Навигация по страницам">
+    {% if page_info.has_prev %}
+    <a href="?page={{ page_info.prev_page }}" class="btn btn-ghost btn-sm">&laquo; Назад</a>
+    {% endif %}
+    {% for p in page_info.pages_range %}
+    <a href="?page={{ p }}" class="btn btn-sm {% if p == page_info.page %}btn-primary{% else %}btn-ghost{% endif %}">{{ p }}</a>
+    {% endfor %}
+    {% if page_info.has_next %}
+    <a href="?page={{ page_info.next_page }}" class="btn btn-ghost btn-sm">Вперёд &raquo;</a>
+    {% endif %}
+    <span class="pagination-info">{{ page_info.total }} записей</span>
+</nav>
+{% endif %}

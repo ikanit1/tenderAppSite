@@ -1,0 +1,43 @@
+{
+  "name": "WI-AP316 V2 Wi-Tek Точка доступа 1200 Мбит/с",
+  "price": 2580016770,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "WI-AP316",
+    "Wireless Standards": "802.11ac wave2/wave1 802.11n/b/g/a",
+    "Operating Bands": "2.4GHz & 5GHz",
+    "Antenna": "2.4GHz:5dBi, 5GHz: 5dBi",
+    "Spatial Steams": "2.4GHz：2x2 MIMO  5GHz：2x2 MIMO",
+    "Signal Rate": "Up to 300Mbps at 2.4GHz Up to 867Mbps at 5GHz",
+    "Receiver Sensitivity": "2.4GHz:： 11n: -65dbm@MCS7,    -88dbm@MCS0. 11g: -72dbm@54Mbps,   -89.5dbm@6Mbps. 11b: -92dbm@11Mbps,   -94dbm@1Mbps. 5GHz : 11a: -72dbm@54Mbps,   -88dbm@6Mbps. 11n@HT20: -65dbm@MCS7, -87.5dbm@MCS0. 11ac@HT80:-55.5dbm@MCS9, -79dbm@MCS0.",
+    "Maximum Transmit Power": "<23dbm",
+    "Interface": "(2)10/100 Base-T Ethernet ports",
+    "Power Supply": "DC 12V/1A (Not Included) 24V Passive PoE",
+    "Power Consumption": "< 10W",
+    "Installation": "Pole/Wall mounting",
+    "External buttons": "reset button (long press for 8 seconds to restore the factory default configuration)",
+    "Dimensions": "340mm * 85mm * 35mm",
+    "Environment": "Operating Temperature: -40°C～55°C Storage Temperature: -40°C～70°C Operating Humidity: 5% ～ 95% (non-condensing) Storage Humidity: 5% ～ 95% (non-condensing)",
+    "Operating Mode": "Fit AP, Fat AP",
+    "Wireless Function": "Up to 16 SSIDs",
+    "Roaming": "Support Layer 2  roaming",
+    "Wireless Security": "Captive portal authentication Static blacklist and whitelist Wireless isolation between clients SSID to VLAN mapping Support 802.1X WPA/WPA2/PSK/WPA/WPA2-Enterprise",
+    "Internet Connection Type": "Support Static IP, DHCP, PPPoE Dial Up",
+    "Management": "Support local management with web Support centralized management with AC Support remote management with Wi-Tek cloud platform"
+  },
+  "tabs": {},
+  "images_count": 8,
+  "model": "WI-AP316 V2",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=39973",
+  "images": [
+    "image_01.jpg",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png",
+    "image_05.jpg",
+    "image_06.png",
+    "image_07.png",
+    "image_08.png"
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "name": "DH-PFM300 Блок питания",
+  "price": 44803584,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "DH-PFM300",
+    "Rated input": "AC180~264V, 50/60Hz, 0.6A",
+    "Efficiency": "82%",
+    "no-load power consumption": "<0.5W",
+    "Output voltage": "DC12V (±5%)",
+    "Output current": "2A (±2%)",
+    "Protection": "Accurate over current, voltage load protection",
+    "Working temperature": "-30℃~+70℃(-22℉~+158℉)",
+    "Working humidity": "<90% RH",
+    "Weight": "160g(0.35lb)",
+    "Dimension(LxWxH)": "88mmx37mmx138mm (3.46”x1.46“x5.43”)",
+    "Installation": "Wall mount",
+    "Color": "Grey",
+    "Input": "Palisade terminal",
+    "Output": "DC output wire 60mm (interface: φ5.5×φ2.1)",
+    "Certification": "CE"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DH-PFM300",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15737",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

@@ -1,0 +1,24 @@
+# Systemd unit для TenderBot (деплой без Docker)
+# Копировать: sudo cp tenderbot/deploy/tenderbot.service /etc/systemd/system/
+# Затем: sudo systemctl daemon-reload && sudo systemctl enable tenderbot && sudo systemctl start tenderbot
+#
+# Перед использованием: создать venv в tenderbot/, установить зависимости (pip install -r requirements.txt),
+# настроить .env (DATABASE_URL=sqlite+aiosqlite:///./data.db или абсолютный путь к data.db)
+
+[Unit]
+Description=TenderBot (Telegram bot + Web admin)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/tenderAppSite-main/tenderbot
+EnvironmentFile=/opt/tenderAppSite-main/tenderbot/.env
+Environment="PATH=/opt/tenderAppSite-main/tenderbot/venv/bin"
+ExecStart=/opt/tenderAppSite-main/tenderbot/venv/bin/python run.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

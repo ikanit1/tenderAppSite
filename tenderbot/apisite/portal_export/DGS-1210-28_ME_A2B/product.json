@@ -1,0 +1,33 @@
+{
+  "name": "Коммутатор D-Link DGS-1210-28/ME/A2B",
+  "price": 0,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Производитель": "D-Link",
+    "Модель": "DGS-1210-28/ME/A2B",
+    "Тип коммутатора": "управляемый",
+    "Метод коммутации": "Store and Forward",
+    "Размещение": "монтируемый в стойку",
+    "Базовая скорость передачи данных": "1000 Мбит/с",
+    "Размер таблицы МАС адресов": "16000",
+    "Скорость обслуживания пакетов": "41,7 Mpps",
+    "Поддержка стандартов": "• IEEE 802.3 10Base-T Ethernet (медная витая пара) • IEEE 802.3u 100Base-TX Fast Ethernet (медная витая пара) • IEEE 802.3ab 1000Base-T Gigabit Ethernet (медная витая пара) • IEEE 802.3az Energy Efficient Ethernet • Автоматическое согласование скорости • Управление потоком IEEE 802.3x • IEEE 802.3z 1000Base-X • Автоматическое определение MDI/MDIX на всех медных портах",
+    "Размеры": "440 x 140 x 44 мм",
+    "Потребляемая мощность": "18,8 Вт",
+    "Рабочая температура": "от -30 до 50 °C",
+    "Рабочая влажность": "от 10% до 90% без конденсата"
+  },
+  "tabs": {},
+  "images_count": 6,
+  "model": "DGS-1210-28/ME/A2B",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=38403",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg",
+    "image_05.jpg",
+    "image_06.jpg"
+  ]
+}

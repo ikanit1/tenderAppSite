@@ -1,0 +1,42 @@
+{
+  "name": "DH-HAC-B1A21P-0280B Уличная HD-камера",
+  "price": 93477478,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Pixel": "2 MP",
+    "Image Sensor": "2MP CMOS",
+    "Max. Resolution": "1920 (H) × 1080 (V)",
+    "Scanning System": "Progressive",
+    "Electronic Shutter Speed": "PAL: 1/25 s–1/100,000 s NTSC: 1/30 s–1/100,000 s",
+    "Min. Illumination": "0.04 lux@F2.0 (Color, 30 IRE) 0.004 lux@F2.0 (B/W, 30 IRE) 0 lux (Illuminator on)",
+    "S/N Ratio": ">65 dB",
+    "Illumination Distance": "20 m (65.62 ft)",
+    "Illuminator On/Off Control": "Auto/Manual",
+    "Illuminator Number": "2 (IR light)",
+    "Pan/Tilt/Rotation Range": "Pan: 0°–360° Tilt: 0°–90° Rotation: 0°–360°",
+    "Lens Type": "Fixed-focal",
+    "Lens Mount": "M12",
+    "Focal Length": "2.8 mm; 3.6 mm; 6 mm",
+    "Max. Aperture": "F2.0",
+    "Field of View": "2.8 mm: H: 100°; V: 53°; D: 120° 3.6 mm: H: 82°; V: 42°; D: 98° 6 mm: H: 53°; V: 30°; D: 60°",
+    "Iris Control": "Fixed",
+    "Close Focus Distance": "2.8 mm: 0.6 m (1.97 ft) 3.6 mm: 1.0 m (3.28 ft) 6 mm: 2.0 m (6.56 ft)",
+    "DORI Distance": "Lens",
+    "2.8 mm": "46.9 m (153.87 ft)",
+    "3.6 mm": "60.9 m (199.80 ft)",
+    "6 mm": "82.8 m (271.65 ft)",
+    "Video Frame Rate": "CVI: PAL: 1080p@25 fps; 720p@25 fps NTSC: 1080p@30 fps; 720p@30 fps TVI: PAL: 1080p@25 fps; 720p@25 fps NTSC: 1080p@30 fps; 720p@30 fps AHD: PAL: 1080p@25 fps; 720p@25 fps NTSC: 1080p@30 fps; 720p@30 fps CVBS: PAL: 960H NTSC: 960H",
+    "Resolution": "1080p (1920 × 1080); 720p (1280 × 720); 960H (960 × 576/960 × 480)",
+    "Day/Night": "Auto (ICR)/Color/B/W",
+    "BLC": "BLC; HLC; DWDR"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DH-HAC-B1A21P-0280B",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15417",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

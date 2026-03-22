@@ -1,0 +1,22 @@
+{
+  "name": "P550 Yeastar IP-АТС на 50 абонентов",
+  "price": 458541,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Пользователей:": "до 50 внутренних абонентов.",
+    "Одновременные вызовы:": "до 25.",
+    "Голосовая почта:": "8700 мин. на встроенную flash-память",
+    "Поддерживаемые интерфейсы:": "До 8 аналоговых портов (FXO/FXS), используя модули S2 (2 FXS), O2 (2 FXO) и SO (FXS и FXO) До 8 BRI портов, используя модули BRI До 4 GSM порта, используя модуль GSM До 4 UMTS-портов (UMTS 900/2100МГц или 850/2100МГц или 850/1900МГц), используя модули UMTS"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "P550",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=16306",
+  "images": [
+    "image_01.png",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png"
+  ]
+}

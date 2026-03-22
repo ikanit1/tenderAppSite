@@ -1,0 +1,23 @@
+{
+  "name": "SFP-GE-LX-SM1310-IN 1.25G SFP модуль в комплекте 2 шт.",
+  "price": 131008700,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Модель": "SFP-GE-LX-SM1310-IN",
+    "Длина волны": "1310 нм",
+    "Дистанция передачи": "10 км",
+    "Скорость передачи данных": "1.25 Гбит/с",
+    "Разъём": "LC, одномодовый",
+    "Оптическая выходная мощность": "-3 до -9 дБм",
+    "Рабочая температура": "0 до 70 ℃"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "SFP-GE-LX-SM1310-IN",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=39639",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

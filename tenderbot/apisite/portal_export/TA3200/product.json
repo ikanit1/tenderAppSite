@@ -1,0 +1,25 @@
+{
+  "name": "TA3200 Yeastar Шлюз",
+  "price": 364905,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Бренд": "Yeastar",
+    "Артикул": "TA3200",
+    "Тип оборудования": "VoIP шлюз",
+    "Порты и интерфейсы": "32 × FXS Port 1 × RJ-45 10/100 Mbps 1 × 50 pin Telco 1 × RS232",
+    "Питание": "100-240V",
+    "Службы": "Cтатический IP-адрес DDNS DHCP PPPoE SNMP",
+    "Поддержка протоколов": "FTP HTTP HTTPS IAX2 SIP 2.0 SNMP SRTP SSH TLS"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "TA3200",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=16302",
+  "images": [
+    "image_01.png",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png"
+  ]
+}

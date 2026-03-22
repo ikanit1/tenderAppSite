@@ -1,0 +1,24 @@
+{
+  "name": "Коммутатор TP-Link LS108G",
+  "price": 0,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Бренд": "TP-Link",
+    "Артикул": "LS108G",
+    "Метод коммутации": "Store-and-forward",
+    "Интерфейсы": "8 портов 10/100/1000 Мбит/с с автосогласованием, с разъемами RJ45 (авто-MDI/MDIX)",
+    "Объём": "0.01 м 3",
+    "Вес": "0.5 кг"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "LS108G",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=38401",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}

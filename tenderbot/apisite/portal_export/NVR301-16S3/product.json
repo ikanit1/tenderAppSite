@@ -1,0 +1,38 @@
+{
+  "name": "NVR301-16S3 16-ти канальный видеорегистратор",
+  "price": 5020029900,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "NVR301-04S3",
+    "IP Video Input": "4-ch(up to 6 after channel expansion)",
+    "Incoming Bandwidth": "64Mbps",
+    "Outgoing Bandwidth": "48Mbps",
+    "Remote Users": "128",
+    "Protocols": "P2P, UPnP, NTP, DHCP, PPPoE",
+    "HDMI/VGA Output": "HDMI: 3840x2160/30Hz, 1920x1080p/60Hz, 1920x1080p/50Hz, 1600x1200/60Hz, 1280x1024/60Hz, 1280x720/60Hz, 1024x768/60Hz VGA: 1920x1080p/60Hz, 1920x1080p/50Hz, 1600x1200/60Hz, 1280x1024/60Hz, 1280x720/60Hz, 1024x768/60Hz",
+    "Recording Resolution": "4K/5MP/4MP/3MP/1080p/960p/720p/D1/2CIF/CIF",
+    "Audio Output": "1-ch, 3.5mm",
+    "Synchronous Playback": "4-ch",
+    "Corridor Mode Screen": "3/4",
+    "Decoding format": "Ultra 265/H.265/H.264",
+    "Liveview/Playback": "4K/ 5MP/ 4MP/ 3MP/ 1080p/ 960p/ 720p/ D1/ 2CIF/ CIF",
+    "Capability": "1 x 4K@30, 1 x 5MP@30, 2 x 4MP@30, 4 x 3MP@25, 4 x 1080p@30",
+    "SATA": "1 SATA interface",
+    "Capacity": "up to 6TB for each disk",
+    "Network Interface": "1 RJ45 10M/100M self-adaptive Ethernet Interface",
+    "USB Interface": "Rear panel: 2 x USB2.0",
+    "Power Supply": "12V DC Power Consumption: ≤5 W (without HDD)",
+    "Working Environment": "-10°C ~ + 55°C (+14°F ~ +131°F), Humidity ≤ 90% RH (non-condensing)",
+    "Dimensions (W×D×H)": "260mm × 240mm × 46mm (10.2\"×9.4\"×1.8 \")",
+    "Weight (without HDD)": "≤0.98kg (2.16 lb)"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "NVR301-16S3",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=10501",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

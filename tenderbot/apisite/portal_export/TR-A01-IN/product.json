@@ -1,0 +1,21 @@
+{
+  "name": "TR-A01-IN муфта",
+  "price": 0,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Bracket": "TR-A01-IN",
+    "Application": "Indoor and outdoor",
+    "Dimensions": "Ø37 × 46mm (Ø1.46” × 1.81”)",
+    "Weight": "0.023kg(0.05lb)",
+    "Material": "Plastic"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "TR-A01-IN",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=497",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "DH-PFM321D-EN Источник питания",
+  "price": 36002880,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Input": "100–240 V, 50/60 Hz, 0.5 A",
+    "Output": "12 V (+7%, –3%) 1 A (±2%)",
+    "Protection": "Surge protection, over temperature protection, over current, voltage load protection ESD: EN61000-4-2 +/-4 kV Contact; +/-8 kV Air Surge: EN61000-4-5\" Combination Wave: Common Mode ±4 KV (12 ohms); Differential Mode ±2 kV (2 ohms)",
+    "Working Temperature": "–30 °C to +70 °C(–22 °F to +158 °F)",
+    "Working Humidity": "< 95% (RH)",
+    "Weight": "150 g (0.33 lb)",
+    "Dimension(Lxwxh)": "84 mm × 41 mm × 26 mm (3.31\" × 1.61\" × 1.02\")",
+    "Installation Mode": "Plane installation",
+    "Color": "Black",
+    "Input Plug": "2-pin Euro plug",
+    "Outgoing Cord": "AC wire: 50 cm (19.69\"), DC wire: 80 cm (31.5\")",
+    "DC Plug": "Φ5.5 mm × Φ2.1 mm × 12 mm (Φ0.22\" × Φ0.08\" × 0.47\")",
+    "Certification": "PFM321D-EN/PFM321D-BS: CE LVD(EN62368-1:2014+A11:2017) CE EMC(EN55032:2015,EN61000-3-2:2014,EN61000-3-3:2013,EN55035:2017) PFM321D-US: UL-VI(UL60950-1) FCC(FCC Part 15 Subpart B) DOE(VI) CEC(VI)"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DH-PFM321D-EN",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15734",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

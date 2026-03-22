@@ -1,0 +1,21 @@
+{
+  "name": "DH-PFM800-E Пассивный приемопередатчик",
+  "price": 14001200,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Тип кабеля витой пары": "UTP CAT5E/6 (медный провод)",
+    "Дальность передачи": "HDCVI",
+    "Помехоустойчивость": ">60 дБ",
+    "Подключение коаксиального кабеля": "BNC-M",
+    "Подключение кабеля витой пары": "Безвинтовое зажимное"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DH-PFM800-E",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15811",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "name": "Автоматический выключатель A9N18365",
+  "price": 7224458360,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Страна производитель": "Франция",
+    "Вес": "0.615 кг",
+    "Степень защиты IP": "20",
+    "Тип УЗО": "Выключатель",
+    "Тип монтажа": "На DIN рейку",
+    "Высота": "81 мм",
+    "Длина": "73 мм",
+    "Ширина": "81 мм",
+    "Номинальный ток": "80 А"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "A9N18365",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=38340",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

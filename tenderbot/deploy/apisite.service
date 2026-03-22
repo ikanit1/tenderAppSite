@@ -1,0 +1,23 @@
+# Systemd unit для APISite (деплой без Docker)
+# Копировать: sudo cp tenderbot/deploy/apisite.service /etc/systemd/system/
+# Затем: sudo systemctl daemon-reload && sudo systemctl enable apisite && sudo systemctl start apisite
+#
+# Перед использованием: создать venv в tenderbot/apisite/, установить зависимости (pip install -r requirements.txt),
+# собрать React: cd tenderbot/apisite/react && npm run build, настроить .env в apisite/
+
+[Unit]
+Description=APISite (B2B catalog)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/tenderAppSite-main/tenderbot/apisite
+Environment="PATH=/opt/tenderAppSite-main/tenderbot/apisite/venv/bin"
+ExecStart=/opt/tenderAppSite-main/tenderbot/apisite/venv/bin/python main.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

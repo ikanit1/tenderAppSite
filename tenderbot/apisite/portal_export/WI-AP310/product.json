@@ -1,0 +1,39 @@
+{
+  "name": "Wi-Tek WI-AP310 Точка доступа",
+  "price": 1860012090,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "WI-AP310",
+    "Wireless Standards": "802.11n/b/g/a",
+    "Operating Bands": "2.4GHz",
+    "Antenna": "2.4GHz: 5dBi",
+    "Spatial Steams": "2.4GHz: 2x2 MIMO",
+    "Signal Rate": "Up to 300Mbps at 2.4GHz",
+    "Receiver Sensitivity": "2.4GHz: 802.11n: -69dbm@MCS7 -88dbm@MCS0. 802.11g: -73dbm@54Mbps -90dbm@6Mbps. 802.11b: -85dbm@11Mbps -94dbm@1Mbps.",
+    "Maximum Transmit Power": "<22dbm",
+    "Interface": "(2)10/100 Base-T Ethernet ports",
+    "Power Supply": "DC 12V/1A (Not Included) 24V Passive PoE",
+    "Power Consumption": "< 10W",
+    "Installation": "Pole/Wall mounting",
+    "External Buttons": "reset button (long press for 8 seconds to restore the factory default configuration)",
+    "Dimensions": "340mm * 85mm * 35mm",
+    "Environment": "Operating Temperature: -40°C～55°C Storage Temperature: -40°C～70°C Operating Humidity: 5% ～ 95% (non-condensing) Storage Humidity: 5% ～ 95% (non-condensing)",
+    "Operating Mode": "Fit AP, Fat AP, Repeater, WISP mode",
+    "Wireless Function": "Up to 8 SSIDs"
+  },
+  "tabs": {},
+  "images_count": 8,
+  "model": "WI-AP310",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15134",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg",
+    "image_05.jpg",
+    "image_06.jpg",
+    "image_07.jpg",
+    "image_08.jpg"
+  ]
+}

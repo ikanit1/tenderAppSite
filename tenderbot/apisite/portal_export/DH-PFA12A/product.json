@@ -1,0 +1,25 @@
+{
+  "name": "DH-PFA12A Монтажная коробка",
+  "price": 15001200,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "DH-PFA12A",
+    "Material": "PP",
+    "Dimension (WxHxD)": "210.9mmx97.5mmx35mm (8.3”x3.84”x1.38”)",
+    "Weight": "0.1kg (0.22lb)",
+    "Color": "White",
+    "Operating Temperature": "-40℃ ~+60℃(-40℉~+140℉)",
+    "Humidity": "0~90% RH",
+    "Installation": "Wall mount",
+    "Applicable Model": "Please see “Accessory Selector”"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DH-PFA12A",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15826",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

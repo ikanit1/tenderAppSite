@@ -1,0 +1,30 @@
+{
+  "name": "Ajax CombiProtect датчик движения черный",
+  "price": 25040,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Бренд": "Ajax",
+    "Артикул": "TD00000011713",
+    "Тип оборудования": "датчик движения датчик разбития стекла",
+    "Питание": "3V",
+    "Цвет": "черный",
+    "Рабочая влажность": "0…75%",
+    "Комплектация": "Комбинированный датчик движения и разбития стекла Ajax CombiProtect Элемент питания СR123А - 1 шт Монтажный комплект - 1 шт Крепежная панель SmartBracket - 1 шт Документация",
+    "Рабочая температура": "-10…+40 °C",
+    "Размеры (Ш×В×Г)": "6.5×11×5 cm",
+    "Вес товара": "0.092 kg"
+  },
+  "tabs": {},
+  "images_count": 6,
+  "model": "CombiProtect черный",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15032",
+  "images": [
+    "image_01.png",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.png",
+    "image_05.jpg",
+    "image_06.jpg"
+  ]
+}

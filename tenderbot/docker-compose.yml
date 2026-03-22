@@ -1,0 +1,40 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    # УДАЛЕНО: блок environment с DATABASE_URL (теперь берется из .env)
+    # УДАЛЕНО: depends_on (так как база теперь внутри приложения)
+    ports:
+      - "${WEB_PORT:-8000}:8000"
+    volumes:
+      - .:/app  # Пробрасываем текущую папку, чтобы test.db лежал на сервере
+      - uploads:/app/web/static/uploads
+
+  apisite:
+    build:
+      context: .
+      dockerfile: apisite/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - apisite/.env
+    environment:
+      PORT: ${APISITE_PORT:-8001}
+      HOST: 0.0.0.0
+      API_KEY: ${APISITE_API_KEY:-}
+      GOOGLE_API_KEY: ${APISITE_GOOGLE_API_KEY:-}
+      GOOGLE_CSE_ID: ${APISITE_GOOGLE_CSE_ID:-}
+      IMAGE_PARSER_ENABLED: ${APISITE_IMAGE_PARSER_ENABLED:-true}
+      IMAGE_PARSER_MAX_PAGES: ${APISITE_IMAGE_PARSER_MAX_PAGES:-0}
+      IMAGE_PARSER_STARTUP_DELAY: ${APISITE_IMAGE_PARSER_STARTUP_DELAY:-30}
+    ports:
+      - "${APISITE_PORT:-8001}:8001"
+    volumes:
+      - ./apisite/data:/app/data
+      - ./apisite/images:/app/images
+      - ./apisite/portal_export:/app/portal_export
+
+volumes:
+  uploads:
+  # pgdata удален, так как он больше не нужен

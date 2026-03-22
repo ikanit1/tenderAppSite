@@ -1,0 +1,23 @@
+{
+  "name": "YBF10-8-32-01 IEK Шина медная гибкая изолированная ШМГ",
+  "price": 103485,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Поперечное сечение2:": "256 мм",
+    "Длина:": "2000 мм",
+    "Тип подключения:": "Прочее",
+    "Материал:": "Медь",
+    "Температура эксплуатации:": "-40…+125 °C",
+    "Макс сила тока:": "800 А",
+    "Вес погонного метра:": "4,796 кг"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "YBF10-8-32-01",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=37185",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

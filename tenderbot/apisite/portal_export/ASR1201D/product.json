@@ -1,0 +1,37 @@
+{
+  "name": "ASR1201D Считыватель",
+  "price": 1210010000,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "ASR1201D",
+    "Main Processor": "8 Bit",
+    "Read Format": "13.56MHz",
+    "Read Range": "1cm–3cm (max.)",
+    "Reading time": "<0.1s",
+    "Tamper Alarm": "Yes",
+    "To Controller": "RS485, Wiegand34(Wiegand 26 optional)",
+    "Keypad": "12Keys (0-9,*,#)",
+    "LED Indicator": "Yes",
+    "Beep Tone": "Buzzer",
+    "Ingress Protection": "IP55",
+    "Power Supply": "9V–15V DC/100mA",
+    "Operating Temperature": "-30°C to +60°C",
+    "Working Humidity": "≤95%",
+    "Dimension(W×D×H)": "135×47.5×16mm",
+    "Weight": "0.18kg",
+    "Working Environment": "Outdoor",
+    "CE": "Yes",
+    "FCC": "Yes"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "ASR1201D",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15852",
+  "images": [
+    "image_01.png",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png"
+  ]
+}

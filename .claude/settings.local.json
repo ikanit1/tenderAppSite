@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(xargs grep:*)",
+      "Bash(find c:/Users/admin/Desktop/tenderAppSite-main/tenderbot/apisite/portal_export -iname *WK* -o -iname *PS305*)",
+      "Bash(dir \"c:\\\\Users\\\\admin\\\\Desktop\\\\tenderAppSite-main\\\\public\\\\GR.png\" \"c:\\\\Users\\\\admin\\\\Desktop\\\\tenderAppSite-main\\\\public\\\\pechat.png\")"
+    ]
+  }
+}

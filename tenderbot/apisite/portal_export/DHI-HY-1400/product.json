@@ -1,0 +1,36 @@
+{
+  "name": "DHI-HY-1400 Dahua Адресуемый модуль ввода",
+  "price": 104588889,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Electrical": "",
+    "Working Voltage": "24V DC",
+    "Current": "Monitoring current: ≤ 150μA Operating current: ≤ 190μA",
+    "Indicator": "Red indicator flashes once every 6 seconds, and flashes once every 2 seconds when malfunctioned",
+    "Communication": "",
+    "Wiring": "Two-wire, polarity-free",
+    "Addressing Method": "Electrical encoder",
+    "Address Range": "1–254",
+    "CommunicationDistance": "≤ 1500 m",
+    "Environment": "",
+    "Operating Temperature": "–10°C to +55°C (+14°F to +131°F)",
+    "Storage Temperature": "–20°C to +65°C (–4°F to +149°F)",
+    "Operating Humidity": "≤ 95% RH (no condensation)",
+    "Construction": "",
+    "Color": "White",
+    "Dimensions (with base)": "90 mm × 90 mm × 37 mm (3.54\" × 3.54\" × 1.46\")",
+    "Weight (with base)": "103 g (0.23 lb)",
+    "Certifications": "GB16806-2005"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "DHI-HY-1400",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=37375",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}

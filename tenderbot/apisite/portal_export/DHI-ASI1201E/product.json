@@ -1,0 +1,31 @@
+{
+  "name": "DHI-ASI1201E Контроллер доступа с распознаванием лиц",
+  "price": 3967027770,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Mode": "ASI1201E",
+    "Main Processor": "32 Bit",
+    "Input": "Door sensor x 1, Exit button x 1",
+    "Output": "Relay x 1 (Door lock,)",
+    "Reader": "Reader x 1",
+    "Read Format": "13.56MHz",
+    "Read Range": "1cm–2cm (max.)",
+    "Response Time": "<0.1s",
+    "Cardholders": "30,000",
+    "Events": "60,000",
+    "User Management": "General, VIP, Guest, Patrol, Black list, Duress",
+    "Alarm Function": "Door time out alarm, Intrusion alarm, Duress alarm, Tamper alarm",
+    "Period Setting": "Support 128 groups of schedule, 128 groups of periods and 128 groups of holiday periods"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "DHI-ASI1201E",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15537",
+  "images": [
+    "image_01.png",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png"
+  ]
+}

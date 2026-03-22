@@ -1,0 +1,388 @@
+.wrap {
+  margin-top: 1rem;
+}
+
+.warningsBlock {
+  margin-bottom: 1rem;
+  padding: 1rem 1.25rem;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: var(--radius-card);
+}
+
+.warningsTitle {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-warning);
+  margin-bottom: 0.5rem;
+}
+
+.warningsList {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.resultGroup {
+  margin-bottom: 1.5rem;
+  background: var(--calc-glass-bg);
+  border: 1px solid var(--calc-glass-border);
+  border-radius: var(--radius-card);
+  padding: 1.25rem;
+  overflow-x: auto;
+}
+
+.resultGroupTitle {
+  font-family: var(--calc-font-heading);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 1rem;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  margin-bottom: 0;
+}
+
+.resultTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.resultTable th,
+.resultTable td {
+  padding: 0.75rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(157, 78, 221, 0.15);
+}
+
+.resultTable th {
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.resultTable td {
+  color: var(--color-text);
+}
+
+.resultTable tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.thImage {
+  width: 64px;
+}
+
+.cellImage {
+  vertical-align: middle;
+}
+
+.deviceImage {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  display: block;
+}
+
+.devicePlaceholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: rgba(157, 78, 221, 0.08);
+  border-radius: 4px;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.rowName {
+  max-width: 220px;
+  display: inline-block;
+}
+
+.rowNote {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+}
+
+.cellSum {
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--color-accent);
+}
+
+.groupSubtotal {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(157, 78, 221, 0.15);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  text-align: right;
+}
+
+.groupSubtotal strong {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.totalBlock {
+  margin-bottom: 1.5rem;
+  background: var(--calc-glass-bg);
+  border: 1px solid var(--calc-glass-border);
+  border-radius: var(--radius-card);
+  padding: 1.5rem 1.25rem;
+}
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-base);
+  color: var(--color-text);
+  padding: 0.5rem 0;
+}
+
+.totalRowHighlight {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-lg);
+  color: var(--color-text);
+  padding: 1rem 0 0;
+  margin-top: 0.5rem;
+  border-top: 1px solid rgba(157, 78, 221, 0.2);
+}
+
+.totalRowHighlight strong {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.totalRowGrand {
+  font-size: var(--text-xl, 1.2rem) !important;
+  font-weight: 700;
+  border-top: 2px solid rgba(157, 78, 221, 0.4) !important;
+  padding-top: 0.75rem !important;
+  margin-top: 0.25rem !important;
+}
+
+.totalRowGrand strong {
+  font-size: 1.2em;
+}
+
+.installmentBlock {
+  margin-bottom: 1rem;
+  padding: 1.25rem;
+  background: var(--calc-glass-bg);
+  border: 1px solid var(--calc-glass-border);
+  border-radius: var(--radius-card);
+}
+
+.installmentTitle {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--color-text);
+}
+
+.installmentCards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.installmentCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(157, 78, 221, 0.06);
+  border-radius: var(--radius-card);
+  border: 1px solid rgba(157, 78, 221, 0.15);
+}
+
+.installmentMonths {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.installmentPayment {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-accent);
+  margin: 0.25rem 0;
+  font-family: var(--calc-font-mono);
+}
+
+.installmentLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.installmentPerFlat {
+  font-size: var(--text-sm);
+  margin: 0.75rem 0 0;
+  color: var(--color-text);
+}
+
+.installmentPerFlat strong {
+  color: var(--color-accent);
+}
+
+.installmentDisclaimer {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* Рассрочка (обновлённая логика) */
+.installmentInputRow {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.installmentField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.installmentFieldLabel {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.installmentFieldInput {
+  width: 180px;
+  padding: 0.5rem 0.75rem;
+  font-family: var(--calc-font-mono);
+  font-size: var(--text-base);
+  background: var(--color-surface);
+  border: 1px solid var(--calc-glass-border);
+  border-radius: var(--radius-button);
+  color: var(--color-text);
+}
+
+.installmentError {
+  margin: 0 0 0.75rem;
+  font-size: var(--text-sm);
+  color: var(--color-warning);
+  font-weight: 600;
+}
+
+.installmentMessage {
+  margin: 0 0 0.75rem;
+  font-size: var(--text-sm);
+  color: #92400e;
+  font-weight: 600;
+}
+
+.installmentSummary {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.35rem;
+  margin: 0.75rem 0;
+}
+
+.installmentSummaryRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: baseline;
+  padding: 0.25rem 0;
+  border-bottom: 1px dashed rgba(157, 78, 221, 0.15);
+}
+
+.installmentSummaryLabel {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.installmentSummaryValue {
+  color: var(--color-accent);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+.installmentTableWrap {
+  overflow-x: auto;
+  margin-top: 0.75rem;
+}
+
+.installmentTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.installmentTable th,
+.installmentTable td {
+  padding: 0.55rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(157, 78, 221, 0.15);
+}
+
+.installmentTable th {
+  font-family: var(--calc-font-heading);
+  color: var(--color-text-muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.installmentSelectedRow {
+  background: rgba(157, 78, 221, 0.22);
+  outline: 2px solid rgba(157, 78, 221, 0.7);
+  outline-offset: -1px;
+}
+
+.installmentSelectedRow .installmentTermCell {
+  color: var(--color-accent);
+}
+
+.installmentSelectedRow .installmentTermCell::before {
+  content: '✓ ';
+  font-weight: 700;
+}
+
+.installmentSelectedRow .installmentAmountCell {
+  font-size: 1.08em;
+}
+
+.installmentTermCell {
+  color: var(--color-text);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.installmentAmountCell {
+  color: var(--color-accent);
+  font-weight: 700;
+  font-family: var(--calc-font-mono);
+  cursor: pointer;
+}
+
+.installmentAfterText {
+  margin: 0.75rem 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 768px) {
+  .installmentCards {
+    grid-template-columns: 1fr;
+  }
+}

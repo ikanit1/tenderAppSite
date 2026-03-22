@@ -1,0 +1,36 @@
+{
+  "name": "DH-PFS4218-16GT-190 16-портовый управляемый PoE коммутатор",
+  "price": 202271157772,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Стандарты PoE": "IEEE 802.3af, IEEE 802.3at, Hi-PoE",
+    "LAN-порты": "• 16 × RJ45 (14 PoE 802.3af/at + 2 Hi-PoE / PoE, 10/100/1000 Base-T) • 2 × SFP Uplink (1000 Base-X)",
+    "Скорость передачи": "• Ethernet – 10 Мбит/с Full Duplex • Fast Ethernet – 100 Мбит/с Full Duplex • Gigabit Ethernet – 1000 Мбит/с Full Duplex",
+    "Максимальная мощность на порт": "• PoE – до 30 Вт • Hi-PoE – до 60 Вт",
+    "Общая мощность PoE": "190 Вт",
+    "Методы управления": "Веб-интерфейс (WWW), консоль",
+    "Метод передачи": "Store-and-forward (Сохранить и выслать)",
+    "MAC-таблица": "8K",
+    "Функции": "• Управление через Интернет • Автоматическое обновление таблицы MAC-адресов • Поддержка IEEE802.1Q VLAN • DHCP client/server",
+    "IP по умолчанию": "192.168.1.110",
+    "Данные по умолчанию": "Логин: admin / Пароль: admin",
+    "Индикаторы (LED)": "Power: 50% / 80% / 100%, Link/Act, PoE, System, Power",
+    "Питание": "100–240 В AC",
+    "Тип корпуса": "RACK 19\", 1U",
+    "Размеры": "440 × 300 × 44 мм",
+    "Вес": "3.3 кг"
+  },
+  "tabs": {},
+  "images_count": 6,
+  "model": "DH-PFS4218-16GT-190",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=39676",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg",
+    "image_05.jpg",
+    "image_06.jpg"
+  ]
+}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Пользователь {{ user.id }} — TenderBot Admin{% endblock %}
+{% block header_title %}Карточка пользователя{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2 class="page-title">{{ user.full_name }}</h2>
+    <p class="page-subtitle">ID {{ user.id }} · Telegram ID {{ user.tg_id }}</p>
+</div>
+<div class="detail-actions">
+    <a href="/users/{{ user.id }}/edit" class="btn btn-warning">✏️ Редактировать</a>
+    <a href="/users" class="btn btn-secondary">← К списку</a>
+</div>
+<div class="detail-info">
+    <p><strong>ID:</strong> {{ user.id }}</p>
+    <p><strong>Telegram ID:</strong> {{ user.tg_id }}</p>
+    <p><strong>Роль:</strong> <span class="badge badge-neutral">{{ user.role|translate_role }}</span></p>
+    <p><strong>Статус:</strong>
+        <span class="badge {% if user.status == 'active' %}badge-success{% elif user.status == 'pending_moderation' %}badge-warning{% else %}badge-danger{% endif %}">{{ user.status|translate_status }}</span>
+    </p>
+    <p><strong>Город:</strong> {{ user.city }}</p>
+    <p><strong>Телефон:</strong> {{ user.phone }}</p>
+    {% if user.birth_date %}
+    <p><strong>Дата рождения:</strong> {{ user.birth_date.strftime('%d.%m.%Y') }}</p>
+    {% endif %}
+    <p><strong>Навыки:</strong> {{ user.skills|join(", ") if user.skills else "—" }}</p>
+    {% if user.created_at %}
+    <p><strong>Дата регистрации:</strong> {{ user.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+    {% endif %}
+</div>
+
+{% if documents_list %}
+<div class="card moderation-block">
+    <h3>📎 Архив документов пользователя</h3>
+    <p class="form-hint">Проверьте приложенные файлы (идентификация по Telegram ID). Разрешены: фото (JPEG, PNG), PDF. После модерации документы можно удалить.</p>
+    <ul class="doc-list">
+        {% for doc in documents_list %}
+        <li>
+            {% if doc.type == "photo" %}
+            <a href="/users/by-tg/{{ user.tg_id }}/document?index={{ loop.index0 }}" target="_blank" rel="noopener">🖼️ Фото {{ loop.index }}</a>
+            {% else %}
+            <a href="/users/by-tg/{{ user.tg_id }}/document?index={{ loop.index0 }}" target="_blank" rel="noopener">📄 Документ {{ loop.index }}</a>
+            {% if doc.file_name %}<span class="form-hint"> — {{ doc.file_name }}</span>{% endif %}
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    <form method="post" action="/users/{{ user.id }}/documents/delete" style="margin-top: 0.75rem;" onsubmit="return confirm('Удалить приложенные документы у этого пользователя? Ссылки на файлы будут удалены.');">
+        {{ csrf_hidden_input(request)|safe }}
+        <button type="submit" class="btn btn-danger">🗑 Удалить документы</button>
+    </form>
+</div>
+{% endif %}
+
+<div class="card">
+    <h3 class="card-title">Действия модерации</h3>
+    <div class="btn-group">
+        {% if user.status == "pending_moderation" %}
+        <form method="post" action="/users/{{ user.id }}/approve" style="display: inline-block;">
+            {{ csrf_hidden_input(request)|safe }}
+            <button type="submit" class="btn btn-success">✅ Одобрить</button>
+        </form>
+        <form method="post" action="/users/{{ user.id }}/reject" style="display: inline-block;">
+            {{ csrf_hidden_input(request)|safe }}
+            <button type="submit" class="btn btn-danger">❌ Отклонить</button>
+        </form>
+        {% elif user.status == "banned" %}
+        <form method="post" action="/users/{{ user.id }}/unban" style="display: inline-block;">
+            {{ csrf_hidden_input(request)|safe }}
+            <button type="submit" class="btn btn-success">🔓 Разблокировать</button>
+        </form>
+        {% elif user.status == "active" %}
+        <form method="post" action="/users/{{ user.id }}/ban" style="display: inline-block;">
+            {{ csrf_hidden_input(request)|safe }}
+            <button type="submit" class="btn btn-danger">🚫 Заблокировать</button>
+        </form>
+        {% endif %}
+        <form method="post" action="/users/{{ user.id }}/delete" style="display: inline-block;" onsubmit="return confirm('Удалить пользователя безвозвратно? Отклики, тикеты поддержки и отзывы будут удалены.');">
+            {{ csrf_hidden_input(request)|safe }}
+            <button type="submit" class="btn btn-secondary">🗑 Удалить пользователя</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

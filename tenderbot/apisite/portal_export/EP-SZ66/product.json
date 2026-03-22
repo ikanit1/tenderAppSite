@@ -1,0 +1,17 @@
+{
+  "name": "EP-SZ66 UNV Модуль",
+  "price": 0,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "EP-SZ66": "Mounting bracket for attaching the Uniview EP-SZ66 module. Suitable for surveillance and security systems."
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "EP-SZ66",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=39106",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

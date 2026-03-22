@@ -1,0 +1,23 @@
+{
+  "name": "SVA30D-EP-02 Электропривод ЭПм-35 220В MASTER IEK",
+  "price": 53477,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Номин напряжение питания цепи управ Us AC 50 Гц:": "220 В",
+    "Тип напряжения управления:": "Переменный (AC)",
+    "Совместимость:": "ВА88 серии MASTER",
+    "Максимальная мощность при пуске:": "200 ВА",
+    "Время включения:": "< 0,8 с",
+    "Время отключения:": "< 0,2 с",
+    "Номинальное напряжение изоляции:": "690 В"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "SVA30D-EP-02",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=36911",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TenderBot Admin{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/admin.css">
+    {% block extra_css %}{% endblock %}
+    {% block extra_head %}{% endblock %}
+</head>
+<body {% block body_attrs %}{% endblock %}>
+<div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Главное меню">
+        <div class="sidebar-header">
+            <a href="/dashboard" class="sidebar-brand">
+                <span class="sidebar-brand-icon">📋</span>
+                <span class="sidebar-nav-link-text">TenderBot</span>
+            </a>
+            <span class="sidebar-brand-badge">Админ</span>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="sidebar-nav-section">
+                <div class="sidebar-nav-section-title">Обзор</div>
+                <a href="/dashboard" class="sidebar-nav-link {% if request.url.path == '/dashboard' %}active{% endif %}">
+                    <span class="sidebar-nav-link-icon">📊</span>
+                    <span class="sidebar-nav-link-text">Дашборд</span>
+                </a>
+            </div>
+            <div class="sidebar-nav-section">
+                <div class="sidebar-nav-section-title">Пользователи</div>
+                <a href="/users" class="sidebar-nav-link {% if request.url.path == '/users' or request.url.path.startswith('/users/') %}active{% endif %}">
+                    <span class="sidebar-nav-link-icon">👥</span>
+                    <span class="sidebar-nav-link-text">Пользователи</span>
+                </a>
+                <a href="/users?status=pending_moderation" class="sidebar-nav-link {% if request.url.path == '/users' and request.query_params.get('status') == 'pending_moderation' %}active{% endif %}">
+                    <span class="sidebar-nav-link-icon">📎</span>
+                    <span class="sidebar-nav-link-text">Модерация</span>
+                </a>
+            </div>
+            <div class="sidebar-nav-section">
+                <div class="sidebar-nav-section-title">Тендеры</div>
+                <a href="/tenders" class="sidebar-nav-link {% if request.url.path == '/tenders' or request.url.path.startswith('/tenders/') %}active{% endif %}">
+                    <span class="sidebar-nav-link-icon">📋</span>
+                    <span class="sidebar-nav-link-text">Тендеры</span>
+                </a>
+                <a href="/applications" class="sidebar-nav-link {% if request.url.path == '/applications' or request.url.path.startswith('/applications/') %}active{% endif %}">
+                    <span class="sidebar-nav-link-icon">📩</span>
+                    <span class="sidebar-nav-link-text">Отклики</span>
+                </a>
+            </div>
+            <div class="sidebar-nav-section">
+                <div class="sidebar-nav-section-title">Поддержка</div>
+                <a href="/support" class="sidebar-nav-link {% if request.url.path == '/support' or request.url.path.startswith('/support/') %}active{% endif %}">
+                    <span class="sidebar-nav-link-icon">💬</span>
+                    <span class="sidebar-nav-link-text">Поддержка</span>
+                </a>
+                <a href="/reviews" class="sidebar-nav-link {% if request.url.path == '/reviews' or request.url.path.startswith('/reviews/') %}active{% endif %}">
+                    <span class="sidebar-nav-link-icon">⭐</span>
+                    <span class="sidebar-nav-link-text">Рейтинги</span>
+                </a>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/logout" class="sidebar-nav-link">
+                <span class="sidebar-nav-link-icon">🚪</span>
+                <span class="sidebar-nav-link-text">Выход</span>
+            </a>
+        </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+    <div class="main-wrap">
+        <header class="main-header">
+            <button type="button" class="burger" id="burger" aria-label="Открыть меню" title="Меню">
+                <span>☰</span>
+            </button>
+            <h1 class="main-header-title">{% block header_title %}Панель администратора{% endblock %}</h1>
+        </header>
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</div>
+<script>
+(function() {
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebarOverlay');
+    var burger = document.getElementById('burger');
+    function openSidebar() {
+        sidebar.classList.add('open');
+        overlay.classList.add('visible');
+        overlay.setAttribute('aria-hidden', 'false');
+    }
+    function closeSidebar() {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('visible');
+        overlay.setAttribute('aria-hidden', 'true');
+    }
+    if (burger) burger.addEventListener('click', openSidebar);
+    if (overlay) overlay.addEventListener('click', closeSidebar);
+})();
+</script>
+<script>
+(function() {
+    var live = document.body && document.body.dataset.liveUpdates === "1";
+    if (!live) return;
+    var since = null;
+    var timer = null;
+    function schedule(ms) {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(poll, ms);
+    }
+    function poll() {
+        if (document.visibilityState === "hidden") {
+            schedule(1500);
+            return;
+        }
+        var url = "/updates?timeout=25";
+        if (since) url += "&since=" + encodeURIComponent(since);
+        fetch(url, { credentials: "same-origin" })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data && data.ts) {
+                    if (since && data.changed) {
+                        window.location.reload();
+                        return;
+                    }
+                    since = data.ts;
+                }
+            })
+            .catch(function() {})
+            .finally(function() { schedule(800); });
+    }
+    schedule(10);
+})();
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

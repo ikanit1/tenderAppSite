@@ -1,0 +1,55 @@
+.layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.star {
+  position: absolute;
+  left: var(--star-x, 50%);
+  top: -5%;
+  width: 3px;
+  height: var(--star-length, 80px);
+  opacity: var(--star-opacity, 0.8);
+  transform: rotate(var(--star-angle, 0deg)) translateX(-50%);
+  animation: fallingStarFly var(--star-duration, 1s) ease-out forwards;
+}
+
+.head {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.7), 0 0 12px rgba(157, 78, 221, 0.45);
+}
+
+.tail {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: calc(100% - 4px);
+  border-radius: 2px;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.45) 14%, rgba(200, 180, 255, 0.18) 40%, transparent 100%);
+}
+
+@keyframes fallingStarFly {
+  0% {
+    transform: rotate(var(--star-angle, 0deg)) translateX(-50%) translateY(0);
+    opacity: var(--star-opacity, 0.8);
+  }
+  70% {
+    opacity: var(--star-opacity, 0.8);
+  }
+  100% {
+    transform: rotate(var(--star-angle, 0deg)) translateX(-50%) translateY(120vh);
+    opacity: 0;
+  }
+}

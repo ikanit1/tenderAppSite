@@ -1,0 +1,30 @@
+{
+  "name": "LM43-F400 Монитор",
+  "price": 249990188000,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "DHI-LM43-F400",
+    "Screen Size": "43\"",
+    "Aspect Ratio": "16:9",
+    "Resolution": "3840×2160 (UHD)",
+    "Backlight": "LED",
+    "Brightness/Luminance": "300cd/㎡",
+    "Contrast Ratio": "4000:1",
+    "Display Color": "1.07B",
+    "Viewing Angle(H/V)": "178°(H)/178°(V）",
+    "Response Time": "9.5ms",
+    "Refresh Rate": "60Hz",
+    "Input": "HDMI ×3, USB ×1,",
+    "Output": "Speaker×2 6W ,Earphone×1",
+    "Power Supply": "AC100~240V"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DHI-LM43-F400",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=37727",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

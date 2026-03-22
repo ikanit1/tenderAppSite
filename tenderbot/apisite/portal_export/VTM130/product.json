@@ -1,0 +1,23 @@
+{
+  "name": "VTM130 Металлический короб",
+  "price": 2753022024,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Color": "Silver",
+    "Installation": "Surface mount",
+    "Dimensions": "376.5 mm × 136 mm × 37.5 mm (14.82\" × 5.35\" × 1.48\")",
+    "Operating Temperature": "-30°C to +70°C (-22°F to +158°F)",
+    "Operating Humidity": "10%RH–90%RH",
+    "Product Material": "Aluminum alloy",
+    "Gross Weight": "1.1 kg (2.43 lb)"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "VTM130",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=36652",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

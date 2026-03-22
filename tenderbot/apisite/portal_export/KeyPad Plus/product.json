@@ -1,0 +1,25 @@
+{
+  "name": "Ajax KeyPad Plus белый клавиатура",
+  "price": 35760,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Бренд": "Ajax",
+    "Артикул": "TD00000016748",
+    "Тип оборудования": "модуль клавиатуры",
+    "Цвет": "белый",
+    "Электропитание": "1.5V",
+    "Рабочая влажность": "0…75%",
+    "Комплектация": "Беспроводная сенсорная клавиатура Ajax KeyPad Plus Крепежная панель SmartBracket - 1 шт Батарея АА - 4 шт Монтажный комплект - 1 шт Документация",
+    "Рабочая температура": "-10…+40 °C",
+    "Вес товара": "0.267 kg"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "KeyPad Plus",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15068",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

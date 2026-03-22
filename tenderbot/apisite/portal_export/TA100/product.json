@@ -1,0 +1,29 @@
+{
+  "name": "TA100 Yeastar Шлюз",
+  "price": 18819,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Бренд": "Yeastar",
+    "Артикул": "TA100",
+    "Тип оборудования": "VoIP шлюз",
+    "Порты и интерфейсы": "1 × FXS Port 1 × RJ-45 10/100 Mbps 1 × MicroUSB",
+    "Питание": "5V, 1A",
+    "Службы": "Cтатический IP-адрес DHCP NAT PPPoE",
+    "Поддержка протоколов": "FTP HTTP SIP 2.0 TLS",
+    "Аудиокодеки": "G.711 G.726 G.729A",
+    "Цвет": "черный",
+    "Режим DTMF": "RFC 2833 SIP INFO In-band",
+    "Комплектация": "VoIP-шлюз Yeastar TA100 USB адаптер Блок питания Сетевой кабель (патчкорд) Гарантийный талон Краткое руководство пользователя"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "TA100",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=16296",
+  "images": [
+    "image_01.png",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png"
+  ]
+}

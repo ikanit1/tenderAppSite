@@ -1,0 +1,26 @@
+{
+  "name": "DH-PFA121 Монтажная коробка",
+  "price": 108207580,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "DH-PFA121",
+    "Материал корпуса": "Алюминий",
+    "Размеры": "134 мм × 133.5 мм × 56 мм",
+    "Резьба": "G3/4”",
+    "Максимальная нагрузка": "3 кг",
+    "Масса": "0.54 кг",
+    "Цвет": "Белый",
+    "Рабочая температура": "-40°C ~ +60°C",
+    "Рабочая влажность": "0% ~ 90%",
+    "Защита": "IP66"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DH-PFA121",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15685",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

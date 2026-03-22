@@ -1,0 +1,20 @@
+{
+  "name": "JB3-115W Коробка монтажная KadrON",
+  "price": 0,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Вид крепления": "коробка закрытая",
+    "Материал крепления": "пластик",
+    "Для камер": "буллет; купольные",
+    "Размеры, мм": "146x47,5"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "JB3-115W",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=39593",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

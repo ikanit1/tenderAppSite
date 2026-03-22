@@ -1,0 +1,34 @@
+{
+  "name": "DHI-KTA02 Комплект аналогового видеодомофона",
+  "price": 5760046080,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Button Type": "Touch button",
+    "Display": "7.0\" TFT",
+    "Screen Resolution": "1024 × 600",
+    "Status Indicator": "1 indicator light Green: Power on",
+    "Communication Mode": "Analog",
+    "Casing": "PC + ABS",
+    "Color": "White",
+    "Power Supply": "DC 12V/2A",
+    "Power Adapter": "Included",
+    "Installation": "Surface mount",
+    "Certifications": "CE/FCC",
+    "Accessory": "Bracket (included)",
+    "Dimensions": "133.90 mm × 182.70 mm × 17.70 mm (5.27\" × 7.19\" × 0.70\")",
+    "Operating Temperature": "-10°C to +55°C (+14°F to +131°F)",
+    "Operating Humidity": "10%RH–95%RH",
+    "Power Consumption": "≤ 2W (standby) ≤ 5W (working)",
+    "Net Weight": "0.25 kg (0.55 lb)",
+    "Gross Weight": "0.48 kg (1.05 lb)"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DHI-KTA02",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15514",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "name": "HB-5043-H Кронштейн",
+  "price": 35003500,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "HB-5043-H",
+    "Dimension(W*H*D）(mm)": "211.3*43.66*43.66",
+    "Package dimensions (W*H*D)(mm)": "260*100*70",
+    "Weight(g/PCS)": "25",
+    "Material": "Plastic"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "HB-5043-H",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=38164",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

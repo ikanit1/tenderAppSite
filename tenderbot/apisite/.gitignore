@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+data/
+*.log
+.DS_Store
+.env
+*.xml
+# Скрипты с ключами (генерируются create_satu_script_with_keys.sh, не коммитить)
+run_satu_from_my_pc.sh
+run_satu_from_my_pc.bat

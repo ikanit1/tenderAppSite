@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api
+Disallow: /catalog/admin
+
+Sitemap: https://grgroup.kz/sitemap.xml

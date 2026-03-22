@@ -1,0 +1,23 @@
+{
+  "name": "SVA10D-PM1-P Панель ПМ1/П-32 IEK",
+  "price": 10244,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Тип монтажной панели:": "втычная",
+    "Номин раб напряжение:": "400 В",
+    "Номин частота:": "50 Гц",
+    "Вес:": "≤ 0,9 кг",
+    "Климатическое исполнение:": "УХЛ3",
+    "Совместимость с авт выкл:": "ВА88-32",
+    "Присоединение проводников:": "переднее"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "SVA10D-PM1-P",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=36799",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

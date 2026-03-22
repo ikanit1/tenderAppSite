@@ -1,0 +1,26 @@
+{
+  "name": "TG200 Yeastar VoIP-GSM-шлюз",
+  "price": 129897,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Бренд": "Yeastar",
+    "Артикул": "TG200",
+    "Тип оборудования": "VoIP шлюз",
+    "Порты и интерфейсы": "1 × LAN Ethernet 10/100 BASE-T 2 × GSM/CDMA/UMTS Channels",
+    "Питание": "100-240V",
+    "Службы": "Cтатический IP-адрес DDNS NAT",
+    "Поддержка протоколов": "FTP HTTP IAX2 NTP SIP 2.0 SSH",
+    "Аудиокодеки": "ADPCM G.711 G.711A/U-law G.722 G.726 G.729A GSM Speex"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "TG200",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=16324",
+  "images": [
+    "image_01.png",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png"
+  ]
+}

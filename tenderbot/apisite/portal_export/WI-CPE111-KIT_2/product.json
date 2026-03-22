@@ -1,0 +1,38 @@
+{
+  "name": "Wi-Tek WI-CPE111-KIT Комплект беспроводных точек доступа",
+  "price": 4670030400,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Процессор": "Qualcomm QCA9531",
+    "Память": "64MB SDRAM 8MB Flash",
+    "Интерфейсы": "1X10/100BASE-TX",
+    "Питание": "24В Passive PoE",
+    "Потребляемая мощность": "4Вт макс.",
+    "Антенна": "Секторная антенна с коэффициентом усиления 8дБи и поддержкой MIMO 2x2 Диаграмма направленности 60x15 o",
+    "Стандарты беспроводной связи": "802.11b/g/n",
+    "Протоколы": "CSMA/CA,TCP/IP,IPX/SPX, NetBEUI, DHCP",
+    "Режимы работы": "Точка доступа, клиент",
+    "Частота": "2400 - 2483,5MГц",
+    "Выходная мощность передатчика": "20дБм(100мВт)",
+    "Ширина канала": "20/40МГц",
+    "Защита": "IP65 10KV Lightning Protection",
+    "Размеры": "160мм*105мм*52мм",
+    "Температура и влажность": "Рабочая температура: -40°C +70°C Температура хранения: -40°C +85°C Влажность при эксплуатации: 10%-90% RH без конденсата Влажность при хранении: 5%-95% RH без конденсата",
+    "Особенности": "IGMP Snooping/Proxy Watch dog",
+    "Безопасность": "WPA/WPA2, WPA-PSK/WPA2-PSK (AES/TKIP) Encryption, 64/128/152-bit WEP Encryption",
+    "Управление": "Web"
+  },
+  "tabs": {},
+  "images_count": 6,
+  "model": "WI-CPE111-KIT",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15137",
+  "images": [
+    "image_01.jpg",
+    "image_02.png",
+    "image_03.png",
+    "image_04.jpg",
+    "image_05.png",
+    "image_06.png"
+  ]
+}

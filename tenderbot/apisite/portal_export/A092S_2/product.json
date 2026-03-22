@@ -1,0 +1,23 @@
+{
+  "name": "A092S Контроллер доступа",
+  "price": 300100180100,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Итого": "1500680 ₸"
+  },
+  "tabs": {},
+  "images_count": 8,
+  "model": "A092S",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=38202",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg",
+    "image_05.jpg",
+    "image_06.jpg",
+    "image_07.jpg",
+    "image_08.jpg"
+  ]
+}

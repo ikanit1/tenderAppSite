@@ -1,0 +1,37 @@
+{
+  "name": "OEI-372S-H-W-Z Настенная 7-дюймовая внутренняя станция (белая, Wi-Fi)",
+  "price": 6540043500,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Power Supply": "DC12V±25%,IEEE802.3af, Standard PoE",
+    "Power Consumption": "＜10W",
+    "Screen": "7-inch ultra-thin TFT LCD screen",
+    "Screen Resolution": "1024×600",
+    "Operation System": "Linux",
+    "Audio Quality": "Noise suppression,echo cancellation and AGC",
+    "Audio Input": "1 built-in omnidirectional microphone",
+    "Audio Output": "1 built-in speaker",
+    "Audio Compression Standard": "MP3 G711",
+    "Audio Compression Bitrate": "128Kbps",
+    "Interface": "Power*1, network*1, WiFi*1,RS485*1, IO output*2, IO input*8, TF card slot*1",
+    "Network": "100Mbps network port, supports IEEE802.3af PoE power supply,WIFI4、2.4GHZ",
+    "Weight": "360g",
+    "Dimensions (L x W x H)": "193mm×143mm×25mm",
+    "Operating Environment": "-10°C to +55°C, 10% to 90%, non-condensing, indoor",
+    "Protocol": "UNV private protocol",
+    "Network protocol": "TCP/IP, IPv4, HTTP, RTP, RTSP, NTP",
+    "Capacity": "200 ScreenShots 200 Zone Alarms A total of 20 connected devices, including IPCs, entrance stations, NVRs (up to 2), and Doorbells",
+    "Linked Indoor Station Capacity": "19 extensions"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "OEI-372S-H-W-Z",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=39858",
+  "images": [
+    "image_01.png",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png"
+  ]
+}

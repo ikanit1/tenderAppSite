@@ -1,0 +1,25 @@
+{
+  "name": "DH-PFA136 Монтажная коробка",
+  "price": 59604768,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Модель": "DH-PFA136",
+    "Материал": "Алюминий",
+    "Размеры": "Φ111.5мм x 34мм",
+    "Резьба": "M20(G1/2”)",
+    "Максимальная нагрузка": "1кг",
+    "Вес": "0.19кг",
+    "Цвет": "Белый",
+    "Температура": "-40° ~ +60°C",
+    "Относительная влажность": "0 ~ 90%"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DH-PFA136",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15692",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

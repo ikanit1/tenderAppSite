@@ -1,0 +1,29 @@
+{
+  "name": "S50 Yeastar IP-АТС",
+  "price": 364905,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Бренд": "Yeastar",
+    "Артикул": "S50",
+    "Тип оборудования": "АТС",
+    "Размер оперативной памяти": "512 MB",
+    "Размер встроенной памяти": "4096 MB",
+    "Порты и интерфейсы": "8 × аналоговых порта (FXO/FXS) 4 × GSM/3G-порт 8 × BRI портов 4 × UMTS порта 1 × LAN (10/100/1000 Мб/с) 1 × WAN (10/100/1000 Мб/с)",
+    "Питание": "100-240V, 0,6A",
+    "Спецификация": "http://www.yeastar.com/download/Yeastar_S_Series_VoIP_PBX_Datasheet_en.pdf",
+    "Видеокодек": "H.263 H.264 H263p MPEG 4",
+    "Поддержка протоколов": "IAX2 SIP 2.0",
+    "Аудиокодеки": "ADPCM G.711 G.722 G.726"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "S50",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=16310",
+  "images": [
+    "image_01.png",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png"
+  ]
+}

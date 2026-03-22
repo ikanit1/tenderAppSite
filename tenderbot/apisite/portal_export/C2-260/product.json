@@ -1,0 +1,31 @@
+{
+  "name": "C2-260 Контроллер",
+  "price": 3709035400,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "AUX вход": "2",
+    "AUX выход": "2",
+    "RS485 модуль расширения": "1",
+    "RS485 считыватель": "1",
+    "Типы считывателей": "RS485 карточный считыватель, Wiegand считыватель (WR485)",
+    "DM10 (Модуль расширения на 1 дверь) (опция)": "до 8",
+    "AUX485 (Конвертер RS485-4 Aux. входа) (опция)": "2",
+    "WR485 (Конвертер RS485-Weigand) (опция)": "4",
+    "Память карт": "30 000",
+    "Журнал событий": "200 000",
+    "Связь": "Ethernet, RS485",
+    "CPU": "32-bit 1.0GHz",
+    "RAM": "64MB"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "C2-260",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=36879",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}

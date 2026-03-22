@@ -1,0 +1,33 @@
+{
+  "name": "RBcAPGi-5acD2nD Точка доступа",
+  "price": 28100,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Бренд": "MikroTik",
+    "Артикул": "RBcAPGi-5acD2nD",
+    "Тип оборудования": "точка доступа",
+    "Стандарты Wi-Fi": "Wi-Fi 5 (802.11ac) Wi-Fi 4 (802.11n)",
+    "Каналы беспроводной сети": "2.4, 5 MHz",
+    "Операционная система": "RouterOS Level 4",
+    "Частота процессора": "716 MHz",
+    "Размер оперативной памяти": "128 MB",
+    "Размер встроенной памяти": "16 MB",
+    "Направленность антенны": "всенаправленная",
+    "MIMO": "MIMO2 × 2",
+    "Порты и интерфейсы": "2 10/100/1000Mbps",
+    "Стандарты проводной связи": "802.3af (PoE) 802.3at (PoE+)",
+    "Потребляемая мощность (макс)": "13 Watts",
+    "Индикаторы": "7х индикаторов 1х пользовательский"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "RBcAPGi-5acD2nD",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=16040",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}

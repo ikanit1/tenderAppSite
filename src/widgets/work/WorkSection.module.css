@@ -1,0 +1,193 @@
+.section {
+  padding: 0 var(--container-padding-lg) var(--gap-section);
+  background: transparent;
+}
+
+.hero {
+  position: relative;
+  max-width: var(--container-max);
+  margin: 0 auto 3.5rem;
+  padding: 4rem 3rem 4.5rem;
+  background: linear-gradient(160deg, rgba(45, 7, 84, 0.95) 0%, rgba(25, 8, 50, 0.98) 50%, rgba(15, 2, 35, 0.98) 100%);
+  border-radius: var(--radius-block);
+  border: 1px solid var(--color-border-strong);
+  box-shadow: 0 0 60px rgba(157, 78, 221, 0.2), 0 20px 50px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.heroGlow {
+  position: absolute;
+  top: -40%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120%;
+  height: 80%;
+  background: radial-gradient(ellipse at center, rgba(157, 78, 221, 0.18) 0%, rgba(123, 44, 191, 0.08) 40%, transparent 70%);
+  pointer-events: none;
+}
+
+.heroLogoWrap {
+  margin-bottom: 1.25rem;
+}
+
+.heroLogo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.heroLogo:hover {
+  transform: translateY(-1px) scale(1.01);
+}
+
+.heroLogoImage {
+  display: block;
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  filter: brightness(0) invert(1) contrast(2);
+}
+
+.heroLabel {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin: 0 0 0.75rem;
+}
+
+.heroTitle {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 800;
+  line-height: 1.15;
+  margin: 0 0 1rem;
+  color: var(--color-text);
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #f4ecff 0%, #e0d4f5 50%, #c8b5e8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.heroTagline {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 1.25rem;
+  max-width: 560px;
+  line-height: 1.4;
+}
+
+.heroIntro {
+  font-size: var(--text-base);
+  color: var(--color-text-muted);
+  line-height: var(--leading-relaxed);
+  margin: 0 0 2rem;
+  max-width: 640px;
+}
+
+.block {
+  max-width: var(--container-max);
+  margin: 0 auto 3rem;
+  padding: 3rem 2.5rem;
+  background: var(--content-block-bg);
+  border-radius: var(--radius-block);
+  border: 1px solid var(--color-border-strong);
+  box-shadow: 0 0 32px rgba(157, 78, 221, 0.12);
+}
+
+.blockHeading {
+  font-size: clamp(var(--text-xl), 2.5vw, var(--text-2xl));
+  font-weight: 700;
+  margin: 0 0 1rem;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+}
+
+.featuresList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.featuresList li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: var(--text-base);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.featuresList li::before {
+  content: '';
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  margin-top: 0.6em;
+  border-radius: 50%;
+  background: var(--color-primary);
+  box-shadow: 0 0 10px rgba(157, 78, 221, 0.5);
+}
+
+.directionsText {
+  font-size: var(--text-base);
+  color: var(--color-text-muted);
+  line-height: var(--leading-relaxed);
+  margin: 0 0 1.5rem;
+}
+
+.accessNote {
+  font-size: var(--text-sm);
+  color: var(--color-accent);
+  line-height: 1.5;
+  margin: 0;
+  padding: 1rem 1.25rem;
+  background: rgba(157, 78, 221, 0.1);
+  border-radius: var(--radius-button);
+  border: 1px solid rgba(157, 78, 221, 0.25);
+}
+
+.heroCta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 2rem;
+}
+
+.ctaPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.875rem 1.75rem;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-active) 100%);
+  color: #fff;
+  font-size: var(--text-base);
+  font-weight: 600;
+  border-radius: var(--radius-button);
+  text-decoration: none;
+  border: none;
+  box-shadow: 0 4px 20px rgba(157, 78, 221, 0.45);
+  transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+}
+
+.ctaPrimary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(157, 78, 221, 0.5);
+  filter: brightness(1.08);
+}
+
+@media (max-width: 768px) {
+  .hero {
+    padding: 2.5rem 1.5rem 3rem;
+  }
+  .block {
+    padding: 2rem 1.5rem;
+  }
+}

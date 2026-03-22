@@ -1,0 +1,25 @@
+{
+  "name": "DH-PFA134 Монтажная коробка",
+  "price": 59604768,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Модель": "DH-PFA134",
+    "Материал": "Алюминий и SECC",
+    "Размеры": "φ90мм x 36.1мм",
+    "Резьба": "M20(G1/2”)",
+    "Максимальная нагрузка": "1кг",
+    "Вес": "0.24кг",
+    "Цвет": "Белый",
+    "Температура": "-40° ~ +60°C",
+    "Относительная влажность": "0 ~ 90%"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DH-PFA134",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15691",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

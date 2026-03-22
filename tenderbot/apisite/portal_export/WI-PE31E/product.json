@@ -1,0 +1,34 @@
+{
+  "name": "WI-PE31E Wi-Tek Повторитель PoE",
+  "price": 119007735,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "HARDWARE FEATURES": "WI-PE31E",
+    "Interface": "PoE in port： 1 x 100Mbps PoE port with 802.3af/at 30W DC input port: 48-55V PoE output port: 2 x 100Mbps PoE port with 802.3at/at 30W",
+    "Network Media": "10BASE-T: UTP category 3, 4, 5 cable (Max 100m) EIA/TIA-568 100Ω STP (Max 100m) 100BASE-TX: UTP category 5, 5e cable (Max 100m)EIA/TIA-568 100Ω STP (Max 100m)",
+    "PoE PIN": "PoE IN: 4/5(+) 7/8(-)or 1/2(+) 3/6(-) PoE OUT: 4/5(+) 7/8(-)or 1/2(+)3/6(-)",
+    "LED Indicator": "PWR, Link",
+    "DIP Switch": "Extend",
+    "250m Long Distance": "Yes",
+    "Transmission Method": "Store-And-Forward",
+    "Advanced Functions": "Mac Address Auto-Learning And Auto-Aging Store and forward IEEE 802.3x ﬂow control for Full-duplex Mode Backpressure for Half-duplex Mode",
+    "Certification": "CE, FCC, RoHS",
+    "Package Dimension": "125×97×40mm",
+    "Switch Dimension": "86×84×25mm",
+    "Gross Weight": "0.17kg",
+    "Net Weight": "0.14kg",
+    "Operating Temperature": "0°C~40°C",
+    "Package Contents": "1 x PoE Extender 1*Installation Guide"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "WI-PE31E",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15184",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "name": "PFM340-5CH Блок питания",
+  "price": 0,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "DH-PFM340-5CH",
+    "Input Voltage Range": "AC90~264V",
+    "Outputs": "5 x 12VDC (-3%~+7%) outputs",
+    "Max. output": "4 A",
+    "Output Protection": "5 replacement fuses, max. per output 2.5A",
+    "Efficiency": "84%",
+    "No Load Power Consumption": "<0.5W",
+    "Internal ON/OFF Power Switch": "Yes",
+    "Individual LED Output Indicator": "Yes",
+    "Surge Protected": "Line to ground: 4000V Line to line: 2000V",
+    "ESD": "Contact discharge: 6000V Air discharge: 8000V",
+    "Working Temperature": "- 20 ℃ ~ +45 ℃ ( -4 ℉ ~+ 113 ℉ )",
+    "Working Humidity": "<90% RH",
+    "Weight": "0.85kg(1.87lb)",
+    "Dimension(LxWxH)": "165mmx165mmx50mm(6.5”x6.5”x1.97”)",
+    "Installation": "Wall mount",
+    "Color": "White",
+    "Certification": "CE(EN55032, EN55020) FCC(FCC Part 15 Class B, ISED ICES-003 Issue 6)"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "PFM340-5CH",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=23381",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

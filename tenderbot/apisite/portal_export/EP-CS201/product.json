@@ -1,0 +1,22 @@
+{
+  "name": "EP-CS201 Uniview Настенное крепление с козырьком",
+  "price": 60004020,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Parameter": "Description",
+    "Material": "Sheet metal",
+    "Dimensions": "179mm*83mm*50mm",
+    "Mount": "Wall mount",
+    "Weight": "303.9g (with package), 213.8g (without package)",
+    "Operating environment": "Outdoor"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "EP-CS201",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=38633",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

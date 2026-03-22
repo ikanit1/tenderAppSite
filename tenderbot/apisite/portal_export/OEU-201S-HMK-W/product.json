@@ -1,0 +1,40 @@
+{
+  "name": "OEU-201S-HMK-W Uniview Вызывная панель",
+  "price": 8320055400,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Parameter": "Description",
+    "Power": "DC 12V±25% input;IEEE802.3af, Standard PoE",
+    "Card capacity": "10000",
+    "Operation system": "Linux",
+    "Supplement light": "IR light(Adaptive infrared compensation)",
+    "WDR": "Support",
+    "FOV": "Horizontal:124.3° Vertical:67.5° Diagonal:147.2°",
+    "Power consumption": "＜10W",
+    "Volume adjustment": "Adjustable",
+    "Audio quality": "Noise suppression,echo cancellation and AGC",
+    "Audio input": "1 built-in omnidirectional microphone",
+    "Audio output": "1 built-in speaker",
+    "Audio compression standard": "PCM,G711,MP3",
+    "Audio compression bitrate": "128Kbps",
+    "Protocol": "UNV private protocol",
+    "Button": "1 physical button",
+    "Protection level": "IP65 (Apply waterproof glue to the gap between the device and the wall. For more information, see the quick guide.) IK08",
+    "Weight": "0.267Kg",
+    "Linked indoor station capacity": "20",
+    "Mount method": "Wall mounted, flush installation",
+    "Interface": "Power *1, network port *1, WIFI, RS485, door lock interface *2, IO input *4",
+    "Network": "100Mbps network port, supports IEEE802.3af PoE power supply",
+    "Dimensions (L×H×W)": "79mm×171mm×34mm",
+    "Operating environment": "﹣30℃~﹢60℃,10%～90%, non-condensing, outdoor"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "OEU-201S-HMK-W",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=38631",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "name": "VTO6221E-P вызывная панель",
+  "price": 129950103960,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "VTO6221E-P",
+    "Main Processor": "Embedded Micro Processor",
+    "Operation System": "Embedded LINUX OS",
+    "Video Compression": "H.264",
+    "Image Sensor": "1/2.9” 2MP CMOS",
+    "Auto Gain Control": "White Light",
+    "Lens": "2mm",
+    "Angle of View": "H:138°,V:78°, D:158°",
+    "Day/Night": "Color Image",
+    "Audio Compression": "G.711",
+    "Audio Input": "Omnidirectional Mic",
+    "Audio Output": "Built-in Speaker",
+    "Bidirectional Talk": "Support Dual-way Bidirectional talk",
+    "Screen": "2.3'' OLED",
+    "Keypad": "Mechanical Button with Braille",
+    "Reader": "Mifare Card (13.56MHz)"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DHI-VTO6221E-P",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15851",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}

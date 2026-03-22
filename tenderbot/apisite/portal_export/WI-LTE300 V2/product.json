@@ -1,0 +1,37 @@
+{
+  "name": "WI-LTE300 V2 Роутер 4G WiFi",
+  "price": 2920018980,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Model": "WI-LTE300 v2",
+    "Hardware Version": "v2",
+    "Interface": "(3)10/100M Base-T Ethernet Ports",
+    "Signal Rate": "300 Mbps at 2.4 GHz",
+    "Wi-Fi Antenna": "5dBi",
+    "Power Supply": "12V/1A DC",
+    "Power Consumption": "< 10W",
+    "External buttons": "reset button (long press for 8 seconds to restore the factory default configuration)",
+    "Transmit Power": "20dBm",
+    "Supported Bands": "EU: LTE FDD: B1/B3/B5/B7/B8/B20/B28 LTE TDD: B38/ B40/B41 WCDMA: B1/B5/B8 GSM: B3/B8 GN: LTE FDD: B1/B3/B5/B8 LTE TDD: B34/B38/B39/B40/B41 WCDMA: B1/B5/B8 GSM: B3/B8 LA: LTE FDD: B1/B2/B3/B4/B5/B7/B8/B28/B66 LTE TDD: B40 WCDMA: B1/ B2/ B4/B5/B8 GSM: B2/B3/ B5/B8",
+    "LTE Category": "Cat4",
+    "4G/ETH Failover": "Yes",
+    "Software Features": "3G/4G Router, Wireless Router, Eth-First Router, 4G-First Router",
+    "Dimensions": "185mm * 145mm * 28mm",
+    "Gross Weight": "0.58kg",
+    "Net Weight": "0.25kg",
+    "Environment": "Working Temp: 10~ 40°C Storage Temp: -40 ~70°C Working Humidity: 5%~95% non-condensing"
+  },
+  "tabs": {},
+  "images_count": 6,
+  "model": "WI-LTE300 V2",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=37397",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg",
+    "image_05.jpg",
+    "image_06.jpg"
+  ]
+}

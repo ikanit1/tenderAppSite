@@ -1,0 +1,33 @@
+{
+  "name": "IPC-S22FP-0360B-imou Cruiser 2MP IP-камера",
+  "price": 3830032600,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Модель": "IM-IPC-S22FP-0360B-imou",
+    "Тип камеры": "Поворотная",
+    "Фиксированный объектив": "3,6 мм",
+    "Место установки": "Улица",
+    "Материал": "Пластик",
+    "Дальность ИК-подсветки": "30 м.",
+    "Слот для карты Micro SD": "до 256 gb",
+    "Поле обзора": "89°(Г.), 46°(В.), 105°(Д.)",
+    "Вес": "565 гр.",
+    "Встроенный микрофон": "да",
+    "Двусторонняя аудиосвязь": "да"
+  },
+  "tabs": {},
+  "images_count": 8,
+  "model": "Cruiser 2MP",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15109",
+  "images": [
+    "image_01.png",
+    "image_02.png",
+    "image_03.png",
+    "image_04.png",
+    "image_05.png",
+    "image_06.png",
+    "image_07.png",
+    "image_08.png"
+  ]
+}

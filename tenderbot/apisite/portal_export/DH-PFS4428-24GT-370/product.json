@@ -1,0 +1,33 @@
+{
+  "name": "DH-PFS4428-24GT-370 24-портовый управляемый PoE коммутатор",
+  "price": 325000260000,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Партномер": "DH-PFS4428-24GT-370",
+    "Категория": "Коммутаторы",
+    "Бренд": "Dahua",
+    "Применение": "Для среднего офиса",
+    "Тип коммутатора": "Управляемый",
+    "Тип Ethernet-портов": "1000 Base-T (1 Гбит/с)",
+    "Тип Uplink-портов": "Без Uplink портов",
+    "Тип SFP портов": "1000Base-X SFP",
+    "Пропускная способность": "56 Гбит/с",
+    "Поддержка PoE": "Да, IEEE 802.3af",
+    "Поддержка VLAN": "Нет",
+    "Поддержка IPv6": "Нет",
+    "WEB-интерфейс": "Нет",
+    "Способ установки": "Монтаж в стойку (Rack-mount)",
+    "Цвет": "Черный"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "DH-PFS4428-24GT-370",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=39678",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}

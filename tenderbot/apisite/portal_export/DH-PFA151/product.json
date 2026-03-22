@@ -1,0 +1,23 @@
+{
+  "name": "DH-PFA151 Угловой кронштейн",
+  "price": 1488010420,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Модель": "DH-PFA151",
+    "Материал": "SECC",
+    "Размеры": "243мм x 170мм x 138мм",
+    "Максимальная нагрузка": "10кг",
+    "Вес": "1.7кг",
+    "Температура": "-40° ~ +60°C",
+    "Относительная влажность": "10 ~ 90%"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DH-PFA151",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15704",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "name": "DH-PFM321-EN Блок питания",
+  "price": 32902632,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Input Voltage Range": "90–264 VAC",
+    "Input Plug": "2-pin Euro plug",
+    "Efficiency": "80.15% (V)",
+    "Output Voltage": "12 VDC (+7%, –3%)",
+    "Output Current": "1 A",
+    "Max. Output Power": "12 W",
+    "No Load Power Consumption": "< 0.3 W",
+    "Protection": "Surge protection, over temperature protection, over current, voltage load protection ESD: IEC61000-4-2 ±6 kV Contact; ±8 kV Air Surge: EN61000-4-5 Combination Wave: Common Mode ±4 KV (12 ohms); Differential Mode ±2 kV (2 ohms)",
+    "Working Temperature": "–10 °C to +55 °C (–14 °F to +131°F)",
+    "Working Humidity": "< 90% (RH)",
+    "Weight": "76.5 mm × 73.6 mm × 28.5 mm (3.01\" × 2.9\" × 1.12\")",
+    "Installation": "Wall-mount",
+    "Color": "Black",
+    "Outgoing Cord": "DC wire: 1,500 mm (59.06\"/4.92 ft)",
+    "DC Plug": "Φ5.5 mm × Φ2.1 mm × 10 mm (Φ0.22\" × Φ0.08\" × 0.39\")",
+    "Certifications": "PFM321-EN/PFM321-BS: CE LVD(EN62368-1:2014) CE EMC(EN55032:2015,EN55035: 2017,EN50024:2010+A1:2015,EN61000-3-2:2014,EN61000-3-3:2013) PFM321-US: UL-VI(UL60950-1) FCC(FCC Part 15 Subpart B) DOE(VI)"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "DH-PFM321-EN",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15738",
+  "images": [
+    "image_01.png",
+    "image_02.png"
+  ]
+}
