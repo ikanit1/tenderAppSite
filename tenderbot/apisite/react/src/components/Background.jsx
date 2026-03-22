@@ -1,7 +1,13 @@
 import { useEffect } from 'react';
 import FallingStars from './FallingStars';
 
+const isInIframe =
+  typeof window !== 'undefined' &&
+  (window !== window.parent ||
+    new URLSearchParams(window.location.search).get('embedded') === '1');
+
 export default function Background() {
+  if (isInIframe) return null;
   useEffect(() => {
     // Starfield
     const starfield = document.getElementById('starfield');

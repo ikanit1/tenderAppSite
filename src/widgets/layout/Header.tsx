@@ -15,6 +15,11 @@ export function Header({ onCartToggle }: HeaderProps = {} as HeaderProps) {
   const location = useLocation();
   const shouldReduceMotion = useReducedMotion();
 
+  // На страницах каталога и оформления заказа корзину показывает iframe
+  const hideCatalogCart =
+    location.pathname.startsWith('/catalog') ||
+    location.pathname.startsWith('/checkout');
+
   const headerMotionProps = shouldReduceMotion
     ? {}
     : {
@@ -77,7 +82,7 @@ export function Header({ onCartToggle }: HeaderProps = {} as HeaderProps) {
         </nav>
 
         <div className={styles.right}>
-          {onCartToggle && (
+          {onCartToggle && !hideCatalogCart && (
             <motion.button
               type="button"
               className={styles.cartButton}

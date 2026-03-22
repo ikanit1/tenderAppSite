@@ -14,7 +14,13 @@ const itemVariants = {
   exit: { opacity: 0, x: -8 },
 };
 
+const isInIframe =
+  typeof window !== 'undefined' &&
+  (window !== window.parent ||
+    new URLSearchParams(window.location.search).get('embedded') === '1');
+
 export default function CartPanel({ isOpen, onClose }) {
+  if (isInIframe) return null;
   const { cart, removeFromCart, updateQty, totalSum } = useCart();
 
   const formatPrice = (price) => {

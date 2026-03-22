@@ -34,6 +34,11 @@ const buttonVariants = {
   },
 };
 
+const isInIframe =
+  typeof window !== 'undefined' &&
+  (window !== window.parent ||
+    new URLSearchParams(window.location.search).get('embedded') === '1');
+
 export default function FloatingActionsBar({ onCartToggle }) {
   const { totalCount, totalSum } = useCart();
   const { resetFiltersFn } = useResetFilters();
@@ -41,6 +46,22 @@ export default function FloatingActionsBar({ onCartToggle }) {
   const formatPrice = (price) => {
     if (price == null || isNaN(price)) return '0';
     return new Intl.NumberFormat('ru-RU').format(Math.round(price));
+  };
+
+  // В iframe — корзина и оформление заказа открываются через родительский сайт
+  const handleCartClick = () => {
+    if (isInIframe) {
+      window.parent.postMessage({ type: 'CATALOG_OPEN_CART' }, '*');
+    } else {
+      onCartToggle?.();
+    }
+  };
+
+  const handleCheckoutClick = (e) => {
+    if (isInIframe) {
+      e.preventDefault();
+      window.parent.postMessage({ type: 'CATALOG_GOTO_CHECKOUT' }, '*');
+    }
   };
 
   return (
@@ -54,7 +75,7 @@ export default function FloatingActionsBar({ onCartToggle }) {
         {/* Кнопка корзины */}
         <motion.button
           className={styles.actionButton}
-          onClick={onCartToggle}
+          onClick={handleCartClick}
           type="button"
           aria-label="Корзина"
           variants={buttonVariants}
@@ -108,13 +129,11 @@ export default function FloatingActionsBar({ onCartToggle }) {
               animate="visible"
               exit="hidden"
             >
-              <motion.div
-                whileHover={btnHover}
-                whileTap={btnTap}
-              >
+              <motion.div whileHover={btnHover} whileTap={btnTap}>
                 <Link
                   to="/checkout"
                   className={`${styles.actionButton} ${styles.actionButtonSuccess}`}
+                  onClick={handleCheckoutClick}
                 >
                   <svg className={styles.actionIcon} width="20" height="20" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M2 4h12M2 4l1-2h10l1 2M2 4v9a1 1 0 001 1h10a1 1 0 001-1V4M6 7v4M10 7v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>

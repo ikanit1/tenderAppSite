@@ -5,7 +5,9 @@ import { Step1Object } from './steps/Step1Object';
 import { IntercomCalculator } from './IntercomCalculator';
 import styles from './CalculatorWizard.module.css';
 
-const Step5Result = lazy(() => import('./steps/Step5Result').then((m) => ({ default: m.Step5Result })));
+const Step5Result = lazy(() =>
+  import('./steps/Step5Result').then((m) => ({ default: m.Step5Result }))
+);
 
 class StepResultErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
@@ -20,7 +22,7 @@ class StepResultErrorBoundary extends Component<{ children: ReactNode }, { hasEr
 
   render() {
     if (this.state.hasError) {
-      return <div className={styles.loading}>Ошибка загрузки блока</div>;
+      return <div className={styles.loading}>Ошибка загрузки результата</div>;
     }
     return this.props.children;
   }

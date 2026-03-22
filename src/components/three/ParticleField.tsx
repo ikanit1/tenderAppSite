@@ -2,11 +2,12 @@ import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-const COUNT = 1200;
+const COUNT = 600;
 
 export function ParticleField() {
   const pointsRef = useRef<THREE.Points>(null);
   const speedsRef = useRef<Float32Array | null>(null);
+
   const positions = useMemo(() => {
     const pos = new Float32Array(COUNT * 3);
     const spd = new Float32Array(COUNT * 3);
@@ -14,9 +15,9 @@ export function ParticleField() {
       pos[i * 3] = (Math.random() - 0.5) * 60;
       pos[i * 3 + 1] = (Math.random() - 0.5) * 60;
       pos[i * 3 + 2] = (Math.random() - 0.5) * 60;
-      spd[i * 3] = (Math.random() - 0.5) * 0.02;
-      spd[i * 3 + 1] = (Math.random() - 0.5) * 0.02;
-      spd[i * 3 + 2] = (Math.random() - 0.5) * 0.02;
+      spd[i * 3] = (Math.random() - 0.5) * 0.015;
+      spd[i * 3 + 1] = (Math.random() - 0.5) * 0.015;
+      spd[i * 3 + 2] = (Math.random() - 0.5) * 0.015;
     }
     speedsRef.current = spd;
     return pos;
@@ -44,9 +45,21 @@ export function ParticleField() {
   return (
     <points ref={pointsRef}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={COUNT} array={positions} itemSize={3} />
+        <bufferAttribute
+          attach="attributes-position"
+          count={COUNT}
+          array={positions}
+          itemSize={3}
+        />
       </bufferGeometry>
-      <pointsMaterial size={0.12} color="#b184e5" transparent opacity={0.7} sizeAttenuation depthWrite={false} />
+      <pointsMaterial
+        size={0.12}
+        color="#b184e5"
+        transparent
+        opacity={0.7}
+        sizeAttenuation
+        depthWrite={false}
+      />
     </points>
   );
 }

@@ -1,29 +1,45 @@
-import { Suspense, useRef, useState, useEffect } from 'react';
+/**
+ * Декоративный 3D-фон калькулятора — Three.js (без тяжёлого постпроцессинга).
+ *
+ * Рендерится ТОЛЬКО внутри калькулятора (не глобально), поэтому
+ * при переходе между страницами Canvas корректно размонтируется.
+ */
+import { Suspense, useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
-import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import { ParticleField } from './ParticleField';
 import { BuildingModel } from './BuildingModel';
 
-const useLowPerf = () => {
+/* ── Определение производительности устройства ────────────── */
+
+function useLowPerf() {
   const [low, setLow] = useState(false);
   useEffect(() => {
-    const w = window.innerWidth;
-    const cores = typeof navigator !== 'undefined' ? navigator.hardwareConcurrency : 4;
-    setLow(cores < 4 || w < 768);
+    const cores =
+      typeof navigator !== 'undefined' ? navigator.hardwareConcurrency : 4;
+    setLow(cores < 4 || window.innerWidth < 768);
   }, []);
   return low;
-};
+}
 
-function SceneContent({ buildingFloors, lowPerf }: { buildingFloors: number; lowPerf: boolean }) {
+/* ── Содержимое сцены ─────────────────────────────────────── */
+
+function SceneContent({
+  buildingFloors,
+  lowPerf,
+}: {
+  buildingFloors: number;
+  lowPerf: boolean;
+}) {
   const groupRef = useRef<THREE.Group>(null);
   const mouseRef = useRef({ x: 0, y: 0, targetX: 0, targetY: 0 });
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
-      mouseRef.current.targetX = (e.clientX / window.innerWidth - 0.5) * 0.5;
-      mouseRef.current.targetY = (e.clientY / window.innerHeight - 0.5) * 0.5;
+      mouseRef.current.targetX =
+        (e.clientX / window.innerWidth - 0.5) * 0.5;
+      mouseRef.current.targetY =
+        (e.clientY / window.innerHeight - 0.5) * 0.5;
     };
     window.addEventListener('mousemove', onMove);
     return () => window.removeEventListener('mousemove', onMove);
@@ -50,7 +66,13 @@ function SceneContent({ buildingFloors, lowPerf }: { buildingFloors: number; low
   );
 }
 
-export function BackgroundScene({ buildingFloors = 0 }: { buildingFloors?: number }) {
+/* ── Основной компонент ───────────────────────────────────── */
+
+export function BackgroundScene({
+  buildingFloors = 0,
+}: {
+  buildingFloors?: number;
+}) {
   const lowPerf = useLowPerf();
 
   return (
@@ -65,24 +87,26 @@ export function BackgroundScene({ buildingFloors = 0 }: { buildingFloors?: numbe
     >
       <Canvas
         camera={{ position: [0, 0, 25], fov: 60 }}
-        dpr={lowPerf ? 1 : Math.min(2, window.devicePixelRatio)}
-        gl={{ alpha: true, antialias: !lowPerf }}
+        dpr={lowPerf ? 1 : Math.min(1.5, window.devicePixelRatio)}
+        gl={{
+          alpha: true,
+          antialias: !lowPerf,
+          powerPreference: 'low-power',
+          failIfMajorPerformanceCaveat: false,
+        }}
+        onCreated={({ gl }) => {
+          const canvas = gl.domElement;
+          canvas.addEventListener('webglcontextlost', (e) => {
+            e.preventDefault();
+            console.warn('WebGL context lost — prevented default');
+          });
+        }}
       >
         <Suspense fallback={null}>
-          <SceneContent buildingFloors={buildingFloors} lowPerf={lowPerf} />
-          <OrbitControls
-            autoRotate
-            autoRotateSpeed={0.3}
-            enableZoom={false}
-            enablePan={false}
-            enableRotate={false}
+          <SceneContent
+            buildingFloors={buildingFloors}
+            lowPerf={lowPerf}
           />
-          {!lowPerf && (
-            <EffectComposer>
-              <Bloom intensity={0.6} luminanceThreshold={0.4} luminanceSmoothing={0.9} />
-              <Vignette offset={0.35} darkness={0.6} />
-            </EffectComposer>
-          )}
         </Suspense>
       </Canvas>
     </div>

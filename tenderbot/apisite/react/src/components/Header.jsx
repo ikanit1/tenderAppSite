@@ -4,12 +4,19 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { getMainSiteUrl } from '../utils/siteUrl';
 import { getCatalogNavItems } from '../utils/navConfig';
 
+const isInIframe =
+  typeof window !== 'undefined' &&
+  (window !== window.parent ||
+    new URLSearchParams(window.location.search).get('embedded') === '1');
+
 export default function Header({ onCartToggle }) {
   const mainSiteUrl = getMainSiteUrl().replace(/\/$/, '');
   const navItems = getCatalogNavItems();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const shouldReduceMotion = useReducedMotion();
+
+  if (isInIframe) return null;
 
   const headerMotionProps = shouldReduceMotion
     ? {}

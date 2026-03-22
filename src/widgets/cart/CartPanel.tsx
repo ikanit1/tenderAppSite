@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/shared/context/CartContext';
-import { getCatalogUrl } from '@/shared/utils/catalogUrl';
 import styles from './CartPanel.module.css';
 
 const panelTransition = { type: 'tween' as const, duration: 0.25, ease: [0.25, 0.1, 0.25, 1] as const };
@@ -23,6 +23,7 @@ interface CartPanelProps {
 
 export function CartPanel({ isOpen, onClose }: CartPanelProps) {
   const { items, removeFromCart, updateQty, totalSum, refreshCart, saveCartNow } = useCart();
+  const navigate = useNavigate();
 
   // Синхронизация с API при открытии панели (корзина с 8001 видна на 5173)
   useEffect(() => {
@@ -40,7 +41,7 @@ export function CartPanel({ isOpen, onClose }: CartPanelProps) {
     try {
       await saveCartNow(items);
       onClose();
-      window.location.href = `${getCatalogUrl()}/checkout`;
+      navigate('/catalog/checkout');
     } catch (error) {
       console.error('Failed to save cart before checkout', error);
     }
@@ -162,7 +163,7 @@ export function CartPanel({ isOpen, onClose }: CartPanelProps) {
                 Итого: <span>{formatPrice(totalSum)}</span> ₸
               </div>
               <a
-                href={`${getCatalogUrl()}/checkout`}
+                href="/catalog/checkout"
                 className={styles.checkoutButton}
                 onClick={handleCheckout}
               >

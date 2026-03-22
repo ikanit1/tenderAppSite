@@ -1,43 +1,27 @@
-import { useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { Outlet } from 'react-router-dom';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { Background } from '@/widgets/background/Background';
 import { CartPanel } from '@/widgets/cart/CartPanel';
 import styles from './Layout.module.css';
 
-const pageVariants = {
-  initial: { opacity: 1, y: 12 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -6 },
-};
-
-const pageTransition = { type: 'tween' as const, duration: 0.25, ease: 'easeOut' as const };
-
 export function Layout() {
   const [cartOpen, setCartOpen] = useState(false);
-  const location = useLocation();
-  const shouldReduceMotion = useReducedMotion();
+
+  // Открываем корзину по запросу от CatalogPage (через кнопки внутри iframe)
+  useEffect(() => {
+    const handler = () => setCartOpen(true);
+    window.addEventListener('catalog-open-cart', handler);
+    return () => window.removeEventListener('catalog-open-cart', handler);
+  }, []);
 
   return (
     <div className={styles.layout}>
       <Background />
       <Header onCartToggle={() => setCartOpen((prev) => !prev)} />
       <main className={styles.main}>
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={location.pathname}
-            variants={shouldReduceMotion ? undefined : pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={pageTransition}
-            className={styles.mainContent}
-          >
-            <Outlet />
-          </motion.div>
-        </AnimatePresence>
+        <Outlet />
       </main>
       <Footer />
       <CartPanel isOpen={cartOpen} onClose={() => setCartOpen(false)} />

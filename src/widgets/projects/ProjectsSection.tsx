@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { projectsList } from '@/shared/content/projects';
 import {
-  viewportReveal,
   sectionVariants,
   headerVariants,
   gridVariants,
@@ -52,8 +51,7 @@ export function ProjectsSection() {
       aria-labelledby="projects-heading"
       variants={reduceMotion ? undefined : sectionVariants}
       initial="hidden"
-      whileInView="visible"
-      viewport={{ ...viewportReveal, once: false, amount: 0.1 }}
+      animate="visible"
     >
       <motion.div className={styles.container} variants={reduceMotion ? undefined : sectionVariants}>
         <motion.h2 id="projects-heading" className={styles.heading} variants={reduceMotion ? undefined : headerVariants}>

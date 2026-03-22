@@ -104,6 +104,10 @@ export function useCart() {
       window.dispatchEvent(new CustomEvent(CART_UPDATE_EVENT, { detail: cart }));
       saveCartToAPIDebounced(cart);
       setCartCookie(cart);
+      // Уведомляем основной сайт если каталог открыт в iframe
+      if (window !== window.parent) {
+        window.parent.postMessage({ type: 'CATALOG_CART_UPDATE', cart }, '*');
+      }
     }
   }, [cart]);
 
