@@ -35,7 +35,7 @@ async def _auto_close_expired(session: AsyncSession, bot) -> int:
     поэтому в запросы нужно передавать наивные datetime в UTC, иначе
     asyncpg ругается на смешение offset-aware/naive.
     """
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     result = await session.execute(
         select(Tender)
         .options(selectinload(Tender.creator))
@@ -89,7 +89,7 @@ async def _auto_close_expired(session: AsyncSession, bot) -> int:
 
 async def _send_deadline_reminders(session: AsyncSession, bot) -> int:
     """Напомнить создателям о тендерах с дедлайном менее 24ч."""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     remind_threshold = now + REMIND_BEFORE
 
     result = await session.execute(
@@ -130,7 +130,7 @@ async def _send_deadline_reminders(session: AsyncSession, bot) -> int:
 
 async def _notify_idle_open_tenders(session: AsyncSession, bot) -> int:
     """Уведомить, если тендер открыт, но нет откликов дольше порога."""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     threshold = now - NO_APPS_ALERT_AFTER
 
     result = await session.execute(

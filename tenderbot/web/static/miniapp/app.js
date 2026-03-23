@@ -364,7 +364,7 @@
 
   function renderSupportChat() {
     if (state.supportError) {
-      return '<div class="screen"><p class="card-meta" style="color: #c33; padding: 1rem;">⚠️ ' + state.supportError + '</p><button type="button" class="btn btn-secondary" onclick="state.screen=\'support\'; render();">← К списку</button></div>';
+      return '<div class="screen"><p class="card-meta" style="color: #c33; padding: 1rem;">⚠️ ' + state.supportError + '</p><button type="button" class="btn btn-secondary" data-go="support">← К списку</button></div>';
     }
     const t = state.currentTicket;
     if (!t) return '<div class="screen"><p>Загрузка...</p></div>';

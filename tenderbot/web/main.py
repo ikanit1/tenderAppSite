@@ -33,6 +33,11 @@ app.add_middleware(CSRFMiddleware)
 
 app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 
+# React Mini App assets (built by tenderbot/miniapp_react/)
+_miniapp_assets = Path(__file__).parent / "static" / "miniapp" / "dist" / "assets"
+if _miniapp_assets.exists():
+    app.mount("/miniapp/assets", StaticFiles(directory=_miniapp_assets), name="miniapp-assets")
+
 app.include_router(health_router, tags=["health"])
 app.include_router(login_router, tags=["auth"])
 app.include_router(dashboard_router, tags=["dashboard"])

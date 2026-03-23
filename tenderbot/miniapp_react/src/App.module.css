@@ -1,0 +1,56 @@
+.app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.main {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: calc(var(--header-h) + 8px) 0 calc(var(--tabbar-h) + 8px);
+  -webkit-overflow-scrolling: touch;
+}
+
+.loader {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--text-muted);
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(162, 89, 230, 0.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.errorScreen {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.errorBox {
+  background: var(--surface);
+  border: 1px solid rgba(229, 83, 83, 0.3);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  text-align: center;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 340px;
+}

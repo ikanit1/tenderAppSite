@@ -1,0 +1,74 @@
+.screen {
+  padding: 4px 0 12px;
+}
+
+.screenTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 0 16px 10px;
+  margin-bottom: 2px;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.cardHeader h3 {
+  flex: 1;
+}
+
+.errorMsg {
+  margin: 24px 16px;
+  padding: 14px 16px;
+  background: var(--danger-bg);
+  border: 1px solid rgba(229, 83, 83, 0.25);
+  border-radius: var(--radius);
+  color: var(--danger);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.section {
+  margin: 0 12px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.sectionTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 8px;
+}
+
+.sectionText {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.btnRow {
+  display: flex;
+  gap: 8px;
+  padding: 0 12px;
+  margin-bottom: 8px;
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 10px 16px;
+  text-align: center;
+}

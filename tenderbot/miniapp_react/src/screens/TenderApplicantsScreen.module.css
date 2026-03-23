@@ -1,0 +1,24 @@
+.screen { padding: 4px 0 12px; }
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.errorMsg {
+  margin: 24px 16px;
+  padding: 14px 16px;
+  background: var(--danger-bg);
+  border: 1px solid rgba(229, 83, 83, 0.25);
+  border-radius: var(--radius);
+  color: var(--danger);
+  font-size: 14px;
+}

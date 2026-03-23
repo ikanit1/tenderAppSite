@@ -126,6 +126,7 @@ def require_active(user: User = Depends(get_current_user)) -> User:
 
 # ——— Раздача главной страницы Mini App ———
 _MINIAPP_STATIC = Path(__file__).parent.parent / "static" / "miniapp"
+_MINIAPP_DIST = _MINIAPP_STATIC / "dist"
 _NO_CACHE_HEADERS = {"Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache"}
 
 
@@ -137,7 +138,10 @@ def _file_response(path: Path, media_type: str):
 
 @router.get("/", response_class=FileResponse)
 def miniapp_index():
-    """Отдаёт index.html Mini App."""
+    """Отдаёт React-сборку (dist/index.html) если есть, иначе — legacy index.html."""
+    dist_html = _MINIAPP_DIST / "index.html"
+    if dist_html.exists():
+        return _file_response(dist_html, "text/html")
     return _file_response(_MINIAPP_STATIC / "index.html", "text/html")
 
 
@@ -505,7 +509,7 @@ def api_application_detail(
         "tender_id": tender.id,
         "tender_title": tender.title,
         "tender_city": tender.city,
-        "tender_category": tender.category,
+        "tender_category": ", ".join(tender.categories or []),
         "tender_budget": tender.budget,
         "tender_description": tender.description,
         "status": app.status,
@@ -725,4 +729,236 @@ def api_support_close_ticket(
         raise HTTPException(status_code=404, detail="Ticket not found")
     ticket.status = TicketStatus.CLOSED.value
     db.commit()
+    return {"ok": True}
+
+
+# ——— API: заказчик (customer role) ———
+
+def _require_customer(user: User = Depends(require_active)) -> User:
+    if user.role not in (UserRole.CUSTOMER.value, UserRole.BOTH.value):
+        raise HTTPException(status_code=403, detail="Only customers can use this endpoint")
+    return user
+
+
+class TenderCreateBody(BaseModel):
+    title: str
+    categories: list[str]
+    city: str
+    budget: Optional[str] = None
+    description: str
+    deadline: Optional[str] = None  # ISO datetime string
+
+
+@router.post("/api/customer/tenders")
+def api_customer_create_tender(
+    body: TenderCreateBody,
+    user: User = Depends(_require_customer),
+    db: Session = Depends(get_db),
+):
+    """Создать тендер (только для заказчиков)."""
+    if not body.title.strip():
+        raise HTTPException(status_code=400, detail="Название обязательно")
+    if not body.categories:
+        raise HTTPException(status_code=400, detail="Выберите хотя бы одну категорию")
+    if body.city not in settings.CITIES:
+        raise HTTPException(status_code=400, detail="Выберите город из списка")
+    if not body.description.strip():
+        raise HTTPException(status_code=400, detail="Описание обязательно")
+
+    deadline_dt = None
+    if body.deadline:
+        try:
+            deadline_dt = datetime.fromisoformat(body.deadline.replace("Z", "+00:00"))
+            if deadline_dt.tzinfo is not None:
+                deadline_dt = deadline_dt.replace(tzinfo=None)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Неверный формат дедлайна")
+
+    tender = Tender(
+        title=body.title.strip()[:256],
+        categories=[c for c in body.categories if c][:20],
+        city=body.city,
+        budget=body.budget.strip()[:128] if body.budget else None,
+        description=body.description.strip()[:4000],
+        status=TenderStatus.OPEN.value,
+        deadline=deadline_dt,
+        created_by_user_id=user.id,
+        created_by_tg_id=user.tg_id,
+    )
+    db.add(tender)
+    db.commit()
+    db.refresh(tender)
+
+    send_telegram_message(
+        settings.ADMIN_ID,
+        f"📋 <b>Новый заказ</b> от заказчика {user.full_name} ({user.city})\n«{tender.title}»"
+    )
+
+    deadline_str = None
+    if tender.deadline:
+        d = tender.deadline.replace(tzinfo=timezone.utc)
+        deadline_str = d.isoformat()
+
+    return {
+        "id": tender.id,
+        "title": tender.title,
+        "city": tender.city,
+        "category": ", ".join(tender.categories or []),
+        "budget": tender.budget,
+        "description": tender.description,
+        "deadline": deadline_str,
+        "status": tender.status,
+        "has_applied": False,
+        "applications_count": 0,
+    }
+
+
+@router.get("/api/customer/tenders")
+def api_customer_my_tenders(
+    user: User = Depends(_require_customer),
+    db: Session = Depends(get_db),
+):
+    """Список тендеров, созданных текущим заказчиком."""
+    result = db.execute(
+        select(Tender)
+        .where(Tender.created_by_user_id == user.id)
+        .order_by(Tender.id.desc())
+    )
+    tenders = result.scalars().all()
+    out = []
+    for t in tenders:
+        count = db.execute(
+            select(func.count(TenderApplication.id))
+            .where(TenderApplication.tender_id == t.id)
+        ).scalar() or 0
+        deadline_str = None
+        if t.deadline:
+            d = t.deadline
+            if d.tzinfo is None:
+                d = d.replace(tzinfo=timezone.utc)
+            deadline_str = d.isoformat()
+        out.append({
+            "id": t.id,
+            "title": t.title,
+            "city": t.city,
+            "category": ", ".join(t.categories or []),
+            "budget": t.budget,
+            "description": (t.description or "")[:500],
+            "deadline": deadline_str,
+            "status": t.status,
+            "has_applied": False,
+            "applications_count": count,
+        })
+    return {"tenders": out}
+
+
+@router.get("/api/customer/tenders/{tender_id}/applications")
+def api_customer_tender_applicants(
+    tender_id: int,
+    user: User = Depends(_require_customer),
+    db: Session = Depends(get_db),
+):
+    """Список откликов на тендер заказчика."""
+    tender = db.execute(
+        select(Tender).where(Tender.id == tender_id, Tender.created_by_user_id == user.id)
+    ).scalar_one_or_none()
+    if not tender:
+        raise HTTPException(status_code=404, detail="Tender not found")
+
+    result = db.execute(
+        select(TenderApplication, User)
+        .join(User, TenderApplication.user_id == User.id)
+        .where(TenderApplication.tender_id == tender_id)
+        .order_by(TenderApplication.id.asc())
+    )
+    rows = result.all()
+    out = []
+    for app, applicant in rows:
+        out.append({
+            "id": app.id,
+            "user_id": applicant.id,
+            "full_name": applicant.full_name,
+            "city": applicant.city,
+            "phone": applicant.phone,
+            "skills": applicant.skills or [],
+            "status": app.status,
+            "created_at": app.created_at.isoformat() if app.created_at else None,
+        })
+    return {"applications": out}
+
+
+@router.post("/api/customer/applications/{application_id}/select")
+def api_customer_select_applicant(
+    application_id: int,
+    user: User = Depends(_require_customer),
+    db: Session = Depends(get_db),
+):
+    """Выбрать исполнителя по тендеру."""
+    result = db.execute(
+        select(TenderApplication, Tender)
+        .join(Tender, TenderApplication.tender_id == Tender.id)
+        .where(
+            TenderApplication.id == application_id,
+            Tender.created_by_user_id == user.id,
+        )
+    ).one_or_none()
+    if not result:
+        raise HTTPException(status_code=404, detail="Application not found")
+    app, tender = result
+    if tender.status not in (TenderStatus.OPEN.value, TenderStatus.IN_PROGRESS.value):
+        raise HTTPException(status_code=400, detail="Tender is not open")
+
+    # Mark selected, reject others
+    all_apps = db.execute(
+        select(TenderApplication).where(TenderApplication.tender_id == tender.id)
+    ).scalars().all()
+    for a in all_apps:
+        a.status = "selected" if a.id == application_id else "rejected"
+
+    tender.status = TenderStatus.IN_PROGRESS.value
+    db.commit()
+
+    # Notify winner
+    winner = db.execute(select(User).where(User.id == app.user_id)).scalar_one_or_none()
+    if winner:
+        send_telegram_message(
+            winner.tg_id,
+            f"🎉 <b>Вас выбрали!</b>\n\nЗаказчик выбрал вас по заказу «{tender.title}». "
+            f"Ожидайте связи от заказчика."
+        )
+
+    return {"ok": True}
+
+
+@router.post("/api/customer/applications/{application_id}/reject")
+def api_customer_reject_applicant(
+    application_id: int,
+    user: User = Depends(_require_customer),
+    db: Session = Depends(get_db),
+):
+    """Отклонить заявку исполнителя."""
+    result = db.execute(
+        select(TenderApplication, Tender)
+        .join(Tender, TenderApplication.tender_id == Tender.id)
+        .where(
+            TenderApplication.id == application_id,
+            Tender.created_by_user_id == user.id,
+        )
+    ).one_or_none()
+    if not result:
+        raise HTTPException(status_code=404, detail="Application not found")
+    app, tender = result
+    if app.status != "applied":
+        raise HTTPException(status_code=400, detail="Application already processed")
+
+    app.status = "rejected"
+    db.commit()
+
+    rejected_user = db.execute(select(User).where(User.id == app.user_id)).scalar_one_or_none()
+    if rejected_user:
+        send_telegram_message(
+            rejected_user.tg_id,
+            f"По заказу «{tender.title}» был выбран другой исполнитель."
+        )
+
     return {"ok": True}

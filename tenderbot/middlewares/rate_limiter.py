@@ -23,14 +23,14 @@ class RateLimiterMiddleware(BaseMiddleware):
         self._period = settings.RATE_LIMIT_PERIOD
     
     def _cleanup_old_requests(self, user_id: int) -> None:
-        """Удалить старые запросы вне периода."""
+        """Удалить старые запросы вне периода, и саму запись если список пустой."""
         now = time.time()
         cutoff = now - self._period
-        self._requests[user_id] = [
-            req_time
-            for req_time in self._requests[user_id]
-            if req_time > cutoff
-        ]
+        filtered = [t for t in self._requests[user_id] if t > cutoff]
+        if filtered:
+            self._requests[user_id] = filtered
+        else:
+            del self._requests[user_id]
     
     def _is_rate_limited(self, user_id: int) -> bool:
         """Проверить, превышен ли лимит запросов."""
