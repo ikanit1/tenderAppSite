@@ -15,22 +15,56 @@ import type { IntercomResult } from '@/store/calculatorStore';
 import { getDeviceImage } from '@/lib/deviceImages';
 import styles from './Step5Result.module.css';
 
-function buildSummaryText(params: BuildingParams, result: CalculatorResult): string {
-  const lines: string[] = [
-    'Расчёт с калькулятора видеонаблюдения (grgroup.kz)',
-    '',
-    '── Параметры ──',
-    `Подъездов: ${params.entrances}, этажей: ${params.floors}, лифтов: ${params.elevators}`,
-    `Калитки: ${params.yardGates}, паркинг: ${params.hasParking ? `да, ${params.parkingGates} въезд(ов)` : 'нет'}`,
-    `Охват: ${params.coverageType === 'whole_building' ? 'весь дом' : 'только входные группы'}${params.coverageType === 'whole_building' ? `, ${params.twoCamerasPerFloor ? '2' : '1'} камеры на этаж` : ''}, камеры в лифтах: ${params.hasCamerasInLifts ? 'да' : 'нет'}`,
-    '',
-    '── ИТОГ ──',
-    `Камер: ${result.totalCameras}, кабель: ${result.totalCableMeters} м`,
-    `Оборудование: ${formatKzt(result.equipment)}`,
-    `Расходные материалы: ${formatKzt(result.consumables ?? 0)}`,
-    `Монтаж: ${formatKzt(result.installation.total)}`,
-    `ИТОГО: ${formatKzt(result.grandTotal)}`,
-  ];
+function buildSummaryText(
+  params: BuildingParams | null,
+  result: CalculatorResult | null,
+  intercomParams?: { entrances: number; entranceInputs: number; floors: number; flats: number; gates: number },
+  intercomResult?: IntercomResult
+): string {
+  const lines: string[] = ['Расчёт с калькулятора систем безопасности (grgroup.kz)', ''];
+
+  // Видеонаблюдение
+  if (result && params) {
+    lines.push(
+      '── ВИДЕОНАБЛЮДЕНИЕ ──',
+      'Параметры:',
+      `Подъездов: ${params.entrances}, этажей: ${params.floors}, лифтов: ${params.elevators}`,
+      `Калитки: ${params.yardGates}, паркинг: ${params.hasParking ? `да, ${params.parkingGates} въезд(ов)` : 'нет'}`,
+      `Охват: ${params.coverageType === 'whole_building' ? 'весь дом' : 'только входные группы'}${params.coverageType === 'whole_building' ? `, ${params.twoCamerasPerFloor ? '2' : '1'} камеры на этаж` : ''}, камеры в лифтах: ${params.hasCamerasInLifts ? 'да' : 'нет'}`,
+      '',
+      'Итог:',
+      `Камер: ${result.totalCameras}, кабель: ${result.totalCableMeters} м`,
+      `Оборудование: ${formatKzt(result.equipment)}`,
+      `Расходные материалы: ${formatKzt(result.consumables ?? 0)}`,
+      `Монтаж: ${formatKzt(result.installation.total)}`,
+      `ИТОГО видеонаблюдение: ${formatKzt(result.grandTotal)}`,
+      ''
+    );
+  }
+
+  // Домофония
+  if (intercomResult && intercomParams) {
+    lines.push(
+      '── ДОМОФОНИЯ ──',
+      'Параметры:',
+      `Подъездов: ${intercomParams.entrances}, входов у подъезда: ${intercomParams.entranceInputs}`,
+      `Этажей: ${intercomParams.floors}, квартир: ${intercomParams.flats}, калиток: ${intercomParams.gates}`,
+      '',
+      'Итог:',
+      `Оборудование: ${formatKzt(intercomResult.costSwitches4port + intercomResult.costPanelEquip + intercomResult.costManagedSwitches + intercomResult.costUtp + intercomResult.costConsumables)}`,
+      `Монтаж: ${formatKzt(intercomResult.totalInstall)}`,
+      `ПНР: ${formatKzt(intercomResult.totalComm)}`,
+      `ИТОГО домофония: ${formatKzt(intercomResult.grandTotal)}`,
+      ''
+    );
+  }
+
+  // Общий итог
+  const cctvTotal = result?.grandTotal ?? 0;
+  const intercomTotal = intercomResult?.grandTotal ?? 0;
+  const grandTotal = cctvTotal + intercomTotal;
+  lines.push(`ИТОГО ПО ПРОЕКТУ: ${formatKzt(grandTotal)}`);
+
   return lines.join('\n');
 }
 
@@ -190,7 +224,7 @@ export function Step5Result() {
   const handleEmail = () => setModalOpen(true);
 
   const handleSubmitRequest = async () => {
-    if (!result) return;
+    if (!result && !intercomDirty) return;
     const name = submitName.trim();
     const phone = submitPhone.trim();
     if (!name || !phone) {
@@ -204,7 +238,7 @@ export function Step5Result() {
         phone,
         email: submitEmail.trim() || undefined,
         projectType: 'calculator',
-        message: buildSummaryText(params, result),
+        message: buildSummaryText(params, result, intercomDirty ? intercomParams : undefined, intercomDirty ? intercomResult : undefined),
       });
       show('Заявка отправлена. Мы свяжемся с вами в ближайшее время.');
       setModalOpen(false);
@@ -219,7 +253,7 @@ export function Step5Result() {
   };
 
   const handleDocx = async () => {
-    if (!result) return;
+    if (!result && !intercomDirty) return;
     setExporting('kpfull');
     try {
       const { downloadKPFullPDF } = await import('@/widgets/calculator/generateKPFullPDF');
@@ -395,7 +429,7 @@ export function Step5Result() {
           <GlowButton variant="secondary" onClick={handleEmail}>
             Отправить на почту
           </GlowButton>
-          <GlowButton variant="primary" onClick={handleDocx} disabled={!result || exporting === 'kpfull'}>
+          <GlowButton variant="primary" onClick={handleDocx} disabled={(!result && !intercomDirty) || exporting === 'kpfull'}>
             {exporting === 'kpfull' ? 'Генерация…' : 'КП полное .pdf'}
           </GlowButton>
           <GlowButton variant="secondary" onClick={handleFinModel} disabled={(!result && !intercomDirty) || exporting === 'finmodel'}>
