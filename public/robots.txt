@@ -1,7 +1,22 @@
+# robots.txt для grgroup.kz
+
 User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /api
 Disallow: /catalog/admin
+Disallow: /checkout
 
+# Специфичные настройки для Google
+User-agent: Googlebot
+Allow: /
+
+# Специфичные настройки для Яндекс
+User-agent: Yandex
+Allow: /
+
+# Карта сайта
 Sitemap: https://grgroup.kz/sitemap.xml
+
+# Период обхода (опционально)
+Crawl-delay: 1

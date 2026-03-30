@@ -23,6 +23,6 @@ WEB_SECRET_KEY=change-me-in-production
 # BOT_USERNAME=ИмяБота (без @, для ссылки на лендинге)
 
 # Домен для веб-приложения и Mini App (HTTPS)
-# Локальный тест: ngrok URL → MINIAPP_BASE_URL=https://xxxx.ngrok-free.app
-# Production: реальный домен → MINIAPP_BASE_URL=https://grgroup.kz
-MINIAPP_BASE_URL=https://ee93-5-76-222-24.ngrok-free.app
+# Production на grgroup.kz — всё должно работать через https://grgroup.kz
+# Локальный тест: в .env переопределите на ngrok → MINIAPP_BASE_URL=https://xxxx.ngrok-free.app
+MINIAPP_BASE_URL=https://grgroup.kz
