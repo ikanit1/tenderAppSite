@@ -34,8 +34,9 @@ _apisite_dir = Path(__file__).resolve().parent
 if str(_apisite_dir) not in sys.path:
     sys.path.insert(0, str(_apisite_dir))
 
-from upload_to_satu import load_products_from_portal
+from upload_to_satu import load_products_from_portal, _price_to_tenge
 from utils import model_to_foldername, get_clean_id, normalize_model_for_fs
+from satu_categories import classify_product, get_all_group_names, get_group_number
 
 try:
     import openpyxl
@@ -70,6 +71,8 @@ HEADERS_PRODUCTS = (
     "Наличие",
     "Идентификатор_товара",
     "Производитель",
+    "Номер_группы",
+    "Название_группы",
 )
 
 PORTAL_EXPORT_DIR = _apisite_dir / "portal_export"
@@ -147,39 +150,26 @@ def _build_portal_by_model() -> dict:
         desc_file = folder / "description.txt"
         if desc_file.exists():
             desc_plain = desc_file.read_bytes().decode("utf-8-sig", errors="replace").strip() or desc_plain
-        # 1. Начинаем с основного описания если есть
-        description = desc_html if desc_html else desc_plain
-        # 2. Добавляем атрибуты/характеристики из поля "attributes"
-        attrs = data.get("attributes") or {}
-        if attrs:
-            attrs_text = "\n".join(f"{k}: {v}" for k, v in attrs.items())
-            description = (description + "\n\n" + attrs_text).strip()
-        # 3. Добавляем содержимое вкладок "tabs"
-        tabs = data.get("tabs") or {}
-        if tabs:
-            tabs_text = "\n\n".join(
-                f"{tab_name}:\n{tab_content}"
-                for tab_name, tab_content in tabs.items()
-                if tab_content and str(tab_content).strip()
-            )
-            if tabs_text:
-                description = (description + "\n\n" + tabs_text).strip()
-        # 4. Если описание всё ещё пустое — fallback из name + brand + model
-        if not description.strip():
-            parts = []
-            brand_val = (data.get("brand") or data.get("manufacturer") or "").strip()
-            name_val = (data.get("name") or "").strip() or name
-            model_val = (data.get("model") or folder.name).strip()
-            if name_val.startswith(model_val):
-                name_val = name_val[len(model_val):].strip()
-            if name_val:
-                parts.append(name_val)
-            if brand_val:
-                parts.append(f"Производитель: {brand_val}")
-            if model_val:
-                parts.append(f"Модель: {model_val}")
-            description = ". ".join(parts) if parts else (model_val or folder.name)
-        # 5. Обрезаем до лимита SATU (12160 символов)
+        # 1. HTML описание (приоритет): desc_html → desc_plain → атрибуты → fallback
+        if desc_html:
+            description = desc_html
+        elif desc_plain:
+            description = desc_plain
+        else:
+            attrs = data.get("attributes") or {}
+            if attrs:
+                rows = "".join(f"<li><b>{k}:</b> {v}</li>" for k, v in attrs.items())
+                description = f"<h3>{name}</h3><ul>{rows}</ul>"
+            else:
+                brand_val = (data.get("brand") or data.get("manufacturer") or "").strip()
+                model_val = (data.get("model") or folder.name).strip()
+                parts = [name]
+                if brand_val:
+                    parts.append(f"Производитель: {brand_val}")
+                if model_val:
+                    parts.append(f"Модель: {model_val}")
+                description = "<p>" + ". ".join(parts) + ".</p>"
+        # 2. Обрезаем до лимита SATU (12160 символов)
         description = description[:MAX_OPISANIE]
 
         image_names = data.get("images") or []
@@ -214,7 +204,7 @@ def load_products_for_satu(from_api: bool = True, limit: int | None = None) -> l
         from price_manager import calculate_final_price
 
         client = B2BClient()
-        data = client.update_products(use_cache=True)
+        data = client.update_products(use_cache=False)
         api_products = data.get("products") or []
         if not api_products:
             return []
@@ -250,7 +240,7 @@ def load_products_for_satu(from_api: bool = True, limit: int | None = None) -> l
                 if portal_json.exists():
                     try:
                         portal_data = json.loads(portal_json.read_bytes())
-                        portal_price = float(portal_data.get("price") or 0)
+                        portal_price = _price_to_tenge(portal_data.get("price") or 0)
                         if is_valid_price(portal_price):
                             price_rrc = portal_price
                     except Exception:
@@ -321,13 +311,22 @@ def load_products_for_satu(from_api: bool = True, limit: int | None = None) -> l
     return out
 
 
-def _search_queries_from_name(name: str, max_len: int = MAX_POISK_ZAPROS) -> str:
-    """Формирует поисковые запросы из названия (обязательное поле SATU). Слова через запятую."""
+def _build_search_queries(name: str, brand: str = "", category: str = "", max_len: int = MAX_POISK_ZAPROS) -> str:
+    """Формирует поисковые запросы: слова из названия + бренд + категория + фразы покупателя."""
     if not name:
         return "товар"
+    parts = []
     words = re.findall(r"[а-яёa-z0-9\-]+", name.lower(), re.I)
-    words = [w[:50] for w in words if len(w) >= 2][:15]
-    s = ", ".join(words[:20])
+    words = [w[:50] for w in words if len(w) >= 2][:10]
+    parts.extend(words)
+    if brand and brand.lower() not in name.lower():
+        parts.append(brand.lower())
+    if category:
+        parts.append(category.lower())
+        parts.append(f"{category.lower()} купить")
+        if brand:
+            parts.append(f"{brand.lower()} {category.lower()}")
+    s = ", ".join(dict.fromkeys(parts))  # убираем дубли, сохраняем порядок
     return s[:max_len] if s else "товар"
 
 
@@ -385,7 +384,7 @@ def build_full_excel(
     ws_products.row_dimensions[1].height = 20
 
     api_base = api_base_url or _get_api_base_url()
-    col_w = [14, 40, 18, 50, 12, 12, 8, 10, 8, 10, 14, 12, 8, 50, 10, 28, 28]
+    col_w = [14, 40, 18, 50, 12, 12, 8, 10, 8, 10, 14, 12, 8, 50, 10, 28, 28, 12, 30]
 
     for row_idx, p in enumerate(products, 2):
         name = (p.get("name") or "")[:MAX_NAZVA]
@@ -395,7 +394,8 @@ def build_full_excel(
         price_rrc = float(p.get("price_rrc") or 0)
         qty = max(0, int(p.get("quantity", 1)))
         brand = (p.get("brand") or "")[:MAX_PROIZVODITEL]
-        search = _search_queries_from_name(name)
+        category = classify_product(model, name)
+        search = _build_search_queries(name, brand, category)
 
         if image_base_url:
             link_izobr = _image_urls_for_product(p, image_base_url)
@@ -435,6 +435,8 @@ def build_full_excel(
         ws_products.cell(row=row_idx, column=15, value="+" if qty > 0 else "-")
         ws_products.cell(row=row_idx, column=16, value=ident)
         ws_products.cell(row=row_idx, column=17, value=brand)
+        ws_products.cell(row=row_idx, column=18, value=get_group_number(category))
+        ws_products.cell(row=row_idx, column=19, value=category)
 
     for col, w in enumerate(col_w, 1):
         ws_products.column_dimensions[openpyxl.utils.get_column_letter(col)].width = w
@@ -445,12 +447,13 @@ def build_full_excel(
     for col, h in enumerate(headers_groups, 1):
         c = ws_groups.cell(row=1, column=col, value=h)
         c.font = openpyxl.styles.Font(bold=True)
-    ws_groups.cell(row=2, column=1, value=1)
-    ws_groups.cell(row=2, column=2, value="Товары")
-    for col in range(3, 6):
-        ws_groups.cell(row=2, column=col, value="")
+    for grp_idx, grp_name in enumerate(get_all_group_names(), 1):
+        ws_groups.cell(row=grp_idx + 1, column=1, value=grp_idx)
+        ws_groups.cell(row=grp_idx + 1, column=2, value=grp_name)
+        for col in range(3, 6):
+            ws_groups.cell(row=grp_idx + 1, column=col, value="")
     for col in range(1, 6):
-        ws_groups.column_dimensions[openpyxl.utils.get_column_letter(col)].width = 20
+        ws_groups.column_dimensions[openpyxl.utils.get_column_letter(col)].width = 25
 
     return wb, len(products)
 

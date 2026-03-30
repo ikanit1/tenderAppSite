@@ -1,5 +1,5 @@
 """
-Парсер портала complex.com.kz/portal: страницы 1–116.
+Парсер портала complex.com.kz/portal: автоматически определяет количество страниц.
 Каждая позиция сохраняется в свою папку: название, описание, все изображения.
 Требуется авторизация (учётные данные из product_image_parser).
 """
@@ -7,10 +7,12 @@ import re
 import json
 import time
 import logging
+import math
 from pathlib import Path
-from typing import List, Dict, Optional, Any
+from typing import List, Optional
 from urllib.parse import urljoin
 from dataclasses import dataclass, asdict
+from concurrent.futures import ThreadPoolExecutor
 
 import requests
 from bs4 import BeautifulSoup
@@ -25,7 +27,6 @@ from product_image_parser import (
     extract_model_from_url,
     download_image,
 )
-from config import SCRAPING_DELAY
 
 logging.basicConfig(
     level=logging.INFO,
@@ -37,9 +38,15 @@ logger = logging.getLogger(__name__)
 EXPORT_DIR = Path(__file__).parent / "portal_export"
 EXPORT_DIR.mkdir(parents=True, exist_ok=True)
 
-# Страницы каталога: 1..116
+# Страницы каталога: авто-определение через пагинацию
 START_PAGE = 1
-END_PAGE = 116
+END_PAGE = 0  # 0 = авто-определение последней страницы
+
+# Задержки (секунды): меньше = быстрее, но выше риск бана
+PAGE_DELAY = 0.5        # между страницами каталога
+PRODUCT_DELAY = 0.3     # между товарами внутри страницы
+IMAGE_DELAY = 0.1       # между изображениями одного товара
+IMAGE_WORKERS = 4       # параллельных потоков для скачивания изображений
 
 
 @dataclass
@@ -63,6 +70,52 @@ def sanitize_foldername(s: str, max_len: int = 120) -> str:
     """Имя папки без недопустимых символов (то же правило, что в API: model_to_foldername)."""
     from utils import model_to_foldername
     return model_to_foldername(s, max_len=max_len)
+
+
+def detect_last_page() -> int:
+    """Определяет последнюю страницу каталога из пагинации на первой странице.
+
+    Ищет ссылки с ?page=N или текст "N to M of TOTAL". Если не нашёл — возвращает 200.
+    """
+    url = f"{PORTAL_URL}?sort=p.sort_order&order=ASC&page=1"
+    try:
+        resp = session.get(url, timeout=20)
+        if resp.status_code != 200:
+            logger.warning(f"Не удалось получить первую страницу (статус {resp.status_code}), используем 200")
+            return 200
+        soup = BeautifulSoup(resp.content, "lxml")
+
+        # Способ 1: ссылки пагинации вида ?page=N
+        page_numbers: list[int] = []
+        for a in soup.find_all("a", href=re.compile(r"[?&]page=(\d+)")):
+            m = re.search(r"[?&]page=(\d+)", a["href"])
+            if m:
+                page_numbers.append(int(m.group(1)))
+        if page_numbers:
+            last = max(page_numbers)
+            logger.info(f"Авто-определение: последняя страница = {last} (из ссылок пагинации)")
+            return last
+
+        # Способ 2: текст "of N" или "из N" — считаем по 24 товара на страницу
+        for text_node in soup.find_all(string=re.compile(r"of\s+\d+|из\s+\d+", re.I)):
+            m = re.search(r"of\s+(\d+)|из\s+(\d+)", str(text_node), re.I)
+            if m:
+                total_items = int(m.group(1) or m.group(2))
+                per_page = 24
+                for a in soup.find_all("a", href=re.compile(r"limit=(\d+)")):
+                    mm = re.search(r"limit=(\d+)", a["href"])
+                    if mm:
+                        per_page = int(mm.group(1))
+                        break
+                last = math.ceil(total_items / per_page)
+                logger.info(f"Авто-определение: {total_items} товаров / {per_page} на стр = {last} страниц")
+                return last
+
+        logger.warning("Пагинация не найдена, используем 200 страниц как максимум")
+        return 200
+    except Exception as e:
+        logger.error(f"Ошибка авто-определения страниц: {e}")
+        return 200
 
 
 def get_product_entries_from_page(page: int) -> List[CatalogEntry]:
@@ -180,6 +233,14 @@ def ensure_unique_folder(base_path: Path) -> Path:
     return p
 
 
+def _download_one_image(args: tuple) -> bool:
+    """Скачивает одно изображение (запускается в потоке)."""
+    img_url, save_path = args
+    result = download_image(img_url, save_path, check_cache=False)
+    time.sleep(IMAGE_DELAY)
+    return result
+
+
 def save_product_to_folder(
     folder_name: str,
     catalog_entry: CatalogEntry,
@@ -188,10 +249,18 @@ def save_product_to_folder(
 ) -> Path:
     """
     Создаёт папку товара, сохраняет name.txt, description.txt, info.json и скачивает изображения.
+    Изображения скачиваются параллельно (IMAGE_WORKERS потоков).
+    Если папка уже существует и содержит изображения — пропускает (для повторных запусков).
     Возвращает путь к папке.
     """
     safe_name = sanitize_foldername(folder_name)
     base = EXPORT_DIR / safe_name
+
+    # Пропускаем уже скачанный товар
+    if base.exists() and list(base.glob("image_*")):
+        logger.debug(f"Пропуск (уже есть): {safe_name}")
+        return base
+
     product_dir = ensure_unique_folder(base)
     product_dir.mkdir(parents=True, exist_ok=True)
 
@@ -212,27 +281,36 @@ def save_product_to_folder(
     }
     (product_dir / "info.json").write_text(json.dumps(info, ensure_ascii=False, indent=2), encoding="utf-8")
 
+    # Строим список задач и скачиваем параллельно
+    tasks = []
     for i, img_url in enumerate(all_images, 1):
         ext = ".jpg"
         if ".png" in img_url.lower():
             ext = ".png"
         elif ".webp" in img_url.lower():
             ext = ".webp"
-        fname = f"image_{i:02d}{ext}"
-        save_path = product_dir / fname
-        download_image(img_url, save_path, check_cache=False)
-        time.sleep(SCRAPING_DELAY)
+        tasks.append((img_url, product_dir / f"image_{i:02d}{ext}"))
+
+    if tasks:
+        with ThreadPoolExecutor(max_workers=min(IMAGE_WORKERS, len(tasks))) as pool:
+            list(pool.map(_download_one_image, tasks))
 
     return product_dir
 
 
 def run_parser(start_page: int = START_PAGE, end_page: int = END_PAGE) -> None:
-    """Парсит страницы start_page..end_page и сохраняет каждую позицию в свою папку."""
+    """Парсит страницы start_page..end_page и сохраняет каждую позицию в свою папку.
+
+    Если end_page=0, автоматически определяет последнюю страницу из пагинации сайта.
+    """
     logger.info("Инициализация сессии...")
     session.get(BASE_URL, timeout=20)
     if not login():
         logger.error("Авторизация не удалась. Проверьте учётные данные в product_image_parser.")
         return
+
+    if end_page == 0:
+        end_page = detect_last_page()
 
     seen_urls: set = set()
     for page in range(start_page, end_page + 1):
@@ -240,7 +318,7 @@ def run_parser(start_page: int = START_PAGE, end_page: int = END_PAGE) -> None:
         entries = get_product_entries_from_page(page)
         if not entries:
             logger.warning(f"Страница {page}: товары не найдены")
-            time.sleep(SCRAPING_DELAY)
+            time.sleep(PAGE_DELAY)
             continue
 
         for entry in entries:
@@ -259,17 +337,17 @@ def run_parser(start_page: int = START_PAGE, end_page: int = END_PAGE) -> None:
 
             folder_name = entry.model or entry.name or "product"
             save_product_to_folder(folder_name, entry, product, entry.thumb_url)
-            time.sleep(SCRAPING_DELAY)
+            time.sleep(PRODUCT_DELAY)
 
-        time.sleep(SCRAPING_DELAY)
+        time.sleep(PAGE_DELAY)
 
     logger.info(f"Экспорт завершён. Папки: {EXPORT_DIR.absolute()}")
 
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="Парсер complex.com.kz/portal: страницы 1-116, каждая позиция в свою папку.")
+    parser = argparse.ArgumentParser(description="Парсер complex.com.kz/portal: авто-определяет количество страниц, каждая позиция в свою папку.")
     parser.add_argument("--start", type=int, default=START_PAGE, help=f"Начальная страница (по умолчанию {START_PAGE})")
-    parser.add_argument("--end", type=int, default=END_PAGE, help=f"Конечная страница (по умолчанию {END_PAGE})")
+    parser.add_argument("--end", type=int, default=END_PAGE, help="Конечная страница (0 = авто-определение из пагинации сайта)")
     args = parser.parse_args()
     run_parser(args.start, args.end)
