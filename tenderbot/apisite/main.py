@@ -2,7 +2,8 @@
 from fastapi import FastAPI, HTTPException, Depends, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, Response as HttpResponse
-from typing import Optional
+from typing import Optional, Literal
+import base64
 from contextlib import asynccontextmanager
 from pathlib import Path
 from pydantic import BaseModel
@@ -1807,7 +1808,7 @@ class SendKPRequest(BaseModel):
     address: str
     phone: str
     email: str
-    documentType: str  # 'kpfull' | 'finmodel'
+    documentType: Literal['kpfull', 'finmodel']
     pdfBase64: str
     fileName: str
 
@@ -1815,14 +1816,12 @@ class SendKPRequest(BaseModel):
 @app.post("/api/calculator/send-kp")
 async def send_kp(payload: SendKPRequest):
     """Принимает PDF base64 и рассылает его клиенту + копию администратору."""
-    import base64 as b64mod
-
     if not ADMIN_EMAIL:
         logger.warning("send_kp: ADMIN_EMAIL не задан")
-        raise HTTPException(status_code=500, detail="Сервис отправки писем не настроен.")
+        raise HTTPException(status_code=503, detail="Сервис отправки писем не настроен.")
 
     try:
-        pdf_bytes = b64mod.b64decode(payload.pdfBase64)
+        pdf_bytes = base64.b64decode(payload.pdfBase64)
     except Exception:
         raise HTTPException(status_code=400, detail="Некорректные данные PDF.")
 
@@ -1859,7 +1858,7 @@ async def send_kp(payload: SendKPRequest):
     )
 
     attachment = (payload.fileName, pdf_bytes)
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     errors: list[str] = []
 
     # Письмо клиенту
