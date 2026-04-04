@@ -6,7 +6,7 @@ from typing import Optional, Literal
 import base64
 from contextlib import asynccontextmanager
 from pathlib import Path
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from b2b_client import B2BClient
 from models import ProductsResponse, Product, HealthResponse
 from utils import model_to_foldername, get_clean_id, normalize_model_for_fs
@@ -1804,13 +1804,13 @@ async def contacts_submit(payload: ContactsSubmitRequest):
 
 
 class SendKPRequest(BaseModel):
-    complexName: str
-    address: str
-    phone: str
-    email: str
+    complexName: str = Field(..., min_length=2, max_length=200)
+    address: str = Field(..., min_length=5, max_length=500)
+    phone: str = Field(..., min_length=7, max_length=50)
+    email: str = Field(..., max_length=254)
     documentType: Literal['kpfull', 'finmodel']
-    pdfBase64: str
-    fileName: str
+    pdfBase64: str = Field(..., max_length=15_000_000)  # ~10 MB PDF
+    fileName: str = Field(..., max_length=255)
 
 
 @app.post("/api/calculator/send-kp")
