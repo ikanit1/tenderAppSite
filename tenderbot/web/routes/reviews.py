@@ -53,6 +53,7 @@ async def reviews_list(
     )
     avg_by_user = {row[0]: (float(row[1]) if row[1] else 0, row[2]) for row in result.all()}
     return templates.TemplateResponse(
-        "reviews.html",
-        {"request": request, "reviews": reviews, "avg_by_user": avg_by_user, "page_info": page_info},
+        request=request,
+        name="reviews.html",
+        context={"reviews": reviews, "avg_by_user": avg_by_user, "page_info": page_info},
     )

@@ -78,9 +78,9 @@ async def support_list(
             last_msgs[t.id] = None
 
     return templates.TemplateResponse(
-        "support.html",
-        {
-            "request": request,
+        request=request,
+        name="support.html",
+        context={
             "tickets": tickets,
             "last_msgs": last_msgs,
             "status_filter": status,
@@ -118,9 +118,9 @@ async def support_chat(
 
     messages = sorted(ticket.messages or [], key=lambda m: (m.created_at or datetime.min).timestamp() if m.created_at else 0)
     return templates.TemplateResponse(
-        "support_chat.html",
-        {
-            "request": request,
+        request=request,
+        name="support_chat.html",
+        context={
             "ticket": ticket,
             "messages": messages,
         },

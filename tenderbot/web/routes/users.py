@@ -92,8 +92,9 @@ async def users_list(
         ratings = {row[0]: (float(row[1]) if row[1] else 0, row[2]) for row in result.all()}
 
     return templates.TemplateResponse(
-        "users.html",
-        {"request": request, "users": users, "ratings": ratings, "page_info": page_info},
+        request=request,
+        name="users.html",
+        context={"users": users, "ratings": ratings, "page_info": page_info},
     )
 
 
@@ -160,9 +161,9 @@ async def user_edit_form(
     if not user:
         return RedirectResponse(url="/users", status_code=302)
     return templates.TemplateResponse(
-        "user_form.html",
-        {
-            "request": request,
+        request=request,
+        name="user_form.html",
+        context={
             "user": user,
             "skill_tags": settings.SKILL_TAGS,
             "cities": settings.CITIES,
@@ -273,8 +274,9 @@ async def user_detail(
         return RedirectResponse(url="/users", status_code=302)
     documents_list = normalize_documents(user.documents)
     return templates.TemplateResponse(
-        "user_detail.html",
-        {"request": request, "user": user, "documents_list": documents_list},
+        request=request,
+        name="user_detail.html",
+        context={"user": user, "documents_list": documents_list},
     )
 
 

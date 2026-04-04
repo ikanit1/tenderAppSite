@@ -61,6 +61,7 @@ async def applications_list(
     applications = db.execute(q.offset(page_info.offset).limit(page_info.per_page)).scalars().all()
 
     return templates.TemplateResponse(
-        "applications.html",
-        {"request": request, "applications": applications, "page_info": page_info},
+        request=request,
+        name="applications.html",
+        context={"applications": applications, "page_info": page_info},
     )

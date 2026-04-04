@@ -40,7 +40,7 @@ def _record_attempt(ip: str) -> None:
 async def login_page(request: Request):
     if is_admin_session(request):
         return RedirectResponse(url="/dashboard", status_code=302)
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="login.html", context={})
 
 
 @router.post("/login")
@@ -55,8 +55,9 @@ async def login_post(
     if _is_rate_limited(client_ip):
         logger.warning(f"Login rate limit exceeded for IP {client_ip}")
         return templates.TemplateResponse(
-            "login.html",
-            {"request": request, "error": "Слишком много попыток входа. Попробуйте через 5 минут."},
+            request=request,
+            name="login.html",
+            context={"error": "Слишком много попыток входа. Попробуйте через 5 минут."},
         )
 
     # Timing-safe comparison to prevent timing attacks
@@ -72,8 +73,9 @@ async def login_post(
     _record_attempt(client_ip)
     logger.warning(f"Failed login attempt from IP {client_ip}")
     return templates.TemplateResponse(
-        "login.html",
-        {"request": request, "error": "Неверный логин или пароль"},
+        request=request,
+        name="login.html",
+        context={"error": "Неверный логин или пароль"},
     )
 
 

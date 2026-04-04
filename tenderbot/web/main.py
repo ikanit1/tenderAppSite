@@ -64,6 +64,7 @@ async def index(request: Request):
         return RedirectResponse(url="/dashboard", status_code=302)
     bot_url = f"https://t.me/{settings.BOT_USERNAME}" if settings.BOT_USERNAME else ""
     return templates.TemplateResponse(
-        "landing.html",
-        {"request": request, "bot_url": bot_url},
+        request=request,
+        name="landing.html",
+        context={"bot_url": bot_url},
     )

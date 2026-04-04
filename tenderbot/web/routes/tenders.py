@@ -88,9 +88,9 @@ async def tenders_list(
         success_msg = "Тендер успешно удалён."
 
     return templates.TemplateResponse(
-        "tenders.html",
-        {
-            "request": request,
+        request=request,
+        name="tenders.html",
+        context={
             "tenders": tenders,
             "statuses": [s.value for s in TenderStatus],
             "page_info": page_info,
@@ -108,9 +108,9 @@ async def tender_create_form(
     if redir := require_admin(request):
         return redir
     return templates.TemplateResponse(
-        "tender_form.html",
-        {
-            "request": request,
+        request=request,
+        name="tender_form.html",
+        context={
             "tender": None,
             "skill_tags": settings.SKILL_TAGS,
             "cities": settings.CITIES,
@@ -138,9 +138,9 @@ async def tender_create(
 
     if not (title and str(title).strip() and categories and city and str(city).strip() and description and str(description).strip()):
         return templates.TemplateResponse(
-            "tender_form.html",
-            {
-                "request": request,
+            request=request,
+            name="tender_form.html",
+            context={
                 "tender": None,
                 "skill_tags": settings.SKILL_TAGS,
                 "cities": settings.CITIES,
@@ -151,9 +151,9 @@ async def tender_create(
 
     if city and city not in settings.CITIES:
         return templates.TemplateResponse(
-            "tender_form.html",
-            {
-                "request": request,
+            request=request,
+            name="tender_form.html",
+            context={
                 "tender": None,
                 "skill_tags": settings.SKILL_TAGS,
                 "cities": settings.CITIES,
@@ -167,24 +167,24 @@ async def tender_create(
         is_valid, error_msg = validate_string_length(title, max_length=256, field_name="Название")
         if not is_valid:
             return templates.TemplateResponse(
-                "tender_form.html",
-                {
-                    "request": request,
-                "tender": None,
-                "skill_tags": settings.SKILL_TAGS,
-                "cities": settings.CITIES,
-                "statuses": [s.value for s in TenderStatus],
-                "error": error_msg,
-            },
-        )
+                request=request,
+                name="tender_form.html",
+                context={
+                    "tender": None,
+                    "skill_tags": settings.SKILL_TAGS,
+                    "cities": settings.CITIES,
+                    "statuses": [s.value for s in TenderStatus],
+                    "error": error_msg,
+                },
+            )
 
     if city:
         is_valid, error_msg = validate_string_length(city, max_length=128, field_name="Город")
         if not is_valid:
             return templates.TemplateResponse(
-                "tender_form.html",
-                {
-                    "request": request,
+                request=request,
+                name="tender_form.html",
+                context={
                     "tender": None,
                     "skill_tags": settings.SKILL_TAGS,
                     "cities": settings.CITIES,
@@ -197,9 +197,9 @@ async def tender_create(
         is_valid, error_msg = validate_string_length(budget, max_length=128, field_name="Бюджет")
         if not is_valid:
             return templates.TemplateResponse(
-                "tender_form.html",
-                {
-                    "request": request,
+                request=request,
+                name="tender_form.html",
+                context={
                     "tender": None,
                     "skill_tags": settings.SKILL_TAGS,
                     "cities": settings.CITIES,
@@ -216,9 +216,9 @@ async def tender_create(
             now_utc = datetime.now(timezone.utc)
             if deadline_dt < now_utc:
                 return templates.TemplateResponse(
-                    "tender_form.html",
-                    {
-                        "request": request,
+                    request=request,
+                    name="tender_form.html",
+                    context={
                         "tender": None,
                         "skill_tags": settings.SKILL_TAGS,
                         "cities": settings.CITIES,
@@ -228,9 +228,9 @@ async def tender_create(
                 )
         except ValueError:
             return templates.TemplateResponse(
-                "tender_form.html",
-                {
-                    "request": request,
+                request=request,
+                name="tender_form.html",
+                context={
                     "tender": None,
                     "skill_tags": settings.SKILL_TAGS,
                     "cities": settings.CITIES,
@@ -259,9 +259,9 @@ async def tender_create(
         db.rollback()
         logger.error(f"Database error creating tender: {e}")
         return templates.TemplateResponse(
-            "tender_form.html",
-            {
-                "request": request,
+            request=request,
+            name="tender_form.html",
+            context={
                 "tender": None,
                 "skill_tags": settings.SKILL_TAGS,
                 "cities": settings.CITIES,
@@ -283,9 +283,9 @@ async def tender_edit_form(
     if not tender:
         return RedirectResponse(url="/tenders", status_code=302)
     return templates.TemplateResponse(
-        "tender_form.html",
-        {
-            "request": request,
+        request=request,
+        name="tender_form.html",
+        context={
             "tender": tender,
             "skill_tags": settings.SKILL_TAGS,
             "cities": settings.CITIES,
@@ -319,9 +319,9 @@ async def tender_update(
         is_valid, error_msg = validate_string_length(title, max_length=256, field_name="Название")
         if not is_valid:
             return templates.TemplateResponse(
-                "tender_form.html",
-                {
-                    "request": request,
+                request=request,
+                name="tender_form.html",
+                context={
                     "tender": tender,
                     "skill_tags": settings.SKILL_TAGS,
                     "cities": settings.CITIES,
@@ -335,9 +335,9 @@ async def tender_update(
 
     if not categories:
         return templates.TemplateResponse(
-            "tender_form.html",
-            {
-                "request": request,
+            request=request,
+            name="tender_form.html",
+            context={
                 "tender": tender,
                 "skill_tags": settings.SKILL_TAGS,
                 "cities": settings.CITIES,
@@ -348,9 +348,9 @@ async def tender_update(
 
     if city and city not in settings.CITIES:
         return templates.TemplateResponse(
-            "tender_form.html",
-            {
-                "request": request,
+            request=request,
+            name="tender_form.html",
+            context={
                 "tender": tender,
                 "skill_tags": settings.SKILL_TAGS,
                 "cities": settings.CITIES,
@@ -363,9 +363,9 @@ async def tender_update(
         is_valid, error_msg = validate_string_length(city, max_length=128, field_name="Город")
         if not is_valid:
             return templates.TemplateResponse(
-                "tender_form.html",
-                {
-                    "request": request,
+                request=request,
+                name="tender_form.html",
+                context={
                     "tender": tender,
                     "skill_tags": settings.SKILL_TAGS,
                     "cities": settings.CITIES,
@@ -378,9 +378,9 @@ async def tender_update(
         is_valid, error_msg = validate_string_length(budget, max_length=128, field_name="Бюджет")
         if not is_valid:
             return templates.TemplateResponse(
-                "tender_form.html",
-                {
-                    "request": request,
+                request=request,
+                name="tender_form.html",
+                context={
                     "tender": tender,
                     "skill_tags": settings.SKILL_TAGS,
                     "cities": settings.CITIES,
@@ -403,9 +403,9 @@ async def tender_update(
                 now_utc = datetime.now(timezone.utc)
                 if deadline_dt < now_utc:
                     return templates.TemplateResponse(
-                        "tender_form.html",
-                        {
-                            "request": request,
+                        request=request,
+                        name="tender_form.html",
+                        context={
                             "tender": tender,
                             "skill_tags": settings.SKILL_TAGS,
                             "statuses": [s.value for s in TenderStatus],
@@ -415,9 +415,9 @@ async def tender_update(
                 tender.deadline = deadline_dt
             except ValueError:
                 return templates.TemplateResponse(
-                    "tender_form.html",
-                    {
-                        "request": request,
+                    request=request,
+                    name="tender_form.html",
+                    context={
                         "tender": tender,
                         "skill_tags": settings.SKILL_TAGS,
                         "statuses": [s.value for s in TenderStatus],
@@ -437,9 +437,9 @@ async def tender_update(
         db.rollback()
         logger.error(f"Database error updating tender {tender_id}: {e}")
         return templates.TemplateResponse(
-            "tender_form.html",
-            {
-                "request": request,
+            request=request,
+            name="tender_form.html",
+            context={
                 "tender": tender,
                 "skill_tags": settings.SKILL_TAGS,
                 "statuses": [s.value for s in TenderStatus],
@@ -520,9 +520,9 @@ async def tender_detail(
     if not tender:
         return RedirectResponse(url="/tenders", status_code=302)
     return templates.TemplateResponse(
-        "tender_detail.html",
-        {
-            "request": request,
+        request=request,
+        name="tender_detail.html",
+        context={
             "tender": tender,
             "statuses": [s.value for s in TenderStatus],
         },

@@ -8,8 +8,6 @@ from web.utils.translations import (
 
 # Создаем единый экземпляр Jinja2Templates
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
-# Включаем autoescape для безопасности
-templates.env.autoescape = True
 
 # Регистрируем фильтры для перевода
 templates.env.filters["translate_status"] = translate_status

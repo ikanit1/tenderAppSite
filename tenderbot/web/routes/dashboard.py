@@ -45,9 +45,9 @@ async def dashboard(
         select(Tender).order_by(Tender.created_at.desc()).limit(5)
     ).scalars().all()
     return templates.TemplateResponse(
-        "dashboard.html",
-        {
-            "request": request,
+        request=request,
+        name="dashboard.html",
+        context={
             "users_total": users_total,
             "tenders_total": tenders_total,
             "apps_today": apps_today,
