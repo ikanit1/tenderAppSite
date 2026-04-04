@@ -1,14 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git push origin main)",
-      "Bash(git pull --rebase origin main)",
-      "Bash(git stash push -m \"WIP: other changes\")",
-      "Bash(git stash push -m \"WIP: local changes before pulling from GitHub\")",
-      "Bash(git stash drop)",
-      "Bash(git log -1 --format='%an %ae')"
-    ],
-    "deny": [],
-    "ask": []
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(git checkout:*)",
+      "Bash(git checkout-index:*)",
+      "Bash(python -c \"import portal_full_parser; print\\(''OK''\\)\")",
+      "Bash(python -c \"import export_satu_excel; print\\(''OK''\\)\")",
+      "Bash(python export_satu_excel.py)"
+    ]
   }
 }
