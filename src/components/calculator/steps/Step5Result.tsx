@@ -7,65 +7,31 @@ import { GlowButton } from '@/components/ui/GlowButton';
 import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
 import { ResultTable } from '@/components/calculator/ResultTable';
 import { formatKzt } from '@/lib/calculations';
-import { submitLead } from '@/shared/api/leadApi';
+import { sendKPByEmail } from '@/shared/api/leadApi';
 import { useToast } from '@/features/toast/ToastProvider';
-import { calculatorContact } from '@/shared/content/calculatorConfig';
-import type { BuildingParams, CalculatorResult } from '@/widgets/calculator/calculatorLogic';
 import type { IntercomResult } from '@/store/calculatorStore';
 import { getDeviceImage } from '@/lib/deviceImages';
 import styles from './Step5Result.module.css';
 
-function buildSummaryText(
-  params: BuildingParams | null,
-  result: CalculatorResult | null,
-  intercomParams?: { entrances: number; entranceInputs: number; floors: number; flats: number; gates: number },
-  intercomResult?: IntercomResult
-): string {
-  const lines: string[] = ['Расчёт с калькулятора систем безопасности (grgroup.kz)', ''];
+interface ProjectInfo {
+  complexName: string;
+  address: string;
+  phone: string;
+  email: string;
+}
 
-  // Видеонаблюдение
-  if (result && params) {
-    lines.push(
-      '── ВИДЕОНАБЛЮДЕНИЕ ──',
-      'Параметры:',
-      `Подъездов: ${params.entrances}, этажей: ${params.floors}, лифтов: ${params.elevators}`,
-      `Калитки: ${params.yardGates}, паркинг: ${params.hasParking ? `да, ${params.parkingGates} въезд(ов)` : 'нет'}`,
-      `Охват: ${params.coverageType === 'whole_building' ? 'весь дом' : 'только входные группы'}${params.coverageType === 'whole_building' ? `, ${params.twoCamerasPerFloor ? '2' : '1'} камеры на этаж` : ''}, камеры в лифтах: ${params.hasCamerasInLifts ? 'да' : 'нет'}`,
-      '',
-      'Итог:',
-      `Камер: ${result.totalCameras}, кабель: ${result.totalCableMeters} м`,
-      `Оборудование: ${formatKzt(result.equipment)}`,
-      `Расходные материалы: ${formatKzt(result.consumables ?? 0)}`,
-      `Монтаж: ${formatKzt(result.installation.total)}`,
-      `ИТОГО видеонаблюдение: ${formatKzt(result.grandTotal)}`,
-      ''
-    );
-  }
+const SESSION_KEY = 'kp_project_info';
 
-  // Домофония
-  if (intercomResult && intercomParams) {
-    lines.push(
-      '── ДОМОФОНИЯ ──',
-      'Параметры:',
-      `Подъездов: ${intercomParams.entrances}, входов у подъезда: ${intercomParams.entranceInputs}`,
-      `Этажей: ${intercomParams.floors}, квартир: ${intercomParams.flats}, калиток: ${intercomParams.gates}`,
-      '',
-      'Итог:',
-      `Оборудование: ${formatKzt(intercomResult.costSwitches4port + intercomResult.costPanelEquip + intercomResult.costManagedSwitches + intercomResult.costUtp + intercomResult.costConsumables)}`,
-      `Монтаж: ${formatKzt(intercomResult.totalInstall)}`,
-      `ПНР: ${formatKzt(intercomResult.totalComm)}`,
-      `ИТОГО домофония: ${formatKzt(intercomResult.grandTotal)}`,
-      ''
-    );
-  }
+function loadProjectInfo(): ProjectInfo {
+  try {
+    const saved = sessionStorage.getItem(SESSION_KEY);
+    if (saved) return JSON.parse(saved) as ProjectInfo;
+  } catch { /* ignore */ }
+  return { complexName: '', address: '', phone: '', email: '' };
+}
 
-  // Общий итог
-  const cctvTotal = result?.grandTotal ?? 0;
-  const intercomTotal = intercomResult?.grandTotal ?? 0;
-  const grandTotal = cctvTotal + intercomTotal;
-  lines.push(`ИТОГО ПО ПРОЕКТУ: ${formatKzt(grandTotal)}`);
-
-  return lines.join('\n');
+function saveProjectInfo(info: ProjectInfo): void {
+  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(info)); } catch { /* ignore */ }
 }
 
 function IntercomSmeta({ r }: { r: IntercomResult }) {
@@ -188,7 +154,6 @@ function IntercomSmeta({ r }: { r: IntercomResult }) {
 export function Step5Result() {
   const reduceMotion = useReducedMotion();
   const result = useCalculatorStore((s) => s.result);
-  const params = useCalculatorStore((s) => s.params);
   const reset = useCalculatorStore((s) => s.reset);
   const intercomResult = useCalculatorStore((s) => s.intercomResult);
   const intercomParams = useCalculatorStore((s) => s.intercomParams);
@@ -201,14 +166,26 @@ export function Step5Result() {
     : intercomDirty && intercomParams.flats > 0
       ? intercomParams.flats
       : (result?.totalFlats ?? 0);
-  const [exporting, setExporting] = useState<'kpfull' | 'finmodel' | null>(null);
+  const [projectInfo, setProjectInfo] = useState<ProjectInfo>(loadProjectInfo);
+  const [downloadType, setDownloadType] = useState<'kpfull' | 'finmodel' | null>(null);
+  const [projectInfoSending, setProjectInfoSending] = useState(false);
+
+  const updateProjectInfo = (patch: Partial<ProjectInfo>) => {
+    setProjectInfo(prev => {
+      const next = { ...prev, ...patch };
+      saveProjectInfo(next);
+      return next;
+    });
+  };
+
+  const isProjectInfoValid =
+    projectInfo.complexName.trim().length >= 2 &&
+    projectInfo.address.trim().length >= 5 &&
+    /^\+?[0-9\s\-()+]{7,}$/.test(projectInfo.phone.trim()) &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(projectInfo.email.trim());
+
   const [installmentMonths, setInstallmentMonths] = useState<number>(60);
   const [downPayment, setDownPayment] = useState<number>(0);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [submitName, setSubmitName] = useState('');
-  const [submitPhone, setSubmitPhone] = useState('');
-  const [submitEmail, setSubmitEmail] = useState('');
-  const [submitSending, setSubmitSending] = useState(false);
 
   const cctv = result?.grandTotal ?? 0;
   const intercom = intercomDirty ? intercomResult.grandTotal : 0;
@@ -221,68 +198,71 @@ export function Step5Result() {
     }
   };
 
-  const handleEmail = () => setModalOpen(true);
-
-  const handleSubmitRequest = async () => {
-    if (!result && !intercomDirty) return;
-    const name = submitName.trim();
-    const phone = submitPhone.trim();
-    if (!name || !phone) {
-      show('Укажите имя и телефон', 'error');
-      return;
-    }
-    setSubmitSending(true);
+  const handleProjectInfoSubmit = async () => {
+    if (!isProjectInfoValid || !downloadType) return;
+    setProjectInfoSending(true);
     try {
-      await submitLead({
-        name,
-        phone,
-        email: submitEmail.trim() || undefined,
-        projectType: 'calculator',
-        message: buildSummaryText(params, result, intercomDirty ? intercomParams : undefined, intercomDirty ? intercomResult : undefined),
-      });
-      show('Заявка отправлена. Мы свяжемся с вами в ближайшее время.');
-      setModalOpen(false);
-      setSubmitName('');
-      setSubmitPhone('');
-      setSubmitEmail('');
-    } catch {
-      show('Ошибка отправки. Попробуйте позже.', 'error');
-    } finally {
-      setSubmitSending(false);
-    }
-  };
+      let blob: Blob;
+      let filename: string;
 
-  const handleDocx = async () => {
-    if (!result && !intercomDirty) return;
-    setExporting('kpfull');
-    try {
-      const { downloadKPFullPDF } = await import('@/widgets/calculator/generateKPFullPDF');
-      await downloadKPFullPDF(result, intercomDirty ? intercomResult : null, {
-        apartments: effectiveFlats,
-        installmentMonths,
-        downPayment,
-      });
-    } catch {
-      show('Не удалось сформировать PDF.', 'error');
-    } finally {
-      setExporting(null);
-    }
-  };
+      if (downloadType === 'kpfull') {
+        const { generateKPFullPDF } = await import('@/widgets/calculator/generateKPFullPDF');
+        const out = await generateKPFullPDF(
+          result,
+          intercomDirty ? intercomResult : null,
+          { apartments: effectiveFlats, installmentMonths, downPayment },
+          { complexName: projectInfo.complexName, address: projectInfo.address, phone: projectInfo.phone }
+        );
+        blob = out.blob;
+        filename = out.filename;
+      } else {
+        const { generateFinModelPDF } = await import('@/widgets/calculator/generateFinModelPDF');
+        const out = await generateFinModelPDF(
+          result,
+          intercomDirty ? intercomResult : null,
+          { apartments: effectiveFlats, downPayment, installmentMonths },
+          { complexName: projectInfo.complexName, address: projectInfo.address, phone: projectInfo.phone }
+        );
+        blob = out.blob;
+        filename = out.filename;
+      }
 
-  const handleFinModel = async () => {
-    if (!result && !intercomDirty) return;
-    setExporting('finmodel');
-    try {
-      const { downloadFinModelPDF } = await import('@/widgets/calculator/generateFinModelPDF');
-      await downloadFinModelPDF(result, intercomDirty ? intercomResult : null, {
-        apartments: effectiveFlats,
-        downPayment,
-        installmentMonths,
+      // base64
+      const pdfBase64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve((reader.result as string).split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
       });
-    } catch {
-      show('Не удалось сформировать PDF.', 'error');
+
+      // Send to backend
+      await sendKPByEmail({
+        complexName: projectInfo.complexName,
+        address: projectInfo.address,
+        phone: projectInfo.phone,
+        email: projectInfo.email,
+        documentType: downloadType,
+        pdfBase64,
+        fileName: filename,
+      });
+
+      // Download locally
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      show(`Расчёт отправлен на ${projectInfo.email}`);
+      setDownloadType(null);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Ошибка отправки. Попробуйте позже.';
+      show(msg, 'error');
     } finally {
-      setExporting(null);
+      setProjectInfoSending(false);
     }
   };
 
@@ -426,14 +406,19 @@ export function Step5Result() {
           </GlowButton>
         </div>
         <div className={styles.actionsRight}>
-          <GlowButton variant="secondary" onClick={handleEmail}>
-            Отправить на почту
+          <GlowButton
+            variant="primary"
+            onClick={() => setDownloadType('kpfull')}
+            disabled={!result && !intercomDirty}
+          >
+            КП полное .pdf
           </GlowButton>
-          <GlowButton variant="primary" onClick={handleDocx} disabled={(!result && !intercomDirty) || exporting === 'kpfull'}>
-            {exporting === 'kpfull' ? 'Генерация…' : 'КП полное .pdf'}
-          </GlowButton>
-          <GlowButton variant="secondary" onClick={handleFinModel} disabled={(!result && !intercomDirty) || exporting === 'finmodel'}>
-            {exporting === 'finmodel' ? 'Генерация…' : 'Финансовая модель .pdf'}
+          <GlowButton
+            variant="secondary"
+            onClick={() => setDownloadType('finmodel')}
+            disabled={!result && !intercomDirty}
+          >
+            Финансовая модель .pdf
           </GlowButton>
           <a
             href="/kp-intercom-monitors.pdf"
@@ -445,58 +430,86 @@ export function Step5Result() {
         </div>
       </div>
 
-      {modalOpen && (
-        <div className={styles.modalOverlay} onClick={() => !submitSending && setModalOpen(false)}>
+      {downloadType !== null && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => !projectInfoSending && setDownloadType(null)}
+        >
           <motion.div
             className={styles.modal}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className={styles.modalTitle}>Отправить расчёт менеджеру</h3>
+            <h3 className={styles.modalTitle}>
+              {downloadType === 'kpfull'
+                ? 'Получить Коммерческое предложение'
+                : 'Получить Финансовую модель'}
+            </h3>
             <p className={styles.modalDesc}>
-              Укажите контакты — мы отправим расчёт на {calculatorContact.email} и перезвоним.
+              Заполните данные объекта — подготовим документ и пришлём на почту.
             </p>
             <div className={styles.modalForm}>
               <div className={styles.inputGroup}>
-                <label htmlFor="step5-lead-name" className={styles.inputLabel}>Имя *</label>
+                <label htmlFor="pi-complex" className={styles.inputLabel}>Название ЖК *</label>
                 <input
-                  id="step5-lead-name"
+                  id="pi-complex"
                   type="text"
                   className={styles.modalInput}
-                  value={submitName}
-                  onChange={(e) => setSubmitName(e.target.value)}
-                  placeholder="Ваше имя"
+                  value={projectInfo.complexName}
+                  onChange={(e) => updateProjectInfo({ complexName: e.target.value })}
+                  placeholder="ЖК «Солнечный»"
                 />
               </div>
               <div className={styles.inputGroup}>
-                <label htmlFor="step5-lead-phone" className={styles.inputLabel}>Телефон *</label>
+                <label htmlFor="pi-address" className={styles.inputLabel}>Адрес объекта *</label>
                 <input
-                  id="step5-lead-phone"
+                  id="pi-address"
+                  type="text"
+                  className={styles.modalInput}
+                  value={projectInfo.address}
+                  onChange={(e) => updateProjectInfo({ address: e.target.value })}
+                  placeholder="г. Астана, ул. Примерная, 1"
+                />
+              </div>
+              <div className={styles.inputGroup}>
+                <label htmlFor="pi-phone" className={styles.inputLabel}>Телефон *</label>
+                <input
+                  id="pi-phone"
                   type="tel"
                   className={styles.modalInput}
-                  value={submitPhone}
-                  onChange={(e) => setSubmitPhone(e.target.value)}
-                  placeholder="+7 771 000 00 00"
+                  value={projectInfo.phone}
+                  onChange={(e) => updateProjectInfo({ phone: e.target.value })}
+                  placeholder="+7 700 000 00 00"
                 />
               </div>
               <div className={styles.inputGroup}>
-                <label htmlFor="step5-lead-email" className={styles.inputLabel}>Email</label>
+                <label htmlFor="pi-email" className={styles.inputLabel}>Email *</label>
                 <input
-                  id="step5-lead-email"
+                  id="pi-email"
                   type="email"
                   className={styles.modalInput}
-                  value={submitEmail}
-                  onChange={(e) => setSubmitEmail(e.target.value)}
-                  placeholder="email@example.com"
+                  value={projectInfo.email}
+                  onChange={(e) => updateProjectInfo({ email: e.target.value })}
+                  placeholder="manager@example.com"
                 />
+                <span className={styles.inputHint}>
+                  Укажите почту — продублируем расчёт, чтобы не потерять
+                </span>
               </div>
               <div className={styles.modalButtons}>
-                <GlowButton variant="ghost" onClick={() => setModalOpen(false)} disabled={submitSending}>
+                <GlowButton
+                  variant="ghost"
+                  onClick={() => setDownloadType(null)}
+                  disabled={projectInfoSending}
+                >
                   Отмена
                 </GlowButton>
-                <GlowButton onClick={handleSubmitRequest} disabled={submitSending}>
-                  {submitSending ? 'Отправка…' : 'Отправить'}
+                <GlowButton
+                  onClick={handleProjectInfoSubmit}
+                  disabled={!isProjectInfoValid || projectInfoSending}
+                >
+                  {projectInfoSending ? 'Отправка…' : 'Получить расчёт на почту и скачать'}
                 </GlowButton>
               </div>
             </div>

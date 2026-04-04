@@ -2,10 +2,11 @@
 from fastapi import FastAPI, HTTPException, Depends, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, Response as HttpResponse
-from typing import Optional
+from typing import Optional, Literal
+import base64
 from contextlib import asynccontextmanager
 from pathlib import Path
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from b2b_client import B2BClient
 from models import ProductsResponse, Product, HealthResponse
 from utils import model_to_foldername, get_clean_id, normalize_model_for_fs
@@ -1435,19 +1436,39 @@ class ContactsSubmitRequest(BaseModel):
     message: Optional[str] = None
 
 
-def _send_order_email_sync(to_email: str, subject: str, body_plain: str, body_html: Optional[str] = None) -> None:
+def _send_order_email_sync(
+    to_email: str,
+    subject: str,
+    body_plain: str,
+    body_html: Optional[str] = None,
+    attachment: Optional[tuple] = None,  # (filename: str, data: bytes)
+) -> None:
     """Синхронная отправка письма через SMTP. Вызывать из run_in_executor."""
     import smtplib
     from email.mime.text import MIMEText
     from email.mime.multipart import MIMEMultipart
+    from email.mime.application import MIMEApplication
     from email.utils import formatdate
 
-    if body_html:
+    if attachment:
+        # mixed: text/html + PDF attachment
+        msg = MIMEMultipart("mixed")
+        alt = MIMEMultipart("alternative")
+        alt.attach(MIMEText(body_plain, "plain", "utf-8"))
+        if body_html:
+            alt.attach(MIMEText(body_html, "html", "utf-8"))
+        msg.attach(alt)
+        fname, fbytes = attachment
+        pdf_part = MIMEApplication(fbytes, _subtype="pdf")
+        pdf_part.add_header("Content-Disposition", "attachment", filename=fname)
+        msg.attach(pdf_part)
+    elif body_html:
         msg = MIMEMultipart("alternative")
         msg.attach(MIMEText(body_plain, "plain", "utf-8"))
         msg.attach(MIMEText(body_html, "html", "utf-8"))
     else:
         msg = MIMEText(body_plain, "plain", "utf-8")
+
     msg["Subject"] = subject
     msg["From"] = SMTP_USER or to_email
     msg["To"] = to_email
@@ -1780,6 +1801,103 @@ async def contacts_submit(payload: ContactsSubmitRequest):
         ) from e
 
     return JSONResponse(content={"ok": True})
+
+
+class SendKPRequest(BaseModel):
+    complexName: str = Field(..., min_length=2, max_length=200)
+    address: str = Field(..., min_length=5, max_length=500)
+    phone: str = Field(..., min_length=7, max_length=50)
+    email: str = Field(..., max_length=254)
+    documentType: Literal['kpfull', 'finmodel']
+    pdfBase64: str = Field(..., max_length=15_000_000)  # ~10 MB PDF
+    fileName: str = Field(..., max_length=255)
+
+
+@app.post("/api/calculator/send-kp")
+async def send_kp(payload: SendKPRequest):
+    """Принимает PDF base64 и рассылает его клиенту + копию администратору."""
+    if not ADMIN_EMAIL:
+        logger.warning("send_kp: ADMIN_EMAIL не задан")
+        raise HTTPException(status_code=503, detail="Сервис отправки писем не настроен.")
+
+    try:
+        pdf_bytes = base64.b64decode(payload.pdfBase64)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Некорректные данные PDF.")
+
+    doc_name = (
+        "Коммерческое предложение"
+        if payload.documentType == "kpfull"
+        else "Финансовая модель"
+    )
+
+    subject_client = f"{doc_name} для ЖК «{payload.complexName}» — G&R Group"
+    subject_admin = (
+        f"[НОВЫЙ ЛИД] {doc_name} — ЖК «{payload.complexName}» | {payload.phone}"
+    )
+
+    body_client = (
+        f"Здравствуйте!\n\n"
+        f"Высылаем {doc_name.lower()} для вашего объекта.\n\n"
+        f"Объект: ЖК «{payload.complexName}»\n"
+        f"Адрес:  {payload.address}\n\n"
+        f"{doc_name} прикреплён к этому письму.\n\n"
+        f"С уважением,\n"
+        f"ТОО «G&R Group»\n"
+        f"+7 771 421 55 93 | info@grgroup.kz"
+    )
+
+    body_admin = (
+        f"Новый лид с калькулятора\n\n"
+        f"Документ: {doc_name}\n"
+        f"ЖК:       {payload.complexName}\n"
+        f"Адрес:    {payload.address}\n"
+        f"Телефон:  {payload.phone}\n"
+        f"Email:    {payload.email}\n\n"
+        f"{doc_name} прикреплён к письму."
+    )
+
+    attachment = (payload.fileName, pdf_bytes)
+    loop = asyncio.get_running_loop()
+    errors: list[str] = []
+
+    # Письмо клиенту
+    try:
+        await loop.run_in_executor(
+            None,
+            _send_order_email_sync,
+            payload.email,
+            subject_client,
+            body_client,
+            None,
+            attachment,
+        )
+    except Exception:
+        logger.exception("send_kp: ошибка отправки клиенту")
+        errors.append("client")
+
+    # Копия администратору
+    try:
+        await loop.run_in_executor(
+            None,
+            _send_order_email_sync,
+            ADMIN_EMAIL,
+            subject_admin,
+            body_admin,
+            None,
+            attachment,
+        )
+    except Exception:
+        logger.exception("send_kp: ошибка отправки администратору")
+        errors.append("admin")
+
+    if len(errors) == 2:
+        raise HTTPException(
+            status_code=500,
+            detail="Не удалось отправить письма. Попробуйте позже.",
+        )
+
+    return {"success": True}
 
 
 @app.get("/api/cart")

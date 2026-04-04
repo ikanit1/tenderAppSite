@@ -17,6 +17,7 @@ import jsPDF from 'jspdf';
 import robotoBase64 from 'roboto-base64';
 import type { CalculatorResult } from '@/widgets/calculator/calculatorLogic';
 import type { IntercomResult } from '@/store/calculatorStore';
+import type { ProjectInfo } from '@/widgets/calculator/generateKPFullPDF';
 
 // ── Константы ────────────────────────────────────────────────────────────────
 
@@ -210,6 +211,21 @@ function drawTitle(w: PDFWriter): void {
   w.setFont(true, 14);
   w.setColor(PRIMARY_RGB);
   w.text('Финансовая модель — Условия рассрочки', PAGE_W / 2, w.y, 'center');
+  w.y += 9;
+}
+
+// ── Данные объекта ────────────────────────────────────────────────────────────
+
+function drawProjectInfo(w: PDFWriter, info: ProjectInfo): void {
+  w.checkPage(20);
+  w.fillRect(ML, w.y - 2, CW, 18, [232, 240, 254]);
+  w.setFont(false, 9);
+  w.setColor(TEXT_RGB);
+  w.text(`Объект:  ЖК «${info.complexName}»`, ML + 3, w.y + 2);
+  w.y += 5.5;
+  w.text(`Адрес:   ${info.address}`, ML + 3, w.y);
+  w.y += 5.5;
+  w.text(`Контакт: ${info.phone}`, ML + 3, w.y);
   w.y += 9;
 }
 
@@ -615,11 +631,12 @@ function drawFooters(pdf: jsPDF): void {
 
 // ── Главная функция ───────────────────────────────────────────────────────────
 
-export async function downloadFinModelPDF(
+export async function generateFinModelPDF(
   cctvResult: CalculatorResult | null,
   intercomResult: IntercomResult | null,
-  opts: { apartments?: number; downPayment?: number; installmentMonths?: number }
-): Promise<void> {
+  opts: { apartments?: number; downPayment?: number; installmentMonths?: number },
+  projectInfo: ProjectInfo = { complexName: '', address: '', phone: '' }
+): Promise<{ blob: Blob; filename: string }> {
   const { apartments = 0, downPayment = 0, installmentMonths = 60 } = opts;
 
   const cctvTotal = cctvResult?.grandTotal ?? 0;
@@ -660,6 +677,11 @@ export async function downloadFinModelPDF(
   // 2. Title
   drawTitle(w);
 
+  // 2b. Project info block
+  if (projectInfo.complexName || projectInfo.address || projectInfo.phone) {
+    drawProjectInfo(w, projectInfo);
+  }
+
   // 3. Introduction
   drawIntroduction(w);
 
@@ -696,8 +718,9 @@ export async function downloadFinModelPDF(
   // 11. Footers
   drawFooters(pdf);
 
-  // Download
   const d = new Date();
   const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  pdf.save(`Финансовая_модель_${dateStr}_${grandTotal}тг.pdf`);
+  const filename = `Финансовая_модель_${dateStr}_${grandTotal}тг.pdf`;
+  const blob = pdf.output('blob');
+  return { blob, filename };
 }

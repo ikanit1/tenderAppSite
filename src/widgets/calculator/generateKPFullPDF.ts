@@ -238,6 +238,27 @@ function drawKPTitle(w: PDFWriter, kpNum: string, now: Date): void {
   w.y += 8;
 }
 
+// ── Данные объекта ────────────────────────────────────────────────────────────
+
+export interface ProjectInfo {
+  complexName: string;
+  address: string;
+  phone: string;
+}
+
+function drawProjectInfo(w: PDFWriter, info: ProjectInfo): void {
+  w.checkPage(20);
+  w.fillRect(ML, w.y - 2, CW, 18, PRIMARY_BG_RGB);
+  w.setFont(false, 9);
+  w.setColor([50, 50, 50]);
+  w.text(`Объект:  ЖК «${info.complexName}»`, ML + 3, w.y + 2);
+  w.y += 5.5;
+  w.text(`Адрес:   ${info.address}`, ML + 3, w.y);
+  w.y += 5.5;
+  w.text(`Контакт: ${info.phone}`, ML + 3, w.y);
+  w.y += 9;
+}
+
 // ── Заголовок секции ─────────────────────────────────────────────────────────
 
 function drawSectionHeading(w: PDFWriter, title: string): void {
@@ -669,11 +690,12 @@ function drawFooters(pdf: jsPDF): void {
 
 // ── Главная функция ───────────────────────────────────────────────────────────
 
-export async function downloadKPFullPDF(
+export async function generateKPFullPDF(
   cctvResult: CalculatorResult | null,
   intercomResult: IntercomResult | null,
-  opts: { apartments?: number; installmentMonths?: number; downPayment?: number }
-): Promise<void> {
+  opts: { apartments?: number; installmentMonths?: number; downPayment?: number },
+  projectInfo: ProjectInfo = { complexName: '', address: '', phone: '' }
+): Promise<{ blob: Blob; filename: string }> {
   void opts;
 
   // Fetch and compress images
@@ -708,6 +730,11 @@ export async function downloadKPFullPDF(
   const kpNum = kpNumber();
   drawKPTitle(w, kpNum, now);
 
+  // Project info block
+  if (projectInfo.complexName || projectInfo.address || projectInfo.phone) {
+    drawProjectInfo(w, projectInfo);
+  }
+
   // Section I — CCTV
   if (cctvResult) {
     drawCCTVSection(w, cctvResult);
@@ -736,5 +763,7 @@ export async function downloadKPFullPDF(
   // Download
   const d = new Date();
   const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  pdf.save(`КП_Полное_${dateStr}_${grandTotal}тг.pdf`);
+  const filename = `КП_Полное_${dateStr}_${grandTotal}тг.pdf`;
+  const blob = pdf.output('blob');
+  return { blob, filename };
 }
