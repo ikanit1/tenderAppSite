@@ -137,11 +137,11 @@ def _build_portal_by_model() -> dict:
             if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp") and f.name.startswith("image")
         )
 
-    def _register(result: dict, model: str, folder_name: str, record: dict):
+    def _register(registry: dict, model: str, folder_name: str, record: dict):
         """Регистрирует запись по нескольким ключам (model, folder_name, clean_id, foldername)."""
         for key in (model, folder_name, get_clean_id(normalize_model_for_fs(model)), model_to_foldername(model)):
-            if key and key not in result:
-                result[key] = record
+            if key and key not in registry:
+                registry[key] = record
 
     # --- Проход 1: папки с product.json (браузерный парсер) ---
     for folder in sorted(PORTAL_EXPORT_DIR.iterdir()):
