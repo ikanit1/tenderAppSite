@@ -288,14 +288,9 @@ def load_products_for_satu(from_api: bool = True, limit: int | None = None) -> l
             if not is_valid_price(final_price) and is_valid_price(price_rrc):
                 final_price = price_rrc
             description = (portal.get("description") or "").strip()
-            # Если описание пустое — собираем из полей B2B API
             if not description:
-                parts = []
-                if brand:
-                    parts.append(f"Производитель: {brand}")
-                if model:
-                    parts.append(f"Модель: {model}")
-                description = "\n".join(parts) if parts else (model or "")
+                category = classify_product(model, name)
+                description = _build_description_from_template(name, model, brand, category)
             image_paths = portal.get("image_paths", [])
             folder = portal.get("folder", "")
 
@@ -493,7 +488,7 @@ def build_full_excel(
 
         if image_base_url:
             link_izobr = _image_urls_for_product(p, image_base_url)
-        elif (image_via_api or api_base) and api_base and (p.get("image_paths") or []):
+        elif api_base and (p.get("image_paths") or []):
             link_izobr = _image_urls_via_api(p, api_base)
         else:
             link_izobr = ""
