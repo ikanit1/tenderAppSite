@@ -153,11 +153,14 @@ export default function Admin() {
   // Portal state
   const [portalMismatch, setPortalMismatch] = useState(null);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [portalSearch, setPortalSearch] = useState('');
 
   // Health (dashboard last update)
   const [healthData, setHealthData] = useState(null);
   // Brand filter for "Товары без цены"
   const [brandFilter, setBrandFilter] = useState('');
+  const [withoutPricePage, setWithoutPricePage] = useState(1);
+  const NOPRICE_PAGE_SIZE = 50;
   const [confirmModal, setConfirmModal] = useState(null); // { message, onConfirm }
 
   const showConfirm = useCallback((message, onConfirm) => {
@@ -318,6 +321,10 @@ export default function Admin() {
     if (!authenticated) return;
     if (tab === 'portal') loadPortalMismatch();
   }, [tab, loadPortalMismatch, authenticated]);
+
+  useEffect(() => {
+    setWithoutPricePage(1);
+  }, [brandFilter]);
 
   // Polling статуса и логов парсера портала, когда он запущен и открыта вкладка «Парсер»
   useEffect(() => {
@@ -595,8 +602,19 @@ export default function Admin() {
   const customPrices = pricesConfig?.custom_prices || {};
   const withoutPriceAll = products.filter(p => !p.final_price || p.final_price <= 0);
   const withoutPriceFiltered = brandFilter ? withoutPriceAll.filter(p => p.brand === brandFilter) : withoutPriceAll;
-  const withoutPrice = withoutPriceFiltered.slice(0, 50);
+  const withoutPrice = withoutPriceFiltered.slice(0, withoutPricePage * NOPRICE_PAGE_SIZE);
+  const hasMoreNoprice = withoutPriceFiltered.length > withoutPrice.length;
   const withoutPriceBrands = [...new Set(withoutPriceAll.map(p => p.brand).filter(Boolean))].sort();
+  const portalMissingFiltered = (() => {
+    const all = portalMismatch?.missing || [];
+    if (!portalSearch.trim()) return all;
+    const q = portalSearch.toLowerCase();
+    return all.filter(row =>
+      (row.model || '').toLowerCase().includes(q) ||
+      (row.name || '').toLowerCase().includes(q) ||
+      (row.brand || '').toLowerCase().includes(q)
+    );
+  })();
 
   if (checkingAuth) {
     return (
@@ -972,8 +990,8 @@ export default function Admin() {
                         </div>
                       ) : (
                         <>
-                          {withoutPriceFiltered.length > 50 && (
-                            <p className="admin-hint" style={{ marginBottom: 8 }}>Показаны первые 50 из {withoutPriceFiltered.length}.</p>
+                          {withoutPriceFiltered.length > NOPRICE_PAGE_SIZE && (
+                            <p className="admin-hint" style={{ marginBottom: 8 }}>Показано {withoutPrice.length} из {withoutPriceFiltered.length}.</p>
                           )}
                           <motion.div className="product-list" initial="hidden" animate="visible" variants={listContainerVariants}>
                           {withoutPrice.map((p, idx) => (
@@ -986,6 +1004,18 @@ export default function Admin() {
                             </motion.div>
                           ))}
                         </motion.div>
+                        {hasMoreNoprice && (
+                          <motion.button
+                            type="button"
+                            className="btn-action btn-secondary"
+                            onClick={() => setWithoutPricePage(p => p + 1)}
+                            style={{ marginTop: 12, width: '100%' }}
+                            whileHover={{ scale: 1.01 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            Загрузить ещё ({withoutPriceFiltered.length - withoutPrice.length} из {withoutPriceFiltered.length})
+                          </motion.button>
+                        )}
                         </>
                       )}
                     </motion.section>
@@ -1161,8 +1191,8 @@ export default function Admin() {
                   ) : portalMismatch ? (
                     <>
                       <p>Всего товаров в B2B: {portalMismatch.total_products}. Без папки: {portalMismatch.missing_count}.</p>
-                      {(portalMismatch.missing || []).length > 50 && (
-                        <p className="admin-hint" style={{ marginBottom: 8 }}>Показаны первые 50 из {(portalMismatch.missing || []).length}.</p>
+                      {portalMissingFiltered.length > 50 && (
+                        <p className="admin-hint" style={{ marginBottom: 8 }}>Показаны первые 50 из {portalMissingFiltered.length}.</p>
                       )}
                       <div className="form-actions" style={{ marginBottom: 16 }}>
                         <motion.button
@@ -1179,6 +1209,30 @@ export default function Admin() {
                       {!portalMismatch.missing_count && (
                         <p className="admin-hint">Недостающих папок нет. Парсер ищет наименования в каталоге портала и создаёт папки в portal_export.</p>
                       )}
+                      <div className="form-row" style={{ marginBottom: 12 }}>
+                        <input
+                          type="text"
+                          placeholder="Поиск по модели, названию, бренду..."
+                          value={portalSearch}
+                          onChange={e => setPortalSearch(e.target.value)}
+                          className="admin-input"
+                          style={{ flex: 1 }}
+                        />
+                        {portalSearch && (
+                          <motion.button
+                            type="button"
+                            className="btn-action btn-secondary btn-sm"
+                            onClick={() => setPortalSearch('')}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            ✕ Сбросить
+                          </motion.button>
+                        )}
+                      </div>
+                      {portalSearch && (
+                        <p className="admin-hint" style={{ marginBottom: 8 }}>Фильтр: найдено {portalMissingFiltered.length} из {portalMismatch.missing_count}.</p>
+                      )}
                       <div className="admin-table-wrap">
                         <table className="admin-table">
                           <thead>
@@ -1190,7 +1244,7 @@ export default function Admin() {
                             </tr>
                           </thead>
                           <tbody>
-                            {(portalMismatch.missing || []).slice(0, 50).map((row, i) => (
+                            {portalMissingFiltered.slice(0, 50).map((row, i) => (
                               <motion.tr
                                 key={row.model + i}
                                 initial={i < 10 ? { opacity: 0 } : false}
