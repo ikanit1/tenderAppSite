@@ -62,6 +62,43 @@ function formatDateTime(value) {
   });
 }
 
+function ConfirmModal({ message, onConfirm, onCancel }) {
+  return (
+    <div className="admin-modal-overlay" onClick={onCancel}>
+      <motion.div
+        className="admin-modal"
+        onClick={e => e.stopPropagation()}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.15 }}
+      >
+        <p className="admin-modal-message">{message}</p>
+        <div className="admin-modal-actions">
+          <motion.button
+            type="button"
+            className="btn-action btn-secondary"
+            onClick={onCancel}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            Отмена
+          </motion.button>
+          <motion.button
+            type="button"
+            className="btn-action btn-secondary danger"
+            onClick={onConfirm}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            Подтвердить
+          </motion.button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function Admin() {
   const [authenticated, setAuthenticated] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -103,6 +140,12 @@ export default function Admin() {
   const [healthData, setHealthData] = useState(null);
   // Brand filter for "Товары без цены"
   const [brandFilter, setBrandFilter] = useState('');
+  const [confirmModal, setConfirmModal] = useState(null); // { message, onConfirm }
+
+  const showConfirm = useCallback((message, onConfirm) => {
+    setConfirmModal({ message, onConfirm });
+  }, []);
+  const closeConfirm = useCallback(() => setConfirmModal(null), []);
 
   const loadProducts = useCallback(async () => {
     try {
@@ -321,18 +364,20 @@ export default function Admin() {
     }
   };
 
-  const handleDeletePrice = async () => {
+  const handleDeletePrice = () => {
     if (!selectedProduct) return;
-    if (!confirm('Удалить кастомную цену для этого товара?')) return;
-    try {
-      await api(`/api/admin/prices/custom-price/${encodeURIComponent(selectedProduct.model)}`, { method: 'DELETE' });
-      showPriceMsg('success', 'Цена удалена');
-      setSelectedProduct({ ...selectedProduct, final_price: null });
-      loadProducts();
-      loadPrices();
-    } catch (err) {
-      showPriceMsg('error', err.message);
-    }
+    showConfirm('Удалить кастомную цену для этого товара?', async () => {
+      closeConfirm();
+      try {
+        await api(`/api/admin/prices/custom-price/${encodeURIComponent(selectedProduct.model)}`, { method: 'DELETE' });
+        showPriceMsg('success', 'Цена удалена');
+        setSelectedProduct({ ...selectedProduct, final_price: null });
+        loadProducts();
+        loadPrices();
+      } catch (err) {
+        showPriceMsg('error', err.message);
+      }
+    });
   };
 
   const saveGlobalDiscount = async () => {
@@ -468,20 +513,22 @@ export default function Admin() {
     }
   };
 
-  const stopPortalParser = async () => {
+  const stopPortalParser = () => {
     if (!portalParserStatus?.running) return;
-    if (!confirm('Остановить парсер портала?')) return;
-    setParserAction('stop');
-    try {
-      await api('/api/portal-parser/stop', { method: 'POST' });
-      showPriceMsg('success', 'Парсер остановлен');
-      loadPortalParserStatus();
-      loadPortalParserLogs();
-    } catch (err) {
-      showPriceMsg('error', err.message);
-    } finally {
-      setParserAction(null);
-    }
+    showConfirm('Остановить парсер портала?', async () => {
+      closeConfirm();
+      setParserAction('stop');
+      try {
+        await api('/api/portal-parser/stop', { method: 'POST' });
+        showPriceMsg('success', 'Парсер остановлен');
+        loadPortalParserStatus();
+        loadPortalParserLogs();
+      } catch (err) {
+        showPriceMsg('error', err.message);
+      } finally {
+        setParserAction(null);
+      }
+    });
   };
 
   const startPortalParserMissing = async () => {
@@ -500,19 +547,21 @@ export default function Admin() {
     }
   };
 
-  const clearParserCache = async () => {
-    if (!confirm('Очистить кэш парсера? При следующем запуске парсер начнёт с начала.')) return;
-    setParserAction('clear');
-    try {
-      const res = await api('/api/parse-images/clear-cache', { method: 'POST' });
-      showPriceMsg('success', res.message || 'Кэш очищен');
-      loadParserStatus();
-      loadParserStats();
-    } catch (err) {
-      showPriceMsg('error', err.message);
-    } finally {
-      setParserAction(null);
-    }
+  const clearParserCache = () => {
+    showConfirm('Очистить кэш парсера? При следующем запуске парсер начнёт с начала.', async () => {
+      closeConfirm();
+      setParserAction('clear');
+      try {
+        const res = await api('/api/parse-images/clear-cache', { method: 'POST' });
+        showPriceMsg('success', res.message || 'Кэш очищен');
+        loadParserStatus();
+        loadParserStats();
+      } catch (err) {
+        showPriceMsg('error', err.message);
+      } finally {
+        setParserAction(null);
+      }
+    });
   };
 
   const modelDiscounts = pricesConfig?.model_discounts || {};
@@ -1122,6 +1171,16 @@ export default function Admin() {
           </div>
         </div>
       </div>
+      <AnimatePresence>
+        {confirmModal && (
+          <ConfirmModal
+            key="confirm"
+            message={confirmModal.message}
+            onConfirm={confirmModal.onConfirm}
+            onCancel={closeConfirm}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }
