@@ -108,6 +108,13 @@ function ConfirmModal({ message, onConfirm, onCancel }) {
   );
 }
 
+function colorizeLogLine(line) {
+  if (/error|ошибка|fail|failed|exception/i.test(line)) return '#fca5a5';
+  if (/warn|предупреждение|warning/i.test(line)) return '#fde68a';
+  if (/\[ok\]|success|успешн|готово|создан|saved|done|found/i.test(line)) return '#86efac';
+  return null;
+}
+
 export default function Admin() {
   const [authenticated, setAuthenticated] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -140,6 +147,7 @@ export default function Admin() {
   const [portalParserStatus, setPortalParserStatus] = useState(null);
   const [portalParserLogs, setPortalParserLogs] = useState([]);
   const portalLogPreRef = useRef(null);
+  const [logScrollPaused, setLogScrollPaused] = useState(false);
 
   // Portal state
   const [portalMismatch, setPortalMismatch] = useState(null);
@@ -319,10 +327,10 @@ export default function Admin() {
   }, [authenticated, tab, portalParserStatus?.running, loadPortalParserStatus, loadPortalParserLogs]);
 
   useEffect(() => {
-    if (!authenticated) return;
+    if (!authenticated || logScrollPaused) return;
     if (portalLogPreRef.current && portalParserLogs.length)
       portalLogPreRef.current.scrollTop = portalLogPreRef.current.scrollHeight;
-  }, [portalParserLogs, authenticated]);
+  }, [portalParserLogs, authenticated, logScrollPaused]);
 
   const handleTabChange = (newTab) => {
     if (newTab === tab) return;
@@ -1020,9 +1028,30 @@ export default function Admin() {
                         </div>
                       </div>
                       <div className="admin-portal-parser-logs">
-                        <h3>Лог действий</h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                          <h3 style={{ margin: 0 }}>Лог действий</h3>
+                          <motion.button
+                            type="button"
+                            className={`btn-action btn-sm ${logScrollPaused ? 'btn-primary' : 'btn-secondary'}`}
+                            onClick={() => setLogScrollPaused(v => !v)}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            title={logScrollPaused ? 'Включить авто-прокрутку' : 'Приостановить авто-прокрутку'}
+                          >
+                            {logScrollPaused ? '▶ Авто-прокрутка' : '⏸ Пауза'}
+                          </motion.button>
+                        </div>
                         <pre className="admin-log-view" ref={portalLogPreRef}>
-                          {portalParserLogs.length ? portalParserLogs.join('\n') : 'Нет записей. Запустите парсер.'}
+                          {portalParserLogs.length
+                            ? portalParserLogs.map((line, i) => {
+                                const color = colorizeLogLine(line);
+                                return (
+                                  <span key={i} style={color ? { color } : undefined}>
+                                    {line}{'\n'}
+                                  </span>
+                                );
+                              })
+                            : 'Нет записей. Запустите парсер.'}
                         </pre>
                       </div>
                     </>
