@@ -142,6 +142,7 @@ export default function Admin() {
   const [parserStatus, setParserStatus] = useState(null);
   const [parserStats, setParserStats] = useState(null);
   const [parserAction, setParserAction] = useState(null);
+  const [parserMaxPages, setParserMaxPages] = useState(5);
 
   // Portal parser state
   const [portalParserStatus, setPortalParserStatus] = useState(null);
@@ -297,6 +298,14 @@ export default function Admin() {
     if (!authenticated) return;
     if (tab === 'dashboard') api('/health').then(setHealthData).catch(() => setHealthData(null));
   }, [tab, authenticated]);
+  useEffect(() => {
+    if (!authenticated || tab !== 'dashboard') return;
+    const interval = setInterval(() => {
+      api('/health').then(setHealthData).catch(() => setHealthData(null));
+      loadProducts();
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [authenticated, tab, loadProducts]);
   useEffect(() => {
     if (!authenticated) return;
     if (tab === 'prices') loadPrices();
@@ -500,7 +509,7 @@ export default function Admin() {
   const startParser = async () => {
     setParserAction('start');
     try {
-      await api('/api/parse-images/start?max_pages=5', { method: 'POST' });
+      await api(`/api/parse-images/start?max_pages=${parserMaxPages}`, { method: 'POST' });
       showPriceMsg('success', 'Парсинг изображений запущен');
       loadParserStatus();
       loadParserStats();
@@ -1080,30 +1089,31 @@ export default function Admin() {
                 <motion.section className="admin-section" initial="hidden" animate="visible" variants={sectionVariants}>
                   <h2>Действия</h2>
                   <div className="form-actions">
-                    <motion.button
-                      type="button"
-                      className={`btn-action btn-success ${parserAction === 'start' ? 'is-loading' : ''}`}
-                      onClick={startParser}
-                      disabled={parserAction === 'start'}
-                      whileHover={{ scale: parserAction === 'start' ? 1 : 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      animate={parserAction === 'start' ? { boxShadow: ['0 0 0 0 rgba(34, 197, 94, 0.35)', '0 0 0 10px rgba(34, 197, 94, 0)'] } : {}}
-                      transition={{ duration: 1.2, repeat: parserAction === 'start' ? Infinity : 0 }}
-                    >
-                      {parserAction === 'start' ? 'Запуск...' : 'Запустить парсинг изображений (5 страниц)'}
-                    </motion.button>
-                    <motion.button
-                      type="button"
-                      className={`btn-action btn-primary ${parserAction === 'portal' ? 'is-loading' : ''}`}
-                      onClick={startPortalParser}
-                      disabled={parserAction === 'portal'}
-                      whileHover={{ scale: parserAction === 'portal' ? 1 : 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      animate={parserAction === 'portal' ? { boxShadow: ['0 0 0 0 rgba(59, 130, 246, 0.35)', '0 0 0 10px rgba(59, 130, 246, 0)'] } : {}}
-                      transition={{ duration: 1.2, repeat: parserAction === 'portal' ? Infinity : 0 }}
-                    >
-                      {parserAction === 'portal' ? 'Запуск...' : 'Запустить парсер портала'}
-                    </motion.button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <motion.button
+                        type="button"
+                        className={`btn-action btn-success ${parserAction === 'start' ? 'is-loading' : ''}`}
+                        onClick={startParser}
+                        disabled={parserAction === 'start'}
+                        whileHover={{ scale: parserAction === 'start' ? 1 : 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        animate={parserAction === 'start' ? { boxShadow: ['0 0 0 0 rgba(34, 197, 94, 0.35)', '0 0 0 10px rgba(34, 197, 94, 0)'] } : {}}
+                        transition={{ duration: 1.2, repeat: parserAction === 'start' ? Infinity : 0 }}
+                      >
+                        {parserAction === 'start' ? 'Запуск...' : 'Запустить парсинг изображений'}
+                      </motion.button>
+                      <input
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={parserMaxPages}
+                        onChange={e => setParserMaxPages(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="admin-input"
+                        style={{ width: 72, minWidth: 'unset' }}
+                        title="Количество страниц для парсинга"
+                      />
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>стр.</span>
+                    </div>
                     <motion.button
                       type="button"
                       className={`btn-action btn-secondary danger ${parserAction === 'clear' ? 'is-loading' : ''}`}
