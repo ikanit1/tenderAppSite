@@ -487,12 +487,13 @@ def _portal_parser_done_callback(task):
 
 async def run_portal_parser_cannon(
     start_page: int = 1,
-    end_page: int = 116,
+    end_page: int = 0,  # 0 = авто-определение из пагинации сайта
     only_expected_folders: Optional[set] = None,
 ):
     """
     Запускает парсер портала (portal_parser_cannon).
     Если задан only_expected_folders, парсер обрабатывает только товары с этими именами папок (режим «недостающие»).
+    Если end_page=0, автоматически определяет последнюю страницу из пагинации сайта.
     """
     global _portal_parser_started_at
     try:
@@ -538,7 +539,7 @@ async def schedule_nightly_parser():
                 # Запускаем парсер только если он еще не запущен сегодня
                 if _portal_parser_last_run_date != today:
                     logger.info(f"Автозапуск portal_parser_cannon (ночной режим, {now.strftime('%Y-%m-%d %H:%M')})")
-                    await run_portal_parser_cannon(1, 116)
+                    await run_portal_parser_cannon(1, 0)  # 0 = авто-определение страниц
                     _portal_parser_last_run_date = today
             else:
                 # Если вышли из окна 00:00-02:00, сбрасываем флаг для следующей ночи
@@ -2307,7 +2308,7 @@ async def start_portal_parser_missing(request: Request, cached_data: dict = Depe
     try:
         from portal_full_parser_browser import sanitize_foldername
         only_folders = {sanitize_foldername(m["expected_folder"]) for m in missing}
-        success = await run_portal_parser_cannon(1, 116, only_expected_folders=only_folders)
+        success = await run_portal_parser_cannon(1, 0, only_expected_folders=only_folders)  # 0 = авто-определение
         if success:
             return {
                 "status": "success",
@@ -2320,16 +2321,16 @@ async def start_portal_parser_missing(request: Request, cached_data: dict = Depe
 
 
 @app.post("/api/portal-parser/start")
-async def start_portal_parser(request: Request, start_page: Optional[int] = 1, end_page: Optional[int] = 116):
-    """Запускает portal_parser_cannon.py"""
+async def start_portal_parser(request: Request, start_page: Optional[int] = 1, end_page: Optional[int] = 0):
+    """Запускает portal_parser_cannon.py (end_page=0 означает авто-определение из пагинации)"""
     require_admin_auth(request)
-    """Запускает portal_parser_cannon.py"""
     try:
-        success = await run_portal_parser_cannon(start_page or 1, end_page or 116)
+        success = await run_portal_parser_cannon(start_page or 1, end_page if end_page is not None else 0)
         if success:
+            ep_msg = "авто" if (end_page == 0 or end_page is None) else str(end_page)
             return {
                 "status": "success",
-                "message": f"Парсер portal_parser_cannon запущен (страницы {start_page or 1}-{end_page or 116})"
+                "message": f"Парсер portal_parser_cannon запущен (страницы {start_page or 1}-{ep_msg})"
             }
         else:
             raise HTTPException(status_code=500, detail="Не удалось запустить парсер")

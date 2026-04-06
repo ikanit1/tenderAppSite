@@ -452,8 +452,9 @@ export default function Admin() {
   const startPortalParser = async () => {
     setParserAction('portal');
     try {
-      await api('/api/portal-parser/start?start_page=1&end_page=116', { method: 'POST' });
-      showPriceMsg('success', 'Парсер портала запущен');
+      // end_page=0 означает автоопределение количества страниц из пагинации сайта
+      await api('/api/portal-parser/start?start_page=1&end_page=0', { method: 'POST' });
+      showPriceMsg('success', 'Парсер портала запущен (авто-определение страниц)');
       loadPortalParserStatus();
       loadPortalParserLogs();
       setTimeout(() => {

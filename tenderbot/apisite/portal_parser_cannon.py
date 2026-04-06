@@ -45,9 +45,56 @@ COOKIES_FILE = DATA_DIR / "portal_cookies.json"
 PARSED_FILE = DATA_DIR / "portal_parsed.json"
 
 START_PAGE = 1
-END_PAGE = 116
+END_PAGE = 0  # 0 = авто-определение из пагинации сайта
 CONCURRENCY = 8  # 5–10 оптимально для OpenCart, 30 вызывает DDoS-защиту
 REQUEST_TIMEOUT = 20.0
+
+
+async def detect_last_page_async(client: httpx.AsyncClient) -> int:
+    """Определяет последнюю страницу каталога из пагинации.
+
+    Ищет ссылки с ?page=N или текст 'N to M of TOTAL'. Если не нашёл — возвращает 200.
+    """
+    url = f"{PORTAL_URL}?sort=p.sort_order&order=ASC&page=1"
+    try:
+        resp = await client.get(url, timeout=REQUEST_TIMEOUT)
+        if resp.status_code != 200:
+            logger.warning(f"Не удалось получить первую страницу (статус {resp.status_code}), используем 200")
+            return 200
+        soup = BeautifulSoup(resp.content, "lxml")
+
+        # Способ 1: ссылки пагинации вида ?page=N
+        page_numbers: list[int] = []
+        for a in soup.find_all("a", href=re.compile(r"[?&]page=(\d+)")):
+            m = re.search(r"[?&]page=(\d+)", a["href"])
+            if m:
+                page_numbers.append(int(m.group(1)))
+        if page_numbers:
+            last = max(page_numbers)
+            logger.info(f"Авто-определение: последняя страница = {last} (из ссылок пагинации)")
+            return last
+
+        # Способ 2: текст "of N" или "из N" — считаем по 24 товара на страницу
+        for text_node in soup.find_all(string=re.compile(r"of\s+\d+|из\s+\d+", re.I)):
+            m = re.search(r"of\s+(\d+)|из\s+(\d+)", str(text_node), re.I)
+            if m:
+                total_items = int(m.group(1) or m.group(2))
+                per_page = 24
+                for a in soup.find_all("a", href=re.compile(r"limit=(\d+)")):
+                    mm = re.search(r"limit=(\d+)", a["href"])
+                    if mm:
+                        per_page = int(mm.group(1))
+                        break
+                import math
+                last = math.ceil(total_items / per_page)
+                logger.info(f"Авто-определение: {total_items} товаров / {per_page} на стр = {last} страниц")
+                return last
+
+        logger.warning("Пагинация не найдена, используем 200 страниц как максимум")
+        return 200
+    except Exception as e:
+        logger.error(f"Ошибка авто-определения страниц: {e}")
+        return 200
 
 
 def load_cookies() -> List[Dict[str, str]]:
@@ -348,6 +395,8 @@ async def run_cannon(
     Парсит каталог портала, создаёт папки в portal_export.
     Если задан only_expected_folders (нормализованные имена папок), обрабатываются только
     товары, чьё имя папки (sanitize_foldername(model|name)) входит в этот набор.
+
+    Если end_page=0, автоматически определяет последнюю страницу из пагинации сайта.
     """
     cookies_list = ensure_cookies()
     if not cookies_list:
@@ -390,7 +439,13 @@ async def run_cannon(
         },
         cookies=jar,
     ) as client:
-        for page in range(start_page, end_page + 1):
+        # Автоопределение последней страницы, если end_page=0
+        actual_end_page = end_page
+        if end_page == 0:
+            actual_end_page = await detect_last_page_async(client)
+            logger.info(f"Используется авто-определённая конечная страница: {actual_end_page}")
+
+        for page in range(start_page, actual_end_page + 1):
             logger.info("--- Загрузка страницы каталога %s ---", page)
             entries = await fetch_catalog_page(client, page)
             if not entries:
@@ -402,7 +457,7 @@ async def run_cannon(
             ]
             if tasks:
                 await asyncio.gather(*tasks)
-            logger.info("Страница %s/%s: обработано записей с каталога", page, end_page)
+            logger.info("Страница %s/%s: обработано записей с каталога", page, actual_end_page)
             await asyncio.sleep(0.5)
 
     save_parsed(parsed)
