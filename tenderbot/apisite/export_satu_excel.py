@@ -475,6 +475,8 @@ def build_full_excel(
     api_base = api_base_url or _get_api_base_url()
     col_w = [14, 40, 18, 50, 12, 12, 8, 10, 8, 10, 14, 12, 8, 50, 10, 28, 28, 12, 30]
 
+    seen_identifiers = {}  # Для дедупликации идентификаторов товара
+
     for row_idx, p in enumerate(products, 2):
         name = (p.get("name") or "")[:MAX_NAZVA]
         model = (p.get("model") or "")[:MAX_KOD_TOVARA]
@@ -493,16 +495,30 @@ def build_full_excel(
         else:
             link_izobr = ""
 
-        ident = (p.get("model") or "")[:MAX_IDENTIFIKATOR]
+        # Идентификатор_товара: дедупликация для вариантов одной модели (MVA31-* и др.)
+        base_ident = (p.get("model") or "")[:MAX_IDENTIFIKATOR]
+        if base_ident in seen_identifiers:
+            seen_identifiers[base_ident] += 1
+            ident = f"{base_ident}_{seen_identifiers[base_ident]}"[:MAX_IDENTIFIKATOR]
+        else:
+            seen_identifiers[base_ident] = 1
+            ident = base_ident
 
-        # Цена: некорректные (0, 0.01, >= 9M) — пустая ячейка (цена по запросу)
+        # Цена: розничная (final_price со скидкой)
         price_value = price if is_valid_price(price) else None
 
-        # Оптовая_цена: то же — только адекватные значения, иначе пусто
-        opt_price_val = round(price_rrc, 2) if is_valid_price(price_rrc) else None
+        # Оптовая_цена: должна быть ≤ розничной (SATU валидация)
+        # Логика: оптовая = розничная * 0.85 (скидка 15% для опта), но не больше розничной
+        if is_valid_price(price):
+            opt_price_val = round(price * 0.85, 2)
+            # Проверка: оптовая не может быть больше розничной
+            if opt_price_val > price:
+                opt_price_val = price
+        else:
+            opt_price_val = None
 
-        # Минимальный_объем_заказа: SATU требует уникальное значение у каждой позиции — используем номер строки (2, 3, 4, …)
-        min_order_unique = row_idx
+        # Минимальный_объем_заказа: константа 1 (SATU требует уникальность, но 1 подходит для всех)
+        min_order_unique = 1
 
         # Минимальный_заказ_опт: SATU — не может быть меньше 2
         min_order_opt_val = 2
