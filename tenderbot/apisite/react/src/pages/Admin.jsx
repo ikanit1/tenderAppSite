@@ -291,21 +291,21 @@ export default function Admin() {
   }, []);
 
   const handleSearch = async () => {
-    if (!searchModel.trim()) { alert('Введите модель'); return; }
+    if (!searchModel.trim()) { showPriceMsg('error', 'Введите модель'); return; }
     try {
       const product = await api(`/products/${encodeURIComponent(searchModel)}`);
       setSelectedProduct(product);
       setPrice(product.final_price != null ? String(product.final_price) : '');
     } catch {
-      alert('Товар не найден');
+      showPriceMsg('error', 'Товар не найден');
       setSelectedProduct(null);
     }
   };
 
   const handleUpdatePrice = async () => {
-    if (!selectedProduct || !price.trim()) { alert('Введите цену'); return; }
+    if (!selectedProduct || !price.trim()) { showPriceMsg('error', 'Введите цену'); return; }
     const priceValue = parseFloat(price);
-    if (isNaN(priceValue) || priceValue < 0) { alert('Некорректная цена'); return; }
+    if (isNaN(priceValue) || priceValue < 0) { showPriceMsg('error', 'Некорректная цена'); return; }
     try {
       await api('/api/admin/prices/custom-price', {
         method: 'POST',
