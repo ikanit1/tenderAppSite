@@ -63,10 +63,18 @@ function formatDateTime(value) {
 }
 
 function ConfirmModal({ message, onConfirm, onCancel }) {
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onCancel(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onCancel]);
+
   return (
     <div className="admin-modal-overlay" onClick={onCancel}>
       <motion.div
         className="admin-modal"
+        role="dialog"
+        aria-modal="true"
         onClick={e => e.stopPropagation()}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -79,6 +87,7 @@ function ConfirmModal({ message, onConfirm, onCancel }) {
             type="button"
             className="btn-action btn-secondary"
             onClick={onCancel}
+            autoFocus
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
