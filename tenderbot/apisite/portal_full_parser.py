@@ -295,6 +295,21 @@ def save_product_to_folder(
         with ThreadPoolExecutor(max_workers=min(IMAGE_WORKERS, len(tasks))) as pool:
             list(pool.map(_download_one_image, tasks))
 
+    # Сохраняем product.json после скачивания — список images содержит только реально скачанные файлы
+    saved_images = [t[1].name for t in tasks if t[1].exists()]
+    product_data = {
+        "model": catalog_entry.model,
+        "name": name_to_save,
+        "product_url": catalog_entry.product_url,
+        "description": product.description or "",
+        "description_html": "",
+        "attributes": {},
+        "images": saved_images,
+        "images_count": len(saved_images),
+    }
+    (product_dir / "product.json").write_text(
+        json.dumps(product_data, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     return product_dir
 
 
