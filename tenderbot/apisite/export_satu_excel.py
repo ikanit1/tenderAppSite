@@ -124,11 +124,26 @@ def _build_portal_by_model() -> dict:
     """
     Строит словарь для слияния с API: по разным ключам (model, folder_name, clean_id)
     возвращается {description, image_paths, folder} из portal_export.
+    Обрабатывает оба формата: product.json (браузерный парсер) и info.json (старый парсер).
     """
     result = {}
     if not PORTAL_EXPORT_DIR.is_dir():
         return result
 
+    def _scan_images(folder: Path) -> list:
+        """Сканирует папку и возвращает список Path для image_* файлов."""
+        return sorted(
+            f for f in folder.iterdir()
+            if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp") and f.name.startswith("image")
+        )
+
+    def _register(result: dict, model: str, folder_name: str, record: dict):
+        """Регистрирует запись по нескольким ключам (model, folder_name, clean_id, foldername)."""
+        for key in (model, folder_name, get_clean_id(normalize_model_for_fs(model)), model_to_foldername(model)):
+            if key and key not in result:
+                result[key] = record
+
+    # --- Проход 1: папки с product.json (браузерный парсер) ---
     for folder in sorted(PORTAL_EXPORT_DIR.iterdir()):
         if not folder.is_dir():
             continue
@@ -140,17 +155,20 @@ def _build_portal_by_model() -> dict:
         except Exception:
             continue
 
-        name = (data.get("name") or "").strip() or ((folder / "name.txt").read_bytes().decode("utf-8-sig", errors="replace").strip() if (folder / "name.txt").exists() else "")
+        name = (data.get("name") or "").strip()
+        if not name and (folder / "name.txt").exists():
+            name = (folder / "name.txt").read_bytes().decode("utf-8-sig", errors="replace").strip()
         if not name:
             name = folder.name
         model = (data.get("model") or "").strip() or folder.name
+        brand = (data.get("brand") or data.get("manufacturer") or "").strip()
 
         desc_html = (data.get("description_html") or "").strip()
         desc_plain = (data.get("description") or "").strip()
         desc_file = folder / "description.txt"
         if desc_file.exists():
             desc_plain = desc_file.read_bytes().decode("utf-8-sig", errors="replace").strip() or desc_plain
-        # 1. HTML описание (приоритет): desc_html → desc_plain → атрибуты → fallback
+
         if desc_html:
             description = desc_html
         elif desc_plain:
@@ -161,32 +179,51 @@ def _build_portal_by_model() -> dict:
                 rows = "".join(f"<li><b>{k}:</b> {v}</li>" for k, v in attrs.items())
                 description = f"<h3>{name}</h3><ul>{rows}</ul>"
             else:
-                brand_val = (data.get("brand") or data.get("manufacturer") or "").strip()
-                model_val = (data.get("model") or folder.name).strip()
-                parts = [name]
-                if brand_val:
-                    parts.append(f"Производитель: {brand_val}")
-                if model_val:
-                    parts.append(f"Модель: {model_val}")
-                description = "<p>" + ". ".join(parts) + ".</p>"
-        # 2. Обрезаем до лимита SATU (12160 символов)
+                # Шаблон вместо слабого фоллбэка
+                category = classify_product(model, name)
+                description = _build_description_from_template(name, model, brand, category)
+
         description = description[:MAX_OPISANIE]
 
         image_names = data.get("images") or []
-        image_paths = []
-        for im in image_names:
-            p = folder / im
-            if p.exists():
-                image_paths.append(p)
+        image_paths = [folder / im for im in image_names if (folder / im).exists()]
         if not image_paths:
-            for f in sorted(folder.iterdir()):
-                if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp") and f.name.startswith("image"):
-                    image_paths.append(f)
+            image_paths = _scan_images(folder)
 
         record = {"description": description, "image_paths": image_paths, "folder": folder.name}
-        for key in (model, folder.name, get_clean_id(normalize_model_for_fs(model)), model_to_foldername(model)):
-            if key and key not in result:
-                result[key] = record
+        _register(result, model, folder.name, record)
+
+    # --- Проход 2: папки только с info.json (старый парсер без product.json) ---
+    for folder in sorted(PORTAL_EXPORT_DIR.iterdir()):
+        if not folder.is_dir():
+            continue
+        if (folder / "product.json").exists():
+            continue  # уже обработано в проходе 1
+        info_json = folder / "info.json"
+        if not info_json.exists():
+            continue
+        try:
+            data = json.loads(info_json.read_bytes())
+        except Exception:
+            continue
+
+        model = (data.get("model") or "").strip() or folder.name
+        name = (data.get("name") or "").strip() or model
+
+        desc_file = folder / "description.txt"
+        description = ""
+        if desc_file.exists():
+            description = desc_file.read_bytes().decode("utf-8-sig", errors="replace").strip()
+        if not description:
+            category = classify_product(model, name)
+            description = _build_description_from_template(name, model, "", category)
+        description = description[:MAX_OPISANIE]
+
+        image_paths = _scan_images(folder)
+
+        record = {"description": description, "image_paths": image_paths, "folder": folder.name}
+        _register(result, model, folder.name, record)
+
     return result
 
 
