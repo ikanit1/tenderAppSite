@@ -729,11 +729,11 @@ export default function Admin() {
                     <div className="stat-label">Всего товаров</div>
                     <div className="stat-value">{stats.total}</div>
                   </motion.div>
-                  <motion.div className="stat-card" variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}>
+                  <motion.div className="stat-card stat-card-green" variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}>
                     <div className="stat-label">С ценой</div>
                     <div className="stat-value">{stats.withPrice}</div>
                   </motion.div>
-                  <motion.div className="stat-card" variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}>
+                  <motion.div className={`stat-card ${stats.withoutPrice > 0 ? 'stat-card-orange' : 'stat-card-green'}`} variants={{ hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0 } }}>
                     <div className="stat-label">Без цены</div>
                     <div className="stat-value">{stats.withoutPrice}</div>
                   </motion.div>
