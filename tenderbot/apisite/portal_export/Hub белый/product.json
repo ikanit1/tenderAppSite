@@ -1,0 +1,19 @@
+{
+  "name": "Ajax Hub белый централь",
+  "price": 0,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Итого": "40000 ₸"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "Hub белый",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=15008",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}

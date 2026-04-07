@@ -1,0 +1,22 @@
+{
+  "name": "Карта памяти ST2-128-S1 Imou",
+  "price": 1999012900,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Производитель": "Imou",
+    "Модель": "ST2-128-S1",
+    "Объем карты памяти": "128 ГБ",
+    "Формат": "microSDXC",
+    "Скорость чтения": "38 Мбит/с",
+    "Скорость записи": "95 Мбит/с"
+  },
+  "tabs": {},
+  "images_count": 2,
+  "model": "ST2-128-S1",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=38485",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg"
+  ]
+}

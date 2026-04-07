@@ -1,0 +1,37 @@
+{
+  "name": "Точка доступа Ubiquiti LiteAP AC 120",
+  "price": 0,
+  "description": "",
+  "description_html": "",
+  "attributes": {
+    "Бренд": "Ubiquiti",
+    "Артикул": "LAP-120-EU",
+    "Тип оборудования": "точка доступа",
+    "Скорость передачи": "450+ Mbps",
+    "Операционная система": "AirOs 8",
+    "Размер оперативной памяти": "64 MB",
+    "Усиление антенны": "16 dBi",
+    "Порты и интерфейсы": "(1) 10/100/1000 Ethernet Port",
+    "Потребляемая мощность (макс)": "7 Watts",
+    "Питание": "24V, 0.5A Gigabit PoE Adapter (Included)",
+    "Тип точки доступа": "базовая станция",
+    "Диапазоны частот": "5 GHz",
+    "Стандарты PoE": "Passive PoE",
+    "Рабочая влажность": "от 5 до 95%",
+    "Процессор": "Atheros MIPS 74Kc, 533 MHz",
+    "Рабочая температура": "от -40 до 70 °C",
+    "Срок гарантии производителя": "12 m",
+    "Размеры (Ш×В×Г)": "4.52 × 7.87 × 5.44 cm",
+    "Вес товара": "0.420 kg"
+  },
+  "tabs": {},
+  "images_count": 4,
+  "model": "LAP-120",
+  "product_url": "https://complex.com.kz/index.php?route=product/product&product_id=38370",
+  "images": [
+    "image_01.jpg",
+    "image_02.jpg",
+    "image_03.jpg",
+    "image_04.jpg"
+  ]
+}
