@@ -38,48 +38,67 @@ export function PartnersSection() {
       whileInView="visible"
       viewport={{ once: true, margin: '0px', amount: 0.05 }}
     >
-      {partnersContent.mainPartner && (
+      {partnersContent.mainPartners?.length ? (
         <div className={styles.mainPartnerBlock}>
-          <motion.div
-            className={styles.mainPartner}
-            variants={reduceMotion ? undefined : itemVariants}
-          >
-            <motion.div
-              className={styles.mainPartnerLogo}
-              whileHover={reduceMotion ? undefined : { scale: 1.03 }}
-              transition={{ type: 'spring' as const, stiffness: 400, damping: 25 }}
-            >
-              <img
-                src={partnersContent.mainPartner.logo}
-                alt={partnersContent.mainPartner.alt}
-                className={styles.mainPartnerImg}
-              />
-            </motion.div>
-            <span className={styles.mainPartnerLabel}>Главный партнёр</span>
-            <span className={styles.mainPartnerName}>{partnersContent.mainPartner.name}</span>
-            {partnersContent.mainPartner.certificates?.length ? (
-              <div className={styles.certificates}>
-                <span className={styles.certificatesLabel}>Сертификаты:</span>
-                <div className={styles.certificatesList}>
-                  {partnersContent.mainPartner.certificates.map((cert) => (
-                    <motion.button
-                      key={cert.src}
-                      type="button"
-                      className={styles.certLink}
-                      onClick={() => setSelectedCert({ label: cert.label, src: cert.src })}
-                      whileHover={reduceMotion ? undefined : { scale: 1.05 }}
-                      whileTap={reduceMotion ? undefined : { scale: 0.98 }}
-                      transition={{ type: 'spring' as const, stiffness: 400, damping: 25 }}
-                    >
-                      {cert.label}
-                    </motion.button>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </motion.div>
+          <div className={styles.mainPartnersGrid}>
+            {partnersContent.mainPartners.map((partner) => (
+              <motion.div
+                key={partner.name}
+                className={styles.mainPartner}
+                variants={reduceMotion ? undefined : itemVariants}
+              >
+                <motion.div
+                  className={styles.mainPartnerLogo}
+                  whileHover={reduceMotion ? undefined : { scale: 1.03 }}
+                  transition={{ type: 'spring' as const, stiffness: 400, damping: 25 }}
+                >
+                  {partner.url ? (
+                    <a href={partner.url} target="_blank" rel="noopener noreferrer">
+                      <img src={partner.logo} alt={partner.alt} className={styles.mainPartnerImg} />
+                    </a>
+                  ) : (
+                    <img src={partner.logo} alt={partner.alt} className={styles.mainPartnerImg} />
+                  )}
+                </motion.div>
+                <span className={styles.mainPartnerLabel}>{partner.label}</span>
+                <span className={styles.mainPartnerName}>{partner.name}</span>
+                {partner.certificates?.length ? (
+                  <div className={styles.certificates}>
+                    <span className={styles.certificatesLabel}>Сертификаты:</span>
+                    <div className={styles.certificatesList}>
+                      {partner.certificates.map((cert) => (
+                        <motion.button
+                          key={cert.src}
+                          type="button"
+                          className={styles.certLink}
+                          onClick={() => setSelectedCert({ label: cert.label, src: cert.src })}
+                          whileHover={reduceMotion ? undefined : { scale: 1.05 }}
+                          whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+                          transition={{ type: 'spring' as const, stiffness: 400, damping: 25 }}
+                        >
+                          {cert.label}
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+                {partner.tags?.length ? (
+                  <div className={styles.certificates}>
+                    <span className={styles.certificatesLabel}>Направления:</span>
+                    <div className={styles.certificatesList}>
+                      {partner.tags.map((tag) => (
+                        <span key={tag.label} className={styles.tagChip}>
+                          {tag.label}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </motion.div>
+            ))}
+          </div>
         </div>
-      )}
+      ) : null}
       <div className={styles.container}>
         <motion.h2 id="partners-heading" className={styles.heading} variants={reduceMotion ? undefined : itemVariants}>
           {partnersContent.title}

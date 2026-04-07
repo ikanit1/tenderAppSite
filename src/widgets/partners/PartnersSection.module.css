@@ -41,6 +41,12 @@
   padding: 3rem 2.5rem;
 }
 
+.mainPartnersGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+
 .mainPartner {
   display: flex;
   flex-direction: column;
@@ -125,6 +131,17 @@
   color: #fff;
 }
 
+.tagChip {
+  display: inline-block;
+  padding: 0.4rem 0.875rem;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-primary);
+  background: rgba(157, 78, 221, 0.08);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-button);
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -200,6 +217,9 @@
 }
 
 @media (max-width: 768px) {
+  .mainPartnersGrid {
+    grid-template-columns: 1fr;
+  }
   .section {
     padding: var(--gap-section-sm) var(--container-padding);
   }

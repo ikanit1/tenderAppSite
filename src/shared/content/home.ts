@@ -55,17 +55,35 @@ export const aboutContent = {
 export const partnersContent = {
   title: 'Наши партнёры',
   subtitle: 'Работаем с оборудованием ведущих производителей',
-  mainPartner: {
-    name: 'Дистрибьюторский центр Complex',
-    logo: '/complex.png',
-    alt: 'Complex Distribution Center',
-    certificates: [
-      { label: 'Akuvox', src: '/cerficate/Akuvox.png' },
-      { label: 'Evo', src: '/cerficate/Evo.png' },
-      { label: 'UNV', src: '/cerficate/UNV.png' },
-      { label: 'Wi-Tek', src: '/cerficate/Wi-Tek.png' },
-    ],
-  },
+  mainPartners: [
+    {
+      label: 'Главный партнёр',
+      name: 'Дистрибьюторский центр Complex',
+      logo: '/complex.png',
+      alt: 'Complex Distribution Center',
+      certificates: [
+        { label: 'Akuvox', src: '/cerficate/Akuvox.png' },
+        { label: 'Evo', src: '/cerficate/Evo.png' },
+        { label: 'UNV', src: '/cerficate/UNV.png' },
+        { label: 'Wi-Tek', src: '/cerficate/Wi-Tek.png' },
+      ],
+      tags: [] as { label: string }[],
+      url: '',
+    },
+    {
+      label: 'Официальный партнёр',
+      name: 'УправДом',
+      logo: '/images/upravdom.svg',
+      alt: 'УправДом — управление жилыми домами',
+      certificates: [] as { label: string; src: string }[],
+      tags: [
+        { label: 'Модернизация видеонаблюдения' },
+        { label: 'Face ID домофония' },
+        { label: 'Безопасный двор' },
+      ],
+      url: 'https://www.upravdom.com.kz/',
+    },
+  ],
   logos: [
     { src: '/ajax.jpg', alt: 'Ajax Systems', desc: 'Международная компания с беспроводными охранными системами' },
     { src: '/dahua.png', alt: 'Dahua', desc: 'Один из лидеров рынка видео-AIoT' },
