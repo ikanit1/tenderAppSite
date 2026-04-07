@@ -36,7 +36,12 @@
       "Bash(curl -s http://localhost:8001/catalog/assets/Admin-CwiqBXVr.js)",
       "Bash(curl -s http://localhost:8001/assets/Admin-CwiqBXVr.js)",
       "Bash(curl -s https://grgroup.kz/catalog/assets/Admin-CwiqBXVr.js)",
-      "Bash(git add .claude/settings.local.json tenderbot/apisite/portal_export/items.json tenderbot/apisite/react/package-lock.json)"
+      "Bash(git add .claude/settings.local.json tenderbot/apisite/portal_export/items.json tenderbot/apisite/react/package-lock.json)",
+      "Bash(git add tenderbot/apisite/portal_export/)",
+      "Bash(git add SEO.md scripts/generate-sitemap.js src/shared/ui/OptimizedImage/)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nchore: update portal catalog items and Claude settings\n\n- Add ~500+ new product exports to portal catalog (Dahua, Hikvision, Schneider equipment)\n- Update Claude Code auto-approval rules for deployment commands\n- Add SEO documentation and sitemap generator script\n- Add OptimizedImage UI component\n- Update package-lock dependencies (peer flags)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git add .claude/settings.local.json)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nchore: add git command auto-approvals to Claude settings\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ]
   }
 }
