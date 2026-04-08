@@ -65,3 +65,6 @@ debug.log
 
 # Lighthouse
 lighthouse-reports/
+
+# Catalog portal export data (product images + data, 300MB+)
+tenderbot/apisite/portal_export/*/
