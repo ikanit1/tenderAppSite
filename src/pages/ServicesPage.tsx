@@ -16,12 +16,6 @@ export function ServicesPage() {
 
   const serviceSchemas = [
     getServiceSchema({
-      name: 'Электромонтаж',
-      description: 'Профессиональный электромонтаж квартир, офисов и коммерческих объектов',
-      priceRange: 'от 1500 ₸/м²',
-      areaServed: 'Казахстан',
-    }),
-    getServiceSchema({
       name: 'Видеонаблюдение',
       description: 'Проектирование и монтаж систем видеонаблюдения под ключ',
       areaServed: 'Казахстан',

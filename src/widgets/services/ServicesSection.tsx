@@ -41,7 +41,7 @@ export function ServicesSection({ fullPage }: ServicesSectionProps) {
           Наши услуги
         </motion.h2>
         <motion.p className={styles.subtitle} variants={reduceMotion ? undefined : headerVariants}>
-          Полный спектр электромонтажных и слаботочных работ
+          Полный спектр слаботочных систем и систем безопасности
         </motion.p>
         <motion.div
           className={styles.grid}

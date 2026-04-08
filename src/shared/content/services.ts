@@ -8,18 +8,6 @@ export interface ServiceItem {
 
 export const servicesList: ServiceItem[] = [
   {
-    id: 'apartments',
-    title: 'Электромонтаж в квартирах',
-    subtitle: '',
-    items: [
-      'Установка электрощитов',
-      'Монтаж освещения',
-      'Установка розеток и выключателей',
-      'Полная замена электропроводки',
-    ],
-    priceFrom: 'от 1500 ₸/м²',
-  },
-  {
     id: 'commercial',
     title: 'Коммерческие объекты',
     subtitle: '',
