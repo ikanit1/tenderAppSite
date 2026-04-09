@@ -313,6 +313,9 @@ HEADERS_PRODUCTS = (
     "Наличие",
     "Идентификатор_товара",
     "Производитель",
+    "Страна_производитель",
+    "HTML_заголовок",
+    "HTML_описание",
     "Номер_группы",
     "Название_группы",
 )
@@ -719,15 +722,31 @@ def build_full_excel(
     wb = openpyxl.Workbook()
     wb.remove(wb.active)
 
+    # --- Подготовка характеристик: определяем макс. кол-во блоков ---
+    max_attrs = 0
+    for p in products:
+        attrs = p.get("attributes") or {}
+        filtered = [k for k in attrs if k not in _ATTRS_BLACKLIST and str(attrs[k]).strip()]
+        if len(filtered) > max_attrs:
+            max_attrs = len(filtered)
+
     # --- Вкладка «Export Products Sheet» ---
     ws_products = wb.create_sheet("Export Products Sheet", 0)
+    # Основные заголовки
     for col, h in enumerate(HEADERS_PRODUCTS, 1):
         c = ws_products.cell(row=1, column=col, value=h)
         c.font = openpyxl.styles.Font(bold=True)
+    # Заголовки характеристик (блоки по 3 столбца)
+    base_col_header = len(HEADERS_PRODUCTS) + 1
+    for i in range(max_attrs):
+        for j, suffix in enumerate(("Название_Характеристики", "Измерение_Характеристики", "Значение_Характеристики")):
+            col_idx = base_col_header + i * 3 + j
+            c = ws_products.cell(row=1, column=col_idx, value=suffix)
+            c.font = openpyxl.styles.Font(bold=True)
     ws_products.row_dimensions[1].height = 20
 
     api_base = api_base_url or _get_api_base_url()
-    col_w = [14, 40, 18, 50, 12, 12, 8, 10, 8, 10, 14, 12, 8, 50, 10, 28, 28, 12, 30]
+    col_w = [14, 40, 18, 50, 12, 12, 8, 10, 8, 10, 14, 12, 8, 50, 10, 28, 28, 20, 40, 40, 12, 30]
 
     seen_identifiers = {}  # Для дедупликации идентификаторов товара
 
@@ -741,6 +760,7 @@ def build_full_excel(
         brand = (p.get("brand") or "")[:MAX_PROIZVODITEL]
         category = classify_product(model, name)
         search = _build_search_queries(name, brand, category)
+        attrs_raw = p.get("attributes") or {}
 
         if image_base_url:
             link_izobr = _image_urls_for_product(p, image_base_url)
@@ -762,21 +782,22 @@ def build_full_excel(
         price_value = price if is_valid_price(price) else None
 
         # Оптовая_цена: должна быть ≤ розничной (SATU валидация)
-        # Логика: оптовая = розничная * 0.85 (скидка 15% для опта), но не больше розничной
         if is_valid_price(price):
             opt_price_val = round(price * 0.85, 2)
-            # Проверка: оптовая не может быть больше розничной
             if opt_price_val > price:
                 opt_price_val = price
         else:
             opt_price_val = None
 
-        # Минимальный_объем_заказа: константа 1 (SATU требует уникальность, но 1 подходит для всех)
         min_order_unique = 1
-
-        # Минимальный_заказ_опт: SATU — не может быть меньше 2
         min_order_opt_val = 2
 
+        # SEO и страна
+        country = _extract_country(attrs_raw)
+        seo_title = _build_seo_title(name)
+        seo_desc = _build_seo_description(desc)
+
+        # Основные столбцы (22)
         ws_products.cell(row=row_idx, column=1, value=model)
         ws_products.cell(row=row_idx, column=2, value=name)
         ws_products.cell(row=row_idx, column=3, value=search)
@@ -794,11 +815,29 @@ def build_full_excel(
         ws_products.cell(row=row_idx, column=15, value="+" if qty > 0 else "-")
         ws_products.cell(row=row_idx, column=16, value=ident)
         ws_products.cell(row=row_idx, column=17, value=brand)
-        ws_products.cell(row=row_idx, column=18, value=get_group_number(category))
-        ws_products.cell(row=row_idx, column=19, value=category)
+        ws_products.cell(row=row_idx, column=18, value=country)
+        ws_products.cell(row=row_idx, column=19, value=seo_title)
+        ws_products.cell(row=row_idx, column=20, value=seo_desc)
+        ws_products.cell(row=row_idx, column=21, value=get_group_number(category))
+        ws_products.cell(row=row_idx, column=22, value=category)
+
+        # Характеристики (динамические столбцы)
+        parsed_attrs = _filter_attributes(attrs_raw)
+        base_col = len(HEADERS_PRODUCTS) + 1
+        for attr_idx, (attr_name, attr_unit, attr_value) in enumerate(parsed_attrs):
+            col_offset = base_col + attr_idx * 3
+            ws_products.cell(row=row_idx, column=col_offset, value=attr_name)
+            ws_products.cell(row=row_idx, column=col_offset + 1, value=attr_unit)
+            ws_products.cell(row=row_idx, column=col_offset + 2, value=attr_value)
 
     for col, w in enumerate(col_w, 1):
         ws_products.column_dimensions[openpyxl.utils.get_column_letter(col)].width = w
+    # Ширина столбцов характеристик
+    base_col = len(HEADERS_PRODUCTS) + 1
+    for i in range(max_attrs):
+        ws_products.column_dimensions[openpyxl.utils.get_column_letter(base_col + i * 3)].width = 30
+        ws_products.column_dimensions[openpyxl.utils.get_column_letter(base_col + i * 3 + 1)].width = 12
+        ws_products.column_dimensions[openpyxl.utils.get_column_letter(base_col + i * 3 + 2)].width = 25
 
     # --- Вкладка «Export Groups Sheet» ---
     ws_groups = wb.create_sheet("Export Groups Sheet", 1)
