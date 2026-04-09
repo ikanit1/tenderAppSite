@@ -190,7 +190,8 @@ def _build_portal_by_model() -> dict:
         if not image_paths:
             image_paths = _scan_images(folder)
 
-        record = {"description": description, "image_paths": image_paths, "folder": folder.name}
+        attrs = data.get("attributes") or {}
+        record = {"description": description, "image_paths": image_paths, "folder": folder.name, "attributes": attrs}
         _register(result, model, folder.name, record)
 
     # --- Проход 2: папки только с info.json (старый парсер без product.json) ---
@@ -221,7 +222,8 @@ def _build_portal_by_model() -> dict:
 
         image_paths = _scan_images(folder)
 
-        record = {"description": description, "image_paths": image_paths, "folder": folder.name}
+        attrs = data.get("attributes") or {}
+        record = {"description": description, "image_paths": image_paths, "folder": folder.name, "attributes": attrs}
         _register(result, model, folder.name, record)
 
     return result
@@ -304,6 +306,7 @@ def load_products_for_satu(from_api: bool = True, limit: int | None = None) -> l
                 "description": description,
                 "image_paths": image_paths,
                 "folder": folder,
+                "attributes": portal.get("attributes", {}),
             })
             if limit is not None and len(out) >= limit:
                 break
@@ -325,6 +328,14 @@ def load_products_for_satu(from_api: bool = True, limit: int | None = None) -> l
                 brand = (data.get("brand") or data.get("manufacturer") or "").strip()
         except Exception:
             pass
+        attrs = {}
+        try:
+            portal_dir = PORTAL_EXPORT_DIR / p.get("folder", "")
+            if (portal_dir / "product.json").exists():
+                pdata = json.loads((portal_dir / "product.json").read_bytes())
+                attrs = pdata.get("attributes") or {}
+        except Exception:
+            pass
         price_tenge = float(p.get("price_tenge") or 0)
         price_info = calculate_final_price(price_tenge, model, brand)
         final_price = float(price_info["final_price"])
@@ -339,6 +350,7 @@ def load_products_for_satu(from_api: bool = True, limit: int | None = None) -> l
             "description": p.get("description", ""),
             "image_paths": p.get("image_paths", []),
             "folder": p.get("folder", ""),
+            "attributes": attrs,
         })
     return out
 
