@@ -142,7 +142,7 @@ function buildSummaryText(params: BuildingParams, result: CalculatorResult): str
     '',
     '── Параметры ──',
     `Подъездов: ${params.entrances}, этажей: ${params.floors}, лифтов: ${params.elevators}`,
-    `Калитки: ${params.yardGates}, паркинг: ${params.hasParking ? `да, ${params.parkingGates} въезд(ов)` : 'нет'}`,
+    `Калитки: ${params.yardGates}, паркинг: ${params.hasParking ? `да, ${params.parkingGates} въезд(ов)${params.parkingCameras > 0 ? `, ${params.parkingCameras} камер` : ''}` : 'нет'}`,
     `Охват: ${params.coverageType === 'whole_building' ? 'весь дом' : 'только входные группы'}${params.coverageType === 'whole_building' ? `, ${params.twoCamerasPerFloor ? '2' : '1'} камеры на этаж` : ''}, камеры в лифтах: ${params.hasCamerasInLifts ? 'да' : 'нет'}`,
     '',
     '── Смета по группам ──',
@@ -401,14 +401,24 @@ export function CctvCalculatorSection() {
             <span>Есть паркинг (въезд/шлагбаум)</span>
           </label>
           {params.hasParking && (
-            <div className={styles.inputGroup} style={{ marginTop: 8 }}>
-              <label htmlFor="calc-parking-gates" className={styles.inputLabel}>Въездов / шлагбаумов паркинга</label>
-              <input
-                id="calc-parking-gates"
-                className={styles.input}
-                {...numericInputProps(params.parkingGates, (val) => setParams((p) => ({ ...p, parkingGates: Math.max(0, val) })), { max: 20 })}
-              />
-            </div>
+            <>
+              <div className={styles.inputGroup} style={{ marginTop: 8 }}>
+                <label htmlFor="calc-parking-gates" className={styles.inputLabel}>Въездов / шлагбаумов паркинга</label>
+                <input
+                  id="calc-parking-gates"
+                  className={styles.input}
+                  {...numericInputProps(params.parkingGates, (val) => setParams((p) => ({ ...p, parkingGates: Math.max(0, val) })), { max: 20 })}
+                />
+              </div>
+              <div className={styles.inputGroup} style={{ marginTop: 8 }}>
+                <label htmlFor="calc-parking-cameras" className={styles.inputLabel}>Камер в паркинге</label>
+                <input
+                  id="calc-parking-cameras"
+                  className={styles.input}
+                  {...numericInputProps(params.parkingCameras, (val) => setParams((p) => ({ ...p, parkingCameras: Math.max(0, val) })), { max: 100 })}
+                />
+              </div>
+            </>
           )}
           <div className={styles.inputGroup} style={{ marginTop: 12 }}>
             <span className={styles.inputLabel}>Охват видеонаблюдением</span>
@@ -485,7 +495,11 @@ export function CctvCalculatorSection() {
                   </div>
                   <div className={styles.paramsRow}>
                     <span className={styles.paramsLabel}>Паркинг</span>
-                    <span className={styles.paramsValueNum}>{params.hasParking ? `да, ${params.parkingGates} въезд(ов)` : 'нет'}</span>
+                    <span className={styles.paramsValueNum}>
+                      {params.hasParking
+                        ? `да, ${params.parkingGates} въезд(ов)${params.parkingCameras > 0 ? `, ${params.parkingCameras} камер` : ''}`
+                        : 'нет'}
+                    </span>
                   </div>
                   <div className={styles.paramsRow}>
                     <span className={styles.paramsLabel}>Охват</span>
