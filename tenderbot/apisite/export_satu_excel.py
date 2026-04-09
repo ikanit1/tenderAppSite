@@ -27,6 +27,7 @@
 import json
 import re
 import sys
+import time
 from pathlib import Path
 from urllib.parse import quote
 
@@ -152,6 +153,145 @@ def _extract_country(attrs: dict) -> str:
         if key.lower() in lower_map:
             return str(lower_map[key.lower()]).strip()
     return ""
+
+
+_SCRAPE_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+}
+
+_IMG_ACCEPT = {
+    "User-Agent": _SCRAPE_HEADERS["User-Agent"],
+    "Accept": "image/webp,image/png,image/jpeg,*/*;q=0.8",
+}
+
+
+def _get_original_image_url(cache_url: str) -> str:
+    """Преобразует URL кеша complex.com.kz в оригинал.
+
+    '/image/cache/catalog/.../main-360x360.jpg' → '/image/catalog/.../main.jpg'
+    """
+    url = cache_url.replace("/cache/", "/")
+    url = re.sub(r"-\d+x\d+(\.\w+)$", r"\1", url)
+    return url
+
+
+def ensure_product_images(portal_export_dir: Path, max_products: int | None = None) -> dict[str, int]:
+    """Скачивает фото с complex.com.kz для товаров без изображений.
+
+    Возвращает статистику: {'checked': N, 'downloaded': N, 'failed': N, 'skipped': N}
+    """
+    from urllib.request import Request, urlopen
+    from urllib.error import URLError, HTTPError
+
+    stats = {"checked": 0, "downloaded": 0, "failed": 0, "skipped": 0}
+    if not portal_export_dir.is_dir():
+        return stats
+
+    folders = sorted(f for f in portal_export_dir.iterdir() if f.is_dir())
+    if max_products:
+        folders = folders[:max_products]
+
+    for folder in folders:
+        product_json = folder / "product.json"
+        if not product_json.exists():
+            continue
+
+        # Проверяем наличие image-файлов
+        existing_images = [
+            f for f in folder.iterdir()
+            if f.is_file() and f.name.startswith("image") and f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp")
+        ]
+        if existing_images:
+            stats["skipped"] += 1
+            continue
+
+        stats["checked"] += 1
+
+        try:
+            data = json.loads(product_json.read_bytes())
+        except Exception:
+            stats["failed"] += 1
+            continue
+
+        product_url = (data.get("product_url") or "").strip()
+        if not product_url:
+            stats["failed"] += 1
+            continue
+
+        try:
+            req = Request(product_url, headers=_SCRAPE_HEADERS)
+            resp = urlopen(req, timeout=15)
+            html = resp.read().decode("utf-8", errors="replace")
+        except (URLError, HTTPError, OSError) as e:
+            print(f"  [WARN] HTTP error for {folder.name}: {e}", file=sys.stderr)
+            stats["failed"] += 1
+            continue
+
+        # Ищем изображения в секции oct-gallery (основное фото + галерея)
+        image_urls = re.findall(
+            r'oct-gallery[^>]*href=["\']([^"\']+)["\']', html
+        )
+        if not image_urls:
+            # Фоллбэк: ищем img src в productImages секции
+            idx = html.find("productImages")
+            if idx >= 0:
+                section = html[idx:idx + 5000]
+                image_urls = re.findall(
+                    r'src=["\'](https?://complex\.com\.kz/image/[^"\']+\.(?:jpg|jpeg|png|webp))["\']',
+                    section, re.I
+                )
+
+        # Дедупликация и фильтрация
+        seen = set()
+        clean_urls = []
+        for url in image_urls:
+            if not url.startswith("http"):
+                url = "https://complex.com.kz" + url
+            if any(x in url.lower() for x in ("logo", "icon", "new-icon", "shipproduct", "distributor")):
+                continue
+            if not re.search(r"\.\w{3,4}$", url):
+                continue
+            orig = _get_original_image_url(url)
+            if orig not in seen:
+                seen.add(orig)
+                clean_urls.append(orig)
+
+        if not clean_urls:
+            stats["failed"] += 1
+            continue
+
+        # Скачиваем (макс. 10 фото)
+        downloaded_names = []
+        for i, img_url in enumerate(clean_urls[:10], 1):
+            ext = Path(img_url).suffix.lower() or ".jpg"
+            if ext not in (".jpg", ".jpeg", ".png", ".webp"):
+                ext = ".jpg"
+            filename = f"image_{i:02d}{ext}"
+            try:
+                req = Request(img_url, headers=_IMG_ACCEPT)
+                img_resp = urlopen(req, timeout=15)
+                img_data = img_resp.read()
+                if len(img_data) < 500:
+                    continue
+                (folder / filename).write_bytes(img_data)
+                downloaded_names.append(filename)
+            except (URLError, HTTPError, OSError) as e:
+                print(f"  [WARN] Failed to download image {img_url}: {e}", file=sys.stderr)
+                continue
+
+        if downloaded_names:
+            data["images"] = downloaded_names
+            data["images_count"] = len(downloaded_names)
+            product_json.write_bytes(json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8"))
+            stats["downloaded"] += 1
+            print(f"  [OK] {folder.name}: downloaded {len(downloaded_names)} images")
+        else:
+            stats["failed"] += 1
+
+        time.sleep(0.5)
+
+    return stats
 
 
 # Заголовки вкладки «Export Products Sheet» (формат SATU)
