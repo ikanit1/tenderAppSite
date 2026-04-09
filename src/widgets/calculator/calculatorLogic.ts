@@ -758,6 +758,7 @@ const result = calculateResult({
   floors: 9,
   elevators: 4,
   yardGates: 2,
+  parkingCameras: 10,
   hasParking: true,
   parkingGates: 2,
   coverageType: 'whole_building',
