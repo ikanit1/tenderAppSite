@@ -890,7 +890,18 @@ def main():
         default=None,
         help="Базовый URL раздачи по путям папка/файл (напр. https://site.com/catalog/). Загрузите папки portal_export по этому адресу.",
     )
+    parser.add_argument(
+        "--skip-images",
+        action="store_true",
+        help="Пропустить загрузку недостающих фото с complex.com.kz.",
+    )
     args = parser.parse_args()
+
+    if not args.skip_images:
+        print("Проверяем наличие фото товаров...")
+        img_stats = ensure_product_images(PORTAL_EXPORT_DIR)
+        print(f"Фото: проверено={img_stats['checked']}, загружено={img_stats['downloaded']}, "
+              f"пропущено={img_stats['skipped']}, ошибок={img_stats['failed']}")
 
     products = load_products_for_satu(from_api=args.from_api, limit=args.limit)
     if not products:

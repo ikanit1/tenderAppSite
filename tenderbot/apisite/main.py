@@ -2051,7 +2051,8 @@ def download_satu_excel(request: Request):
     """
     require_admin_auth(request)
     try:
-        from export_satu_excel import load_products_for_satu, build_full_excel
+        from export_satu_excel import load_products_for_satu, build_full_excel, ensure_product_images
+        ensure_product_images(PORTAL_EXPORT_DIR)
         products = load_products_for_satu(from_api=True, limit=None)
         if not products:
             raise HTTPException(status_code=404, detail="Товары не найдены в API/кэше.")
