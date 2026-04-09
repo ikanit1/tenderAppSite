@@ -52,6 +52,108 @@ MAX_KOD_TOVARA = 25
 MAX_PROIZVODITEL = 255
 MAX_IDENTIFIKATOR = 255
 
+# Характеристики: blacklist ключей (не являются характеристиками товара)
+_ATTRS_BLACKLIST = {"Итого", "Код Elevel"}
+
+# Whitelist единиц измерения для парсинга значений характеристик
+# Порядок важен: сначала длинные (мм² перед мм, кВт перед Вт)
+_UNIT_PATTERN = re.compile(
+    r"\s+(мм²|мм|см|м|км|мкм|г|кг|т|шт|кВт|МВт|Вт|кГц|МГц|Гц|°C|°|кОм|МОм|Ом|мкФ|нФ|пФ|Ф|Гн|лм|лк|кПа|МПа|Па|бар|дБ|мл|л|А|В)$"
+)
+
+MAX_SEO_TITLE = 250
+MAX_SEO_DESC = 250
+
+
+def _parse_attr_value(raw_value: str) -> tuple[str, str]:
+    """Разделяет значение характеристики на (значение, единица_измерения).
+
+    Примеры:
+        '44.5 мм' → ('44.5', 'мм')
+        'Да' → ('Да', '')
+        '4 А' → ('4', 'А')
+        '1.0...25.0 мм²' → ('1.0...25.0', 'мм²')
+        '-20…+55' → ('-20…+55', '')
+    """
+    raw_value = raw_value.strip()
+    if not raw_value:
+        return ("", "")
+    m = _UNIT_PATTERN.search(raw_value)
+    if m:
+        unit = m.group(1)
+        value = raw_value[:m.start()].strip()
+        return (value, unit)
+    return (raw_value, "")
+
+
+def _filter_attributes(attrs: dict) -> list[tuple[str, str, str]]:
+    """Фильтрует и парсит attributes dict в список (название, измерение, значение).
+
+    Убирает ключи из blacklist, парсит единицы измерения.
+    """
+    result = []
+    for key, value in attrs.items():
+        if key in _ATTRS_BLACKLIST:
+            continue
+        val_str = str(value).strip() if value else ""
+        if not val_str:
+            continue
+        parsed_value, unit = _parse_attr_value(val_str)
+        result.append((key, unit, parsed_value))
+    return result
+
+
+def _strip_html_tags(html_str: str) -> str:
+    """Удаляет все HTML-теги из строки."""
+    return re.sub(r"<[^>]+>", " ", html_str).strip()
+
+
+def _build_seo_title(name: str, max_len: int = MAX_SEO_TITLE) -> str:
+    """Генерирует HTML_заголовок для SEO.
+
+    Шаблон: '{Название} — Купить в Астане по выгодной цене | G&R Group'
+    """
+    suffix = " — Купить в Астане по выгодной цене | G&R Group"
+    if len(name) + len(suffix) <= max_len:
+        return name + suffix
+    available = max_len - len(suffix)
+    truncated = name[:available].rsplit(" ", 1)[0] if available > 10 else name[:available]
+    return truncated + suffix
+
+
+def _build_seo_description(description: str, max_len: int = MAX_SEO_DESC) -> str:
+    """Генерирует HTML_описание для SEO.
+
+    Шаблон: '{первые ~150 символов без HTML}. Купить в Астане с доставкой. G&R Group'
+    """
+    suffix = ". Купить в Астане с доставкой. G&R Group"
+    plain = _strip_html_tags(description)
+    plain = re.sub(r"\s+", " ", plain).strip()
+    available = max_len - len(suffix)
+    if available <= 0:
+        return suffix.lstrip(". ")
+    if len(plain) > available:
+        plain = plain[:available].rsplit(" ", 1)[0]
+    if not plain:
+        return "Купить в Астане с доставкой. G&R Group"
+    return plain + suffix
+
+
+_COUNTRY_KEYS = ("Страна", "Страна производства", "Страна-производитель", "Страна производитель", "Country")
+
+
+def _extract_country(attrs: dict) -> str:
+    """Извлекает страну производителя из attributes."""
+    for key in _COUNTRY_KEYS:
+        if key in attrs:
+            return str(attrs[key]).strip()
+    lower_map = {k.lower(): v for k, v in attrs.items()}
+    for key in _COUNTRY_KEYS:
+        if key.lower() in lower_map:
+            return str(lower_map[key.lower()]).strip()
+    return ""
+
+
 # Заголовки вкладки «Export Products Sheet» (формат SATU)
 HEADERS_PRODUCTS = (
     "Код_товара",
