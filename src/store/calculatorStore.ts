@@ -120,6 +120,7 @@ const defaultParams: BuildingParams = {
   yardGates: 0,
   hasParking: false,
   parkingGates: 0,
+  parkingCameras: 0,
   coverageType: 'entrance_only',
   twoCamerasPerFloor: false,
   hasCamerasInLifts: false,

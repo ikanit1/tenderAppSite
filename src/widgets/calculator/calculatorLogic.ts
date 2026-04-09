@@ -151,6 +151,8 @@ export interface BuildingParams {
   twoCamerasPerFloor: boolean;
   /** Устанавливать ли камеры в лифтах */
   hasCamerasInLifts: boolean;
+  /** Количество камер внутри паркинга (уличные купольные IPC-2122-APF28) */
+  parkingCameras: number;
 }
 
 export interface CalculatorResult {
@@ -228,7 +230,7 @@ function calculateCameras(params: BuildingParams): {
   let totalCameras = 0;
   let liftCameras = 0;
 
-  const { entrances, floors, elevators, yardGates, hasParking, parkingGates, coverageType, twoCamerasPerFloor, hasCamerasInLifts } =
+  const { entrances, floors, elevators, yardGates, hasParking, parkingGates, parkingCameras, coverageType, twoCamerasPerFloor, hasCamerasInLifts } =
     params;
 
   // ── Входные группы: 3 купольные камеры на каждый подъезд ──
@@ -302,6 +304,21 @@ function calculateCameras(params: BuildingParams): {
       unitPrice: ANPR_CAMERA_PRICE_KZT,
       sum: rowSum,
       note: `${qty} ворот/шлагбаумов`,
+    });
+    sum += rowSum;
+    totalCameras += qty;
+  }
+
+  // ── Паркинг: уличные камеры внутри паркинга ──
+  if (hasParking && parkingCameras > 0) {
+    const qty = parkingCameras;
+    const rowSum = qty * OUTDOOR_CAMERA_PRICE_KZT;
+    rows.push({
+      name: `Камера уличная (паркинг) — ${OUTDOOR_CAMERA_MODEL}`,
+      qty,
+      unitPrice: OUTDOOR_CAMERA_PRICE_KZT,
+      sum: rowSum,
+      note: `${qty} камер в паркинге`,
     });
     sum += rowSum;
     totalCameras += qty;
