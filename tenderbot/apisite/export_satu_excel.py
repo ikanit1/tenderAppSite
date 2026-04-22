@@ -811,8 +811,8 @@ def build_full_excel(
         qty = max(0, int(p.get("quantity", 1)))
         brand = (p.get("brand") or "")[:MAX_PROIZVODITEL]
         category = classify_product(model, name)
-        search = _build_search_queries(name, model=model, brand=brand, category=category, attrs=attrs_raw)
         attrs_raw = p.get("attributes") or {}
+        search = _build_search_queries(name, model=model, brand=brand, category=category, attrs=attrs_raw)
 
         if image_base_url:
             link_izobr = _image_urls_for_product(p, image_base_url)
