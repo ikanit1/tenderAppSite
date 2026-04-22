@@ -703,7 +703,7 @@ def _build_description_from_attrs(
 
     table = "<table>" + "".join(rows) + "</table>"
     result = f"<h3>{name}</h3><p>{category_text}.</p>{table}"
-    return result[:MAX_OPISANIE]
+    return result
 
 
 def _image_urls_for_product(product: dict, base_url: str) -> str:

@@ -88,7 +88,10 @@ def test_build_description_from_attrs_empty_attrs():
         category="Прочее",
         attrs={},
     )
+    # При пустых attrs возвращаем шаблон (не таблицу)
     assert len(result) > 0
+    assert "<table>" not in result
+    assert "<p>" in result
 
 
 if __name__ == "__main__":
