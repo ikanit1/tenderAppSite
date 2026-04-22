@@ -96,7 +96,7 @@ def _filter_attributes(attrs: dict) -> list[tuple[str, str, str]]:
     for key, value in attrs.items():
         if key in _ATTRS_BLACKLIST:
             continue
-        val_str = str(value).strip() if value else ""
+        val_str = str(value).strip() if value is not None else ""
         if not val_str:
             continue
         parsed_value, unit = _parse_attr_value(val_str)
@@ -651,7 +651,7 @@ def _build_search_queries(
                 break
             if key in _ATTRS_BLACKLIST:
                 continue
-            val = str(value).strip() if value else ""
+            val = str(value).strip() if value is not None else ""
             if not val or val.isdigit() or len(val) > 50:
                 continue
             parts.append(val)
@@ -746,7 +746,7 @@ def _build_description_from_attrs(
     for key, value in attrs.items():
         if key in _ATTRS_BLACKLIST:
             continue
-        val_str = str(value).strip() if value else ""
+        val_str = str(value).strip() if value is not None else ""
         if not val_str:
             continue
         rows.append(f"<tr><th>{key}</th><td>{val_str}</td></tr>")

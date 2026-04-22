@@ -63,7 +63,9 @@ def test_build_description_from_attrs_with_attrs():
     assert "Номин. ток" in result
     assert "16 А" in result
     assert "Итого" not in result   # blacklist
-    assert len(result) <= 12160
+    # The function does NOT truncate — callers (build_full_excel) truncate to MAX_OPISANIE.
+    # For this small test input (3 attrs) the result is well under the limit.
+    assert len(result) < 1000
 
 
 def test_build_description_from_attrs_no_brand():
