@@ -105,7 +105,9 @@ def test_build_search_queries_includes_attr_values():
         attrs=attrs,
     )
     assert len(result) <= 255
-    assert "63 А" in result or "230 В" in result  # at least one attr value included
+    assert "63 А" in result
+    assert "230 В" in result
+    assert "синий" in result
     assert isinstance(result, str)
 
 

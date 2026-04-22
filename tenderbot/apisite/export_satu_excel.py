@@ -633,7 +633,14 @@ def _build_search_queries(
             parts.append(val)
             added += 1
     s = ", ".join(dict.fromkeys(parts))  # убираем дубли, сохраняем порядок
-    return s[:max_len] if s else "товар"
+    if not s:
+        return "товар"
+    if len(s) <= max_len:
+        return s
+    truncated = s[:max_len]
+    # Avoid cutting mid-token
+    last_comma = truncated.rfind(", ")
+    return truncated[:last_comma] if last_comma != -1 else truncated
 
 
 # Шаблоны описаний по категориям SATU
