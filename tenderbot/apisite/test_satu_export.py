@@ -165,6 +165,28 @@ def test_product_url_encoding():
     assert ("" if not "" else "x") == ""  # empty model guard
 
 
+def test_headers_groups_count():
+    from export_satu_excel import HEADERS_GROUPS
+    assert len(HEADERS_GROUPS) == 8, f"Expected 8 group columns, got {len(HEADERS_GROUPS)}"
+
+
+def test_headers_groups_seo_columns():
+    from export_satu_excel import HEADERS_GROUPS
+    headers = list(HEADERS_GROUPS)
+    assert headers[5] == "HTML_заголовок_группы"
+    assert headers[6] == "Описание_группы_до_списка_товарных_позиций"
+    assert headers[7] == "Описание_группы_после_списка_товарных_позиций"
+
+
+def test_group_seo_title_format():
+    """HTML_заголовок_группы должен быть ≤250 символов."""
+    from export_satu_excel import _CATEGORY_DESCRIPTIONS
+    from satu_categories import get_all_group_names
+    for name in get_all_group_names():
+        title = f"{name} — купить в Казахстане | G&R Group"
+        assert len(title) <= 250, f"Title too long for {name!r}: {len(title)} chars"
+
+
 if __name__ == "__main__":
     test_get_satu_category_url_known()
     test_get_satu_category_url_fallback()
@@ -185,3 +207,7 @@ if __name__ == "__main__":
     test_headers_products_new_columns()
     test_product_url_encoding()
     print("Task 4: все тесты прошли.")
+    test_headers_groups_count()
+    test_headers_groups_seo_columns()
+    test_group_seo_title_format()
+    print("Task 5: все тесты прошли.")

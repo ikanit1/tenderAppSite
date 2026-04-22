@@ -326,6 +326,24 @@ HEADERS_PRODUCTS = (
     "Номер_устройства_(MPN)",
 )
 
+HEADERS_GROUPS = (
+    "Номер_группы",
+    "Название_группы",
+    "Идентификатор_группы",
+    "Номер_родителя",
+    "Идентификатор_родителя",
+    "HTML_заголовок_группы",
+    "Описание_группы_до_списка_товарных_позиций",
+    "Описание_группы_после_списка_товарных_позиций",
+)
+
+_GROUPS_CTA = (
+    "G&R Group — поставщик электротехнического оборудования в Казахстане. "
+    "Доставка по Алматы, Астане и всем регионам РК. "
+    "Оптовые и розничные цены. "
+    "Звоните: +7 (727) 350-30-00."
+)
+
 PORTAL_EXPORT_DIR = _apisite_dir / "portal_export"
 
 
@@ -912,8 +930,7 @@ def build_full_excel(
 
     # --- Вкладка «Export Groups Sheet» ---
     ws_groups = wb.create_sheet("Export Groups Sheet", 1)
-    headers_groups = ["Номер_группы", "Название_группы", "Идентификатор_группы", "Номер_родителя", "Идентификатор_родителя"]
-    for col, h in enumerate(headers_groups, 1):
+    for col, h in enumerate(HEADERS_GROUPS, 1):
         c = ws_groups.cell(row=1, column=col, value=h)
         c.font = openpyxl.styles.Font(bold=True)
     for grp_idx, grp_name in enumerate(get_all_group_names(), 1):
@@ -921,8 +938,15 @@ def build_full_excel(
         ws_groups.cell(row=grp_idx + 1, column=2, value=grp_name)
         for col in range(3, 6):
             ws_groups.cell(row=grp_idx + 1, column=col, value="")
-    for col in range(1, 6):
-        ws_groups.column_dimensions[openpyxl.utils.get_column_letter(col)].width = 25
+        # SEO columns
+        seo_title = f"{grp_name} — купить в Казахстане | G&R Group"[:250]
+        category_desc = _CATEGORY_DESCRIPTIONS.get(grp_name) or _CATEGORY_DESCRIPTIONS["Прочее"]
+        ws_groups.cell(row=grp_idx + 1, column=6, value=seo_title)
+        ws_groups.cell(row=grp_idx + 1, column=7, value=category_desc)
+        ws_groups.cell(row=grp_idx + 1, column=8, value=_GROUPS_CTA)
+    col_widths_groups = [15, 35, 25, 15, 25, 60, 80, 80]
+    for col, width in enumerate(col_widths_groups, 1):
+        ws_groups.column_dimensions[openpyxl.utils.get_column_letter(col)].width = width
 
     return wb, len(products)
 
