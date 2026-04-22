@@ -206,6 +206,87 @@ def test_groups_sheet_has_seo_columns():
     assert cta_val == _GROUPS_CTA
 
 
+def test_build_full_excel_smoke():
+    """End-to-end smoke test: проверяет структуру сгенерированного XLSX."""
+    from export_satu_excel import build_full_excel, HEADERS_PRODUCTS, HEADERS_GROUPS, _GROUPS_CTA
+
+    products = [
+        {
+            "model": "A9F74116",
+            "name": "Автоматический выключатель iC60N 1P 16А",
+            "final_price": 5000,
+            "price_rrc": 5000,
+            "quantity": 10,
+            "image_paths": [],
+            "folder": "",
+            "description": "<p>Автоматический выключатель iC60N — модульный аппарат защиты. Номин. ток: 16 А, Напряжение: 230 В.</p>",
+            "attributes": {"Номин. ток": "16 А", "Напряжение": "230 В"},
+            "brand": "Schneider Electric",
+        },
+        {
+            "model": "LC1D09",
+            "name": "Контактор LC1D09 9А 220В",
+            "final_price": 3500,
+            "price_rrc": 3500,
+            "quantity": 5,
+            "image_paths": [],
+            "folder": "",
+            "description": "<p>Контактор LC1D09 — электромагнитный контактор для коммутации силовых цепей.</p>",
+            "attributes": {},
+            "brand": "Schneider Electric",
+        },
+    ]
+
+    wb, _ = build_full_excel(products, image_via_api=False)
+
+    # === Products Sheet ===
+    ws_p = wb["Export Products Sheet"]
+
+    # Header row has all 28 columns
+    # HEADERS_PRODUCTS indices (1-based):
+    #   1=Код_товара, 2=Название_позиции, 3=Поисковые_запросы, 4=Описание
+    #  23=Адрес_подраздела, 24=Возможность_поставки, 25=Срок_поставки
+    #  26=Способ_упаковки, 27=Продукт_на_сайте, 28=Номер_устройства_(MPN)
+    header_row = [ws_p.cell(row=1, column=c).value for c in range(1, 29)]
+    assert header_row == list(HEADERS_PRODUCTS), "Product headers mismatch"
+
+    # First product row (row 2)
+    assert ws_p.cell(row=2, column=2).value is not None  # Название_позиции (col 2)
+
+    # New columns are populated (cols 23-28)
+    assert ws_p.cell(row=2, column=23).value is not None  # Адрес_подраздела — URL
+    assert ws_p.cell(row=2, column=24).value is not None  # Возможность_поставки — число
+    assert ws_p.cell(row=2, column=25).value == "месяц"  # Срок_поставки
+    assert ws_p.cell(row=2, column=26).value == "в упаковке производителя"  # Способ_упаковки
+    # col 27: Продукт_на_сайте (URL for non-empty model)
+    assert ws_p.cell(row=2, column=27).value is not None  # Продукт_на_сайте
+    # col 28: Номер_устройства_(MPN) = model
+    assert ws_p.cell(row=2, column=28).value is not None  # MPN
+
+    # Description is never empty (col 4 = Описание)
+    desc = ws_p.cell(row=2, column=4).value
+    assert desc and len(desc) > 10
+
+    # Search queries exist and ≤255 chars (col 3 = Поисковые_запросы)
+    search = ws_p.cell(row=2, column=3).value
+    assert search and len(search) <= 255
+
+    # === Groups Sheet ===
+    ws_g = wb["Export Groups Sheet"]
+
+    # Header row has all 8 columns
+    g_header = [ws_g.cell(row=1, column=c).value for c in range(1, 9)]
+    assert g_header == list(HEADERS_GROUPS), "Group headers mismatch"
+
+    # First group row (row 2): SEO columns filled
+    g_title = ws_g.cell(row=2, column=6).value
+    g_desc = ws_g.cell(row=2, column=7).value
+    g_cta = ws_g.cell(row=2, column=8).value
+    assert g_title and "G&R Group" in g_title
+    assert g_desc and len(g_desc) > 10
+    assert g_cta == _GROUPS_CTA
+
+
 if __name__ == "__main__":
     test_get_satu_category_url_known()
     test_get_satu_category_url_fallback()
@@ -231,3 +312,5 @@ if __name__ == "__main__":
     test_group_seo_title_format()
     test_groups_sheet_has_seo_columns()
     print("Task 5: все тесты прошли.")
+    test_build_full_excel_smoke()
+    print("Task 6: smoke test прошёл.")
