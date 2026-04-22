@@ -5,7 +5,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from satu_categories import (
     get_satu_category_url, get_supply_volume,
-    SATU_CATEGORY_URLS, SUPPLY_PERIOD, DEFAULT_SUPPLY_VOLUME,
+    SUPPLY_PERIOD, DEFAULT_SUPPLY_VOLUME,
     get_all_group_names,
 )
 

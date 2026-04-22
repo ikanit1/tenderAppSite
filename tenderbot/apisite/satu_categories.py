@@ -210,13 +210,13 @@ SUPPLY_VOLUMES: dict[str, int] = {
     "Кабельные каналы":           500,
     "Лотки и аксессуары лотков":  200,
 }
-SUPPLY_PERIOD = "месяц"
-DEFAULT_SUPPLY_VOLUME = 100
+SUPPLY_PERIOD: str = "месяц"
+DEFAULT_SUPPLY_VOLUME: int = 100
 
 
 def get_satu_category_url(category: str) -> str:
     """Возвращает URL категории на satu.kz."""
-    return SATU_CATEGORY_URLS.get(category, SATU_CATEGORY_URLS["Прочее"])
+    return SATU_CATEGORY_URLS.get(category, "https://satu.kz/Elektrooborudovanie")
 
 
 def get_supply_volume(category: str) -> int:
