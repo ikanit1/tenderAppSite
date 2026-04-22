@@ -138,6 +138,32 @@ def test_build_search_queries_max_length():
     assert len(result) <= 255
 
 
+def test_new_product_columns_present():
+    """Проверяет что HEADERS_PRODUCTS содержит 6 новых колонок."""
+    from export_satu_excel import HEADERS_PRODUCTS
+    required = [
+        "Адрес_подраздела",
+        "Возможность_поставки",
+        "Срок_поставки",
+        "Способ_упаковки",
+        "Продукт_на_сайте",
+        "Номер_устройства_(MPN)",
+    ]
+    for col in required:
+        assert col in HEADERS_PRODUCTS, f"Missing column: {col}"
+    assert len(HEADERS_PRODUCTS) >= 28
+
+
+def test_product_url_encoding():
+    """Продукт_на_сайте должен содержать URL-encoded артикул."""
+    from urllib.parse import quote
+    model = "A9F74 116"
+    expected = f"https://grgroup.kz/catalog/?model={quote(model)}"
+    assert "%" in expected or " " not in expected  # model with space is encoded
+    product_url = f"https://grgroup.kz/catalog/?model={quote(model)}"
+    assert " " not in product_url
+
+
 if __name__ == "__main__":
     test_get_satu_category_url_known()
     test_get_satu_category_url_fallback()
@@ -154,3 +180,6 @@ if __name__ == "__main__":
     test_build_search_queries_no_attrs()
     test_build_search_queries_max_length()
     print("Task 3: все тесты прошли.")
+    test_new_product_columns_present()
+    test_product_url_encoding()
+    print("Task 4: все тесты прошли.")

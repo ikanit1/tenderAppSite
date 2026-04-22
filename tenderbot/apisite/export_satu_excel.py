@@ -37,7 +37,7 @@ if str(_apisite_dir) not in sys.path:
 
 from upload_to_satu import load_products_from_portal, _price_to_tenge
 from utils import model_to_foldername, get_clean_id, normalize_model_for_fs
-from satu_categories import classify_product, get_all_group_names, get_group_number
+from satu_categories import classify_product, get_all_group_names, get_group_number, get_satu_category_url, get_supply_volume, SUPPLY_PERIOD
 
 try:
     import openpyxl
@@ -318,6 +318,12 @@ HEADERS_PRODUCTS = (
     "HTML_описание",
     "Номер_группы",
     "Название_группы",
+    "Адрес_подраздела",
+    "Возможность_поставки",
+    "Срок_поставки",
+    "Способ_упаковки",
+    "Продукт_на_сайте",
+    "Номер_устройства_(MPN)",
 )
 
 PORTAL_EXPORT_DIR = _apisite_dir / "portal_export"
@@ -879,6 +885,12 @@ def build_full_excel(
         ws_products.cell(row=row_idx, column=20, value=seo_desc)
         ws_products.cell(row=row_idx, column=21, value=get_group_number(category))
         ws_products.cell(row=row_idx, column=22, value=category)
+        ws_products.cell(row=row_idx, column=23, value=get_satu_category_url(category))
+        ws_products.cell(row=row_idx, column=24, value=get_supply_volume(category))
+        ws_products.cell(row=row_idx, column=25, value=SUPPLY_PERIOD)
+        ws_products.cell(row=row_idx, column=26, value="")
+        ws_products.cell(row=row_idx, column=27, value=f"https://grgroup.kz/catalog/?model={quote(model)}")
+        ws_products.cell(row=row_idx, column=28, value=model)
 
         # Характеристики (динамические столбцы)
         parsed_attrs = _filter_attributes(attrs_raw)
