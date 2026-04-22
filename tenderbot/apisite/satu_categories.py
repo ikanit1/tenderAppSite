@@ -162,3 +162,63 @@ def get_group_number(group_name: str) -> int:
         return names.index(group_name) + 1
     except ValueError:
         return len(names)  # Прочее
+
+
+# URL категорий на Satu.kz (проверено на satu.kz 2026-04-22)
+SATU_CATEGORY_URLS: dict[str, str] = {
+    "Видеокамеры":                    "https://satu.kz/Elektrooborudovanie",
+    "Видеорегистраторы":              "https://satu.kz/Elektrooborudovanie",
+    "Коммутаторы":                    "https://satu.kz/Kommutatory",
+    "Точки доступа и маршрутизаторы": "https://satu.kz/Routeryi",
+    "Мониторы и дисплеи":             "https://satu.kz/Monitory",
+    "Жёсткие диски":                  "https://satu.kz/Zhestkie-diski",
+    "Кронштейны и крепёж":            "https://satu.kz/Krepezhnye-materialy",
+    "Контроль доступа (СКУД)":        "https://satu.kz/Elektrooborudovanie",
+    "Аудио и видеотехника":           "https://satu.kz/Akusticheskie-sistemy",
+    "Кабель и провод":                "https://satu.kz/Provod-kabel-sistemy-soedineniya",
+    "Кабельные каналы":               "https://satu.kz/Korobki-montazhnye",
+    "Лотки и аксессуары лотков":      "https://satu.kz/Korobki-montazhnye",
+    "Автоматические выключатели":     "https://satu.kz/Vyklyuchateli",
+    "Дифференциальная защита":        "https://satu.kz/Rele",
+    "Контакторы и пускатели":         "https://satu.kz/Kontaktory",
+    "Светодиодные лампы":             "https://satu.kz/Lampochki",
+    "Светильники и прожекторы":       "https://satu.kz/Led-osveschenie",
+    "Светодиодные ленты":             "https://satu.kz/Led-osveschenie",
+    "Наконечники и гильзы":           "https://satu.kz/Provod-kabel-sistemy-soedineniya",
+    "Розетки и выключатели":          "https://satu.kz/Rozetki-elektricheskie",
+    "Датчики":                        "https://satu.kz/Datchiki",
+    "Реле":                           "https://satu.kz/Rele",
+    "Электродвигатели":               "https://satu.kz/Servodvigateli",
+    "Шкафы и щиты":                   "https://satu.kz/Raspredelitelnye-schity",
+    "Трансформаторы":                 "https://satu.kz/Transformatory",
+    "Разъемы и коннекторы":           "https://satu.kz/Provod-kabel-sistemy-soedineniya",
+    "Блоки питания":                  "https://satu.kz/Bloki-pitaniya",
+    "Зажимы и клеммы":                "https://satu.kz/Krepezhnye-materialy",
+    "Монтажные коробки":              "https://satu.kz/Korobki-montazhnye",
+    "Частотные преобразователи":      "https://satu.kz/Preobrazovateli-chastoty",
+    "Муфты и трубы":                  "https://satu.kz/Provod-kabel-sistemy-soedineniya",
+    "Устройства плавного пуска":      "https://satu.kz/Ustrojstva-plavnogo-puska",
+    "Кнопки управления":              "https://satu.kz/Vyklyuchateli",
+    "Патроны и стартёры":             "https://satu.kz/Komplektuyuschie-dlya-svetovyh-priborov",
+    "Счётчики электроэнергии":        "https://satu.kz/Schetchiki-elektroenergii",
+    "Прочее":                         "https://satu.kz/Elektrooborudovanie",
+}
+
+# Объём поставки по категориям (единица/месяц)
+SUPPLY_VOLUMES: dict[str, int] = {
+    "Кабель и провод":            1000,
+    "Кабельные каналы":           500,
+    "Лотки и аксессуары лотков":  200,
+}
+SUPPLY_PERIOD = "месяц"
+DEFAULT_SUPPLY_VOLUME = 100
+
+
+def get_satu_category_url(category: str) -> str:
+    """Возвращает URL категории на satu.kz."""
+    return SATU_CATEGORY_URLS.get(category, SATU_CATEGORY_URLS["Прочее"])
+
+
+def get_supply_volume(category: str) -> int:
+    """Возвращает объём поставки для категории."""
+    return SUPPLY_VOLUMES.get(category, DEFAULT_SUPPLY_VOLUME)
