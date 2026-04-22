@@ -811,7 +811,7 @@ def build_full_excel(
     ws_products.row_dimensions[1].height = 20
 
     api_base = api_base_url or _get_api_base_url()
-    col_w = [14, 40, 18, 50, 12, 12, 8, 10, 8, 10, 14, 12, 8, 50, 10, 28, 28, 20, 40, 40, 12, 30]
+    col_w = [14, 40, 18, 50, 12, 12, 8, 10, 8, 10, 14, 12, 8, 50, 10, 28, 28, 20, 40, 40, 12, 30, 45, 12, 10, 25, 50, 20]
 
     seen_identifiers = {}  # Для дедупликации идентификаторов товара
 
@@ -888,8 +888,8 @@ def build_full_excel(
         ws_products.cell(row=row_idx, column=23, value=get_satu_category_url(category))
         ws_products.cell(row=row_idx, column=24, value=get_supply_volume(category))
         ws_products.cell(row=row_idx, column=25, value=SUPPLY_PERIOD)
-        ws_products.cell(row=row_idx, column=26, value="")
-        ws_products.cell(row=row_idx, column=27, value=f"https://grgroup.kz/catalog/?model={quote(model)}")
+        ws_products.cell(row=row_idx, column=26, value="в упаковке производителя")
+        ws_products.cell(row=row_idx, column=27, value=f"https://grgroup.kz/catalog/?model={quote(model)}" if model else "")
         ws_products.cell(row=row_idx, column=28, value=model)
 
         # Характеристики (динамические столбцы)

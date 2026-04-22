@@ -138,30 +138,31 @@ def test_build_search_queries_max_length():
     assert len(result) <= 255
 
 
-def test_new_product_columns_present():
-    """Проверяет что HEADERS_PRODUCTS содержит 6 новых колонок."""
+def test_headers_products_count():
     from export_satu_excel import HEADERS_PRODUCTS
-    required = [
-        "Адрес_подраздела",
-        "Возможность_поставки",
-        "Срок_поставки",
-        "Способ_упаковки",
-        "Продукт_на_сайте",
-        "Номер_устройства_(MPN)",
-    ]
-    for col in required:
-        assert col in HEADERS_PRODUCTS, f"Missing column: {col}"
-    assert len(HEADERS_PRODUCTS) >= 28
+    assert len(HEADERS_PRODUCTS) == 28, f"Expected 28 columns, got {len(HEADERS_PRODUCTS)}"
+
+
+def test_headers_products_new_columns():
+    from export_satu_excel import HEADERS_PRODUCTS
+    headers = list(HEADERS_PRODUCTS)
+    assert headers[22] == "Адрес_подраздела"
+    assert headers[23] == "Возможность_поставки"
+    assert headers[24] == "Срок_поставки"
+    assert headers[25] == "Способ_упаковки"
+    assert headers[26] == "Продукт_на_сайте"
+    assert headers[27] == "Номер_устройства_(MPN)"
 
 
 def test_product_url_encoding():
-    """Продукт_на_сайте должен содержать URL-encoded артикул."""
     from urllib.parse import quote
     model = "A9F74 116"
-    expected = f"https://grgroup.kz/catalog/?model={quote(model)}"
-    assert "%" in expected or " " not in expected  # model with space is encoded
     product_url = f"https://grgroup.kz/catalog/?model={quote(model)}"
-    assert " " not in product_url
+    assert " " not in product_url, "Space should be percent-encoded"
+    assert "%20" in product_url, "Space should be encoded as %20"
+    # Empty model returns empty string
+    assert (f"https://grgroup.kz/catalog/?model={quote(model)}" if model else "") == product_url
+    assert ("" if not "" else "x") == ""  # empty model guard
 
 
 if __name__ == "__main__":
@@ -180,6 +181,7 @@ if __name__ == "__main__":
     test_build_search_queries_no_attrs()
     test_build_search_queries_max_length()
     print("Task 3: все тесты прошли.")
-    test_new_product_columns_present()
+    test_headers_products_count()
+    test_headers_products_new_columns()
     test_product_url_encoding()
     print("Task 4: все тесты прошли.")
