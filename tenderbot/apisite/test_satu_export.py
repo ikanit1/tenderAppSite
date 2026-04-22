@@ -44,6 +44,53 @@ def test_supply_period():
     assert SUPPLY_PERIOD == "месяц"
 
 
+def test_build_description_from_attrs_with_attrs():
+    from export_satu_excel import _build_description_from_attrs
+    attrs = {"Номин. ток": "16 А", "Напряжение": "230 В", "Итого": "1500"}
+    result = _build_description_from_attrs(
+        name="Автоматический выключатель iC60N",
+        model="A9F74116",
+        brand="Schneider Electric",
+        category="Автоматические выключатели",
+        attrs=attrs,
+    )
+    assert "<h3>" in result
+    assert "<table>" in result
+    assert "<th>Производитель</th>" in result
+    assert "Schneider Electric" in result
+    assert "<th>Артикул</th>" in result
+    assert "A9F74116" in result
+    assert "Номин. ток" in result
+    assert "16 А" in result
+    assert "Итого" not in result   # blacklist
+    assert len(result) <= 12160
+
+
+def test_build_description_from_attrs_no_brand():
+    from export_satu_excel import _build_description_from_attrs
+    result = _build_description_from_attrs(
+        name="Реле",
+        model="RXM2AB1P7",
+        brand="",
+        category="Реле",
+        attrs={"Катушка": "230 В AC"},
+    )
+    assert "<th>Производитель</th>" not in result
+    assert "RXM2AB1P7" in result
+
+
+def test_build_description_from_attrs_empty_attrs():
+    from export_satu_excel import _build_description_from_attrs
+    result = _build_description_from_attrs(
+        name="Товар",
+        model="M123",
+        brand="Brand",
+        category="Прочее",
+        attrs={},
+    )
+    assert len(result) > 0
+
+
 if __name__ == "__main__":
     test_get_satu_category_url_known()
     test_get_satu_category_url_fallback()
@@ -52,3 +99,7 @@ if __name__ == "__main__":
     test_get_supply_volume_default()
     test_supply_period()
     print("Task 1: все тесты прошли.")
+    test_build_description_from_attrs_with_attrs()
+    test_build_description_from_attrs_no_brand()
+    test_build_description_from_attrs_empty_attrs()
+    print("Task 2: все тесты прошли.")

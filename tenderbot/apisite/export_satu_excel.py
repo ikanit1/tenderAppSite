@@ -420,13 +420,8 @@ def _build_portal_by_model() -> dict:
             description = desc_plain
         else:
             attrs = data.get("attributes") or {}
-            if attrs:
-                rows = "".join(f"<li><b>{k}:</b> {v}</li>" for k, v in attrs.items())
-                description = f"<h3>{name}</h3><ul>{rows}</ul>"
-            else:
-                # Шаблон вместо слабого фоллбэка
-                category = classify_product(model, name)
-                description = _build_description_from_template(name, model, brand, category)
+            category = classify_product(model, name)
+            description = _build_description_from_attrs(name, model, brand, category, attrs)
 
         description = description[:MAX_OPISANIE]
 
@@ -674,6 +669,41 @@ def _build_description_from_template(name: str, model: str, brand: str, category
         items.append(f"<li><b>Артикул:</b> {model}</li>")
     ul = f"<ul>{''.join(items)}</ul>" if items else ""
     return f"<p><b>{name}</b> — {category_text}.</p>{ul}"
+
+
+def _build_description_from_attrs(
+    name: str, model: str, brand: str, category: str, attrs: dict
+) -> str:
+    """Генерирует HTML-описание из словаря атрибутов товара.
+
+    Используется когда нет description_html и description.txt,
+    но есть атрибуты. Строит: заголовок + категорийный абзац + HTML-таблица.
+    Атрибуты из _ATTRS_BLACKLIST исключаются.
+    """
+    if not attrs:
+        return _build_description_from_template(name, model, brand, category)
+
+    category_text = _CATEGORY_DESCRIPTIONS.get(category) or _CATEGORY_DESCRIPTIONS["Прочее"]
+
+    rows = []
+    if brand:
+        rows.append(f"<tr><th>Производитель</th><td>{brand}</td></tr>")
+    if model:
+        rows.append(f"<tr><th>Артикул</th><td>{model}</td></tr>")
+    for key, value in attrs.items():
+        if key in _ATTRS_BLACKLIST:
+            continue
+        val_str = str(value).strip() if value else ""
+        if not val_str:
+            continue
+        rows.append(f"<tr><th>{key}</th><td>{val_str}</td></tr>")
+
+    if not rows:
+        return _build_description_from_template(name, model, brand, category)
+
+    table = "<table>" + "".join(rows) + "</table>"
+    result = f"<h3>{name}</h3><p>{category_text}.</p>{table}"
+    return result[:MAX_OPISANIE]
 
 
 def _image_urls_for_product(product: dict, base_url: str) -> str:
