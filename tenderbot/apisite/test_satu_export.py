@@ -180,11 +180,30 @@ def test_headers_groups_seo_columns():
 
 def test_group_seo_title_format():
     """HTML_заголовок_группы должен быть ≤250 символов."""
-    from export_satu_excel import _CATEGORY_DESCRIPTIONS
     from satu_categories import get_all_group_names
     for name in get_all_group_names():
         title = f"{name} — купить в Казахстане | G&R Group"
         assert len(title) <= 250, f"Title too long for {name!r}: {len(title)} chars"
+
+
+def test_groups_sheet_has_seo_columns():
+    """Проверяет что build_full_excel() реально пишет SEO-данные в Groups Sheet."""
+    from export_satu_excel import build_full_excel, _GROUPS_CTA
+    # Минимальный список продуктов (1 продукт достаточно)
+    products = [{
+        "model": "TEST001",
+        "name": "Тестовый товар",
+        "price": 1000,
+        "images": [],
+    }]
+    wb, _ = build_full_excel(products, image_via_api=False)
+    ws = wb["Export Groups Sheet"]
+    # Строка 2 — первая группа данных (строка 1 = заголовок)
+    title_val = ws.cell(row=2, column=6).value
+    cta_val = ws.cell(row=2, column=8).value
+    assert title_val is not None and "G&R Group" in title_val
+    assert cta_val is not None and "G&R Group" in cta_val
+    assert cta_val == _GROUPS_CTA
 
 
 if __name__ == "__main__":
@@ -210,4 +229,5 @@ if __name__ == "__main__":
     test_headers_groups_count()
     test_headers_groups_seo_columns()
     test_group_seo_title_format()
+    test_groups_sheet_has_seo_columns()
     print("Task 5: все тесты прошли.")

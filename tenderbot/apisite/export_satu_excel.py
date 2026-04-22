@@ -940,7 +940,7 @@ def build_full_excel(
             ws_groups.cell(row=grp_idx + 1, column=col, value="")
         # SEO columns
         seo_title = f"{grp_name} — купить в Казахстане | G&R Group"[:250]
-        category_desc = _CATEGORY_DESCRIPTIONS.get(grp_name) or _CATEGORY_DESCRIPTIONS["Прочее"]
+        category_desc = (_CATEGORY_DESCRIPTIONS.get(grp_name) or _CATEGORY_DESCRIPTIONS["Прочее"])[:500]
         ws_groups.cell(row=grp_idx + 1, column=6, value=seo_title)
         ws_groups.cell(row=grp_idx + 1, column=7, value=category_desc)
         ws_groups.cell(row=grp_idx + 1, column=8, value=_GROUPS_CTA)
