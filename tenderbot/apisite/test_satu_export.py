@@ -94,6 +94,48 @@ def test_build_description_from_attrs_empty_attrs():
     assert "<p>" in result
 
 
+def test_build_search_queries_includes_attr_values():
+    from export_satu_excel import _build_search_queries
+    attrs = {"Номин. ток": "63 А", "Напряжение": "230 В", "Цвет": "синий"}
+    result = _build_search_queries(
+        name="Автоматический выключатель",
+        model="A9F74116",
+        brand="Schneider Electric",
+        category="Автоматические выключатели",
+        attrs=attrs,
+    )
+    assert len(result) <= 255
+    assert "63 А" in result or "230 В" in result  # at least one attr value included
+    assert isinstance(result, str)
+
+
+def test_build_search_queries_no_attrs():
+    from export_satu_excel import _build_search_queries
+    result = _build_search_queries(
+        name="Реле",
+        model="RXM2",
+        brand="Schneider",
+        category="Реле",
+        attrs={},
+    )
+    assert len(result) <= 255
+    assert len(result) > 0
+
+
+def test_build_search_queries_max_length():
+    from export_satu_excel import _build_search_queries
+    # Very long attrs should still produce ≤255 chars
+    attrs = {f"Атрибут{i}": f"значение{i}" for i in range(50)}
+    result = _build_search_queries(
+        name="Товар",
+        model="M123",
+        brand="Бренд",
+        category="Прочее",
+        attrs=attrs,
+    )
+    assert len(result) <= 255
+
+
 if __name__ == "__main__":
     test_get_satu_category_url_known()
     test_get_satu_category_url_fallback()
@@ -106,3 +148,7 @@ if __name__ == "__main__":
     test_build_description_from_attrs_no_brand()
     test_build_description_from_attrs_empty_attrs()
     print("Task 2: все тесты прошли.")
+    test_build_search_queries_includes_attr_values()
+    test_build_search_queries_no_attrs()
+    test_build_search_queries_max_length()
+    print("Task 3: все тесты прошли.")

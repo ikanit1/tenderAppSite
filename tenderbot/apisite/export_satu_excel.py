@@ -595,14 +595,23 @@ def load_products_for_satu(from_api: bool = True, limit: int | None = None) -> l
     return out
 
 
-def _build_search_queries(name: str, brand: str = "", category: str = "", max_len: int = MAX_POISK_ZAPROS) -> str:
-    """Формирует поисковые запросы: слова из названия + бренд + категория + фразы покупателя."""
+def _build_search_queries(
+    name: str,
+    model: str = "",
+    brand: str = "",
+    category: str = "",
+    attrs: dict | None = None,
+    max_len: int = MAX_POISK_ZAPROS,
+) -> str:
+    """Формирует поисковые запросы: слова из названия + артикул + бренд + категория + ключевые значения атрибутов."""
     if not name:
         return "товар"
     parts = []
     words = re.findall(r"[а-яёa-z0-9\-]+", name.lower(), re.I)
     words = [w[:50] for w in words if len(w) >= 2][:10]
     parts.extend(words)
+    if model and model.lower() not in name.lower():
+        parts.append(model[:50])
     if brand and brand.lower() not in name.lower():
         parts.append(brand.lower())
     if category:
@@ -610,6 +619,19 @@ def _build_search_queries(name: str, brand: str = "", category: str = "", max_le
         parts.append(f"{category.lower()} купить")
         if brand:
             parts.append(f"{brand.lower()} {category.lower()}")
+    # Добавляем до 3 ключевых значений из атрибутов для поиска Satu
+    if attrs:
+        added = 0
+        for key, value in attrs.items():
+            if added >= 3:
+                break
+            if key in _ATTRS_BLACKLIST:
+                continue
+            val = str(value).strip() if value else ""
+            if not val or val.isdigit() or len(val) > 50:
+                continue
+            parts.append(val)
+            added += 1
     s = ", ".join(dict.fromkeys(parts))  # убираем дубли, сохраняем порядок
     return s[:max_len] if s else "товар"
 
@@ -789,7 +811,7 @@ def build_full_excel(
         qty = max(0, int(p.get("quantity", 1)))
         brand = (p.get("brand") or "")[:MAX_PROIZVODITEL]
         category = classify_product(model, name)
-        search = _build_search_queries(name, brand, category)
+        search = _build_search_queries(name, model=model, brand=brand, category=category, attrs=attrs_raw)
         attrs_raw = p.get("attributes") or {}
 
         if image_base_url:
