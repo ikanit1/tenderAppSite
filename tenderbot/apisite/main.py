@@ -2342,6 +2342,118 @@ async def start_portal_parser(request: Request, start_page: Optional[int] = 1, e
 
 
 
+# ---------------------------------------------------------------------------
+# Enrichment — обогащение product.json из complex.com.kz
+# ---------------------------------------------------------------------------
+_enrichment_task: Optional[asyncio.Task] = None
+_enrichment_started_at: Optional[float] = None
+_enrichment_log_buffer: list = []
+_ENRICHMENT_LOG_MAX = 500
+_enrichment_stats: dict = {"enriched": 0, "failed": 0, "total": 0, "done": False}
+
+
+class _EnrichmentLogHandler(logging.Handler):
+    """Пишет логи обогащения в буфер для просмотра в админке."""
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            _enrichment_log_buffer.append(msg)
+            while len(_enrichment_log_buffer) > _ENRICHMENT_LOG_MAX:
+                _enrichment_log_buffer.pop(0)
+        except Exception:
+            pass
+
+
+async def _run_enrichment(force: bool = False):
+    """Запускает обогащение в фоне."""
+    global _enrichment_started_at, _enrichment_stats
+    _enrichment_started_at = time.time()
+    _enrichment_stats = {"enriched": 0, "failed": 0, "total": 0, "done": False}
+    enrich_logger = logging.getLogger("enrich_products")
+    handler = _EnrichmentLogHandler()
+    handler.setFormatter(logging.Formatter("%(asctime)s %(message)s", datefmt="%H:%M:%S"))
+    enrich_logger.addHandler(handler)
+    enrich_logger.setLevel(logging.INFO)
+    try:
+        from enrich_products import collect_targets, run as run_enrichment
+        targets = collect_targets(force)
+        _enrichment_stats["total"] = len(targets)
+        enrich_logger.info(f"Найдено {len(targets)} товаров для обогащения")
+        if not targets:
+            _enrichment_stats["done"] = True
+            return
+        stats = await run_enrichment(targets, log=enrich_logger)
+        _enrichment_stats["enriched"] = stats.get("enriched", 0)
+        _enrichment_stats["failed"] = stats.get("failed", 0)
+        _enrichment_stats["done"] = True
+        enrich_logger.info(
+            f"Готово: обогащено {stats['enriched']}, ошибок {stats['failed']}"
+        )
+    except asyncio.CancelledError:
+        enrich_logger.info("Обогащение отменено пользователем")
+        _enrichment_stats["done"] = True
+    except Exception as e:
+        enrich_logger.error(f"Ошибка обогащения: {e}")
+        _enrichment_stats["done"] = True
+    finally:
+        _enrichment_started_at = None
+        enrich_logger.removeHandler(handler)
+
+
+def _enrichment_done_callback(task):
+    global _enrichment_task
+    _enrichment_task = None
+
+
+@app.post("/api/enrichment/start")
+async def start_enrichment(request: Request, force: bool = False):
+    """Запускает обогащение product.json из complex.com.kz"""
+    require_admin_auth(request)
+    global _enrichment_task
+    if _enrichment_task and not _enrichment_task.done():
+        raise HTTPException(status_code=409, detail="Обогащение уже запущено")
+    _enrichment_log_buffer.clear()
+    _enrichment_task = asyncio.create_task(_run_enrichment(force))
+    _enrichment_task.add_done_callback(_enrichment_done_callback)
+    return {"status": "success", "message": "Обогащение запущено"}
+
+
+@app.post("/api/enrichment/stop")
+async def stop_enrichment(request: Request):
+    """Останавливает обогащение"""
+    require_admin_auth(request)
+    global _enrichment_task
+    if not _enrichment_task or _enrichment_task.done():
+        return {"status": "ok", "message": "Обогащение не запущено"}
+    _enrichment_task.cancel()
+    return {"status": "success", "message": "Обогащение останавливается"}
+
+
+@app.get("/api/enrichment/status")
+async def get_enrichment_status(request: Request):
+    """Статус обогащения"""
+    require_admin_auth(request)
+    running = _enrichment_task is not None and not _enrichment_task.done()
+    started_at = None
+    if _enrichment_started_at:
+        from datetime import datetime
+        started_at = datetime.fromtimestamp(_enrichment_started_at).isoformat()
+    return {
+        "running": running,
+        "started_at": started_at,
+        **_enrichment_stats,
+    }
+
+
+@app.get("/api/enrichment/logs")
+async def get_enrichment_logs(request: Request, limit: int = 300):
+    """Последние строки лога обогащения"""
+    require_admin_auth(request)
+    n = min(max(1, limit), 500)
+    lines = list(_enrichment_log_buffer[-n:])
+    return {"lines": lines, "total": len(_enrichment_log_buffer)}
+
+
 def _build_assistant_system_prompt(products: list, budget: Optional[float] = None, preferred_brands: Optional[list[str]] = None) -> str:
     """Строит системный промпт для ИИ-помощника с контекстом каталога"""
     # #region agent log

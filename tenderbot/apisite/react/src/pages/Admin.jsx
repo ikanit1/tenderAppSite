@@ -11,6 +11,7 @@ const TABS = [
   { id: 'prices', label: 'Цены и скидки', icon: '💰' },
   { id: 'parser', label: 'Парсер изображений', icon: '🖼️' },
   { id: 'portal', label: 'Портал', icon: '🔍' },
+  { id: 'enrichment', label: 'Обогащение', icon: '✨' },
 ];
 
 const sectionVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { delay: 0.05 } } };
@@ -155,6 +156,13 @@ export default function Admin() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalSearch, setPortalSearch] = useState('');
 
+  // Enrichment state
+  const [enrichmentStatus, setEnrichmentStatus] = useState(null);
+  const [enrichmentLogs, setEnrichmentLogs] = useState([]);
+  const [enrichmentAction, setEnrichmentAction] = useState(null);
+  const [enrichmentLogPaused, setEnrichmentLogPaused] = useState(false);
+  const enrichLogRef = useRef(null);
+
   // Health (dashboard last update)
   const [healthData, setHealthData] = useState(null);
   // Brand filter for "Товары без цены"
@@ -248,6 +256,26 @@ export default function Admin() {
     }
   }, []);
 
+  const loadEnrichmentStatus = useCallback(async () => {
+    try {
+      const data = await api('/api/enrichment/status');
+      setEnrichmentStatus(data);
+      return data;
+    } catch (err) {
+      setEnrichmentStatus({ running: false, error: err.message });
+      return null;
+    }
+  }, []);
+
+  const loadEnrichmentLogs = useCallback(async () => {
+    try {
+      const data = await api(`/api/enrichment/logs?limit=${150}`);
+      setEnrichmentLogs((data.lines || []).slice(0, 150));
+    } catch {
+      setEnrichmentLogs([]);
+    }
+  }, []);
+
   const checkAuth = useCallback(async () => {
     try {
       const data = await api('/api/admin/check');
@@ -321,6 +349,10 @@ export default function Admin() {
     if (!authenticated) return;
     if (tab === 'portal') loadPortalMismatch();
   }, [tab, loadPortalMismatch, authenticated]);
+  useEffect(() => {
+    if (!authenticated) return;
+    if (tab === 'enrichment') { loadEnrichmentStatus(); loadEnrichmentLogs(); }
+  }, [tab, loadEnrichmentStatus, loadEnrichmentLogs, authenticated]);
 
   useEffect(() => {
     setWithoutPricePage(1);
@@ -347,6 +379,25 @@ export default function Admin() {
     if (portalLogPreRef.current && portalParserLogs.length)
       portalLogPreRef.current.scrollTop = portalLogPreRef.current.scrollHeight;
   }, [portalParserLogs, authenticated, logScrollPaused]);
+
+  // Polling обогащения
+  useEffect(() => {
+    if (!authenticated || tab !== 'enrichment' || !enrichmentStatus?.running) return;
+    let ignore = false;
+    const interval = setInterval(async () => {
+      if (ignore) return;
+      const status = await loadEnrichmentStatus();
+      if (ignore || !status?.running) return;
+      loadEnrichmentLogs();
+    }, 2000);
+    return () => { ignore = true; clearInterval(interval); };
+  }, [authenticated, tab, enrichmentStatus?.running, loadEnrichmentStatus, loadEnrichmentLogs]);
+
+  useEffect(() => {
+    if (!authenticated || enrichmentLogPaused) return;
+    if (enrichLogRef.current && enrichmentLogs.length)
+      enrichLogRef.current.scrollTop = enrichLogRef.current.scrollHeight;
+  }, [enrichmentLogs, authenticated, enrichmentLogPaused]);
 
   const handleTabChange = (newTab) => {
     if (newTab === tab) return;
@@ -578,6 +629,38 @@ export default function Admin() {
     } finally {
       setParserAction(null);
     }
+  };
+
+  const startEnrichment = async (force = false) => {
+    setEnrichmentAction('start');
+    try {
+      await api(`/api/enrichment/start${force ? '?force=true' : ''}`, { method: 'POST' });
+      showPriceMsg('success', 'Обогащение запущено');
+      loadEnrichmentStatus();
+      loadEnrichmentLogs();
+    } catch (err) {
+      showPriceMsg('error', err.message);
+    } finally {
+      setEnrichmentAction(null);
+    }
+  };
+
+  const stopEnrichment = () => {
+    if (!enrichmentStatus?.running) return;
+    showConfirm('Остановить обогащение?', async () => {
+      closeConfirm();
+      setEnrichmentAction('stop');
+      try {
+        await api('/api/enrichment/stop', { method: 'POST' });
+        showPriceMsg('success', 'Обогащение остановлено');
+        loadEnrichmentStatus();
+        loadEnrichmentLogs();
+      } catch (err) {
+        showPriceMsg('error', err.message);
+      } finally {
+        setEnrichmentAction(null);
+      }
+    });
   };
 
   const clearParserCache = () => {
@@ -1267,6 +1350,133 @@ export default function Admin() {
             )}
             </motion.div>
           </AnimatePresence>
+
+            {tab === 'enrichment' && (
+              <div className="admin-enrichment">
+                <motion.section className="admin-section" initial="hidden" animate="visible" variants={sectionVariants}>
+                  <h2>Обогащение товаров из complex.com.kz</h2>
+                  <p className="admin-hint">
+                    Скрипт парсит страницы товаров на complex.com.kz и сохраняет описания,
+                    характеристики и бренд в product.json. Обогащённые товары пропускаются при повторном запуске.
+                  </p>
+
+                  {enrichmentStatus?.error ? (
+                    <p className="admin-error">{enrichmentStatus.error}</p>
+                  ) : enrichmentStatus == null ? (
+                    <div className="loading"><div className="spinner"></div><p>Загрузка статуса...</p></div>
+                  ) : (
+                    <>
+                      {/* Статус и статистика */}
+                      <div className="enrichment-status-row">
+                        <span className={`admin-portal-parser-badge ${enrichmentStatus.running ? 'running' : 'stopped'}`}>
+                          {enrichmentStatus.running ? '⚡ Работает' : enrichmentStatus.done ? '✅ Завершено' : '⏸ Остановлен'}
+                        </span>
+                        {enrichmentStatus?.started_at && enrichmentStatus.running && (
+                          <span className="admin-portal-parser-time">
+                            Запущен: {new Date(enrichmentStatus.started_at).toLocaleTimeString('ru')}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Прогресс-бар */}
+                      {(enrichmentStatus.total > 0) && (
+                        <div className="enrichment-progress-wrap">
+                          <div className="enrichment-progress-labels">
+                            <span>Обогащено: <strong>{enrichmentStatus.enriched}</strong></span>
+                            <span>Ошибок: <strong style={{color:'var(--color-danger, #f87171)'}}>{enrichmentStatus.failed}</strong></span>
+                            <span>Всего: <strong>{enrichmentStatus.total}</strong></span>
+                          </div>
+                          <div className="enrichment-progress-bar-bg">
+                            <motion.div
+                              className="enrichment-progress-bar-fill"
+                              initial={{ width: 0 }}
+                              animate={{ width: `${Math.round(((enrichmentStatus.enriched + enrichmentStatus.failed) / enrichmentStatus.total) * 100)}%` }}
+                              transition={{ duration: 0.4 }}
+                            />
+                          </div>
+                          <div className="enrichment-progress-pct">
+                            {Math.round(((enrichmentStatus.enriched + enrichmentStatus.failed) / enrichmentStatus.total) * 100)}%
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Кнопки управления */}
+                      <div className="form-actions" style={{ marginTop: 16 }}>
+                        <motion.button
+                          type="button"
+                          className="btn-action btn-success"
+                          onClick={() => startEnrichment(false)}
+                          disabled={!!enrichmentStatus.running || enrichmentAction === 'start'}
+                          whileHover={{ scale: enrichmentStatus.running ? 1 : 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          animate={enrichmentStatus.running ? { boxShadow: ['0 0 0 0 rgba(34,197,94,0.35)', '0 0 0 10px rgba(34,197,94,0)'] } : {}}
+                          transition={{ duration: 1.2, repeat: enrichmentStatus.running ? Infinity : 0 }}
+                        >
+                          {enrichmentAction === 'start' ? 'Запуск...' : '▶ Запустить'}
+                        </motion.button>
+                        <motion.button
+                          type="button"
+                          className="btn-action btn-secondary"
+                          onClick={() => startEnrichment(true)}
+                          disabled={!!enrichmentStatus.running || enrichmentAction === 'start'}
+                          whileHover={{ scale: enrichmentStatus.running ? 1 : 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          🔄 Перезапустить всё (force)
+                        </motion.button>
+                        <motion.button
+                          type="button"
+                          className="btn-action btn-secondary danger"
+                          onClick={stopEnrichment}
+                          disabled={!enrichmentStatus.running || enrichmentAction === 'stop'}
+                          whileHover={{ scale: !enrichmentStatus.running ? 1 : 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          {enrichmentAction === 'stop' ? 'Остановка...' : '⏹ Остановить'}
+                        </motion.button>
+                      </div>
+
+                      {/* Лог */}
+                      <div className="admin-portal-parser-logs" style={{ marginTop: 24 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                          <h3 style={{ margin: 0 }}>Лог обогащения</h3>
+                          <motion.button
+                            type="button"
+                            className={`btn-action btn-sm ${enrichmentLogPaused ? 'btn-primary' : 'btn-secondary'}`}
+                            onClick={() => setEnrichmentLogPaused(v => !v)}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            {enrichmentLogPaused ? '▶ Авто-прокрутка' : '⏸ Пауза'}
+                          </motion.button>
+                          <motion.button
+                            type="button"
+                            className="btn-action btn-sm btn-secondary"
+                            onClick={loadEnrichmentLogs}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            🔁 Обновить
+                          </motion.button>
+                        </div>
+                        <pre className="admin-log-view" ref={enrichLogRef}>
+                          {enrichmentLogs.length
+                            ? enrichmentLogs.map((line, i) => {
+                                const color = colorizeLogLine(line);
+                                return (
+                                  <span key={i} style={color ? { color } : undefined}>
+                                    {line}{'\n'}
+                                  </span>
+                                );
+                              })
+                            : 'Нет записей. Запустите обогащение.'}
+                        </pre>
+                      </div>
+                    </>
+                  )}
+                </motion.section>
+              </div>
+            )}
 
           <div className="admin-footer">
             <MotionLink to="/" className="btn-action btn-secondary" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>← Вернуться в каталог</MotionLink>

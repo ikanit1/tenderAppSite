@@ -4413,3 +4413,51 @@ html {
     font-size: 0.75rem;
   }
 }
+
+/* ───── Enrichment progress ───── */
+.enrichment-status-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.enrichment-progress-wrap {
+  margin: 8px 0 4px;
+}
+
+.enrichment-progress-labels {
+  display: flex;
+  gap: 20px;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.enrichment-progress-labels strong {
+  color: var(--text-light);
+}
+
+.enrichment-progress-bar-bg {
+  height: 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.07);
+}
+
+.enrichment-progress-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #3d7eff 0%, #22c55e 100%);
+  transition: width 0.4s ease;
+  min-width: 4px;
+}
+
+.enrichment-progress-pct {
+  text-align: right;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}

@@ -248,8 +248,10 @@ async def process_target(
     index: int,
     total: int,
     stats: dict,
+    log: logging.Logger | None = None,
 ) -> None:
     """Обрабатывает один товар."""
+    _log = log.info if log else lambda m: print(m)
     async with sem:
         await asyncio.sleep(REQUEST_DELAY)
 
@@ -257,24 +259,24 @@ async def process_target(
         if not html:
             save_failed(target)
             stats["failed"] += 1
-            print(f"[{index}/{total}] failed   {target['model']} — no response")
+            _log(f"[{index}/{total}] failed   {target['model']} — no response")
             return
 
         parsed = parse_product_page(html)
         if not parsed:
             save_failed(target)
             stats["failed"] += 1
-            print(f"[{index}/{total}] failed   {target['model']} — no data in page")
+            _log(f"[{index}/{total}] failed   {target['model']} — no data in page")
             return
 
         save_enriched(target, parsed)
         stats["enriched"] += 1
         n_attrs = len(parsed.get("attributes", {}))
         desc_len = len(parsed.get("description_html", ""))
-        print(f"[{index}/{total}] enriched {target['model']} — {n_attrs} attrs, description {desc_len} chars")
+        _log(f"[{index}/{total}] enriched {target['model']} — {n_attrs} attrs, description {desc_len} chars")
 
 
-async def run(targets: list[dict]) -> dict:
+async def run(targets: list[dict], log: logging.Logger | None = None) -> dict:
     """Запускает обогащение для всех целей."""
     stats = {"enriched": 0, "failed": 0, "skipped": 0}
     total = len(targets)
@@ -283,7 +285,7 @@ async def run(targets: list[dict]) -> dict:
     connector = aiohttp.TCPConnector(limit=MAX_CONCURRENT, ssl=False)
     async with aiohttp.ClientSession(connector=connector) as session:
         tasks = [
-            process_target(sem, session, target, i + 1, total, stats)
+            process_target(sem, session, target, i + 1, total, stats, log)
             for i, target in enumerate(targets)
         ]
         await asyncio.gather(*tasks)
