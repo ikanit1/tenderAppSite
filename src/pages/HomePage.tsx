@@ -1,7 +1,13 @@
 import { PageMeta } from '@/app/PageMeta';
 import { MainContainer } from '@/shared/ui/MainContainer/MainContainer';
-import { StructuredData, getLocalBusinessSchema, getWebPageSchema } from '@/shared/seo/StructuredData';
+import {
+  StructuredData,
+  getLocalBusinessSchema,
+  getWebPageSchema,
+  getFaqSchema,
+} from '@/shared/seo/StructuredData';
 import { pageSEOConfig } from '@/shared/seo/seoConfig';
+import { faqItems } from '@/shared/content/faq';
 // import { Hero } from '@/widgets/hero/Hero';
 import { AboutSection } from '@/widgets/about/AboutSection';
 import { ServicesSection } from '@/widgets/services/ServicesSection';
@@ -20,6 +26,7 @@ export function HomePage() {
     description: seoConfig.description,
     url: 'https://grgroup.kz/',
   });
+  const faqSchema = getFaqSchema(faqItems);
 
   return (
     <>
@@ -29,7 +36,7 @@ export function HomePage() {
         keywords={seoConfig.keywords}
         image={seoConfig.image}
       />
-      <StructuredData data={[getLocalBusinessSchema(), webPageSchema]} />
+      <StructuredData data={[getLocalBusinessSchema(), webPageSchema, faqSchema]} />
       <MainContainer>
         {/* <Hero /> */}
         <AboutSection />

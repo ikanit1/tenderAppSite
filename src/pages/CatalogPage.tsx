@@ -2,9 +2,17 @@ import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getCatalogUrl } from '@/shared/utils/catalogUrl';
 import { useCart } from '@/shared/context/CartContext';
+import { PageMeta } from '@/app/PageMeta';
+import { StructuredData, getBreadcrumbSchema } from '@/shared/seo/StructuredData';
+import { pageSEOConfig, siteConfig } from '@/shared/seo/seoConfig';
 import styles from './CatalogPage.module.css';
 
 export function CatalogPage() {
+  const seoConfig = pageSEOConfig.catalog;
+  const breadcrumbSchema = getBreadcrumbSchema([
+    { name: 'Главная', url: `${siteConfig.domain}/` },
+    { name: 'Каталог', url: `${siteConfig.domain}/catalog` },
+  ]);
   const { pathname, search } = useLocation();
   const navigate = useNavigate();
   const { refreshCart } = useCart();
@@ -34,13 +42,21 @@ export function CatalogPage() {
   }, [navigate]);
 
   return (
-    <div className={styles.wrap}>
-      <iframe
-        src={iframeSrc}
-        className={styles.frame}
-        title="Каталог продукции"
-        allow="clipboard-write"
+    <>
+      <PageMeta
+        title={seoConfig.title}
+        description={seoConfig.description}
+        keywords={seoConfig.keywords}
       />
-    </div>
+      <StructuredData data={breadcrumbSchema} />
+      <div className={styles.wrap}>
+        <iframe
+          src={iframeSrc}
+          className={styles.frame}
+          title="Каталог продукции"
+          allow="clipboard-write"
+        />
+      </div>
+    </>
   );
 }

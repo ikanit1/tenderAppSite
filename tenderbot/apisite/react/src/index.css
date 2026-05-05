@@ -2659,7 +2659,7 @@ body::before {
     }
 
     .product-image {
-        height: 90px;
+        height: 160px;
     }
 
     .product-card .product-info {
@@ -2689,10 +2689,13 @@ body::before {
 
     .product-details {
         padding-top: 0.5rem;
-        min-height: 2.5rem;
+        min-height: auto;
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: 0.4rem;
+        align-items: stretch;
+        justify-content: flex-start;
+        margin-top: 0.25rem;
     }
 
     .price-client {
@@ -2782,7 +2785,7 @@ body::before {
         padding: 0.6rem 0.6rem;
     }
     .product-image {
-        height: 80px;
+        height: 140px;
     }
     .product-name {
         font-size: 0.8rem;

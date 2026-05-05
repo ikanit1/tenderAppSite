@@ -2,9 +2,14 @@ import { PageMeta } from '@/app/PageMeta';
 import { MainContainer } from '@/shared/ui/MainContainer/MainContainer';
 import { BackButton } from '@/shared/ui/BackButton/BackButton';
 import { ServicesSection } from '@/widgets/services/ServicesSection';
-import { StructuredData, getBreadcrumbSchema, getServiceSchema } from '@/shared/seo/StructuredData';
+import {
+  StructuredData,
+  getBreadcrumbSchema,
+  getServiceSchema,
+  getOfferCatalogSchema,
+} from '@/shared/seo/StructuredData';
 import { pageSEOConfig } from '@/shared/seo/seoConfig';
-// import { AssistantWidget } from '@/widgets/assistant/AssistantWidget';
+import { servicesList } from '@/shared/content/services';
 
 export function ServicesPage() {
   const seoConfig = pageSEOConfig.services;
@@ -14,18 +19,22 @@ export function ServicesPage() {
     { name: 'Услуги', url: 'https://grgroup.kz/services' },
   ]);
 
-  const serviceSchemas = [
+  const serviceSchemas = servicesList.map((s) =>
     getServiceSchema({
-      name: 'Видеонаблюдение',
-      description: 'Проектирование и монтаж систем видеонаблюдения под ключ',
+      name: s.title,
+      description: s.items.join('. '),
       areaServed: 'Казахстан',
+      ...(s.priceFrom && { priceRange: s.priceFrom }),
     }),
-    getServiceSchema({
-      name: 'СКУД',
-      description: 'Системы контроля и управления доступом для объектов любой сложности',
-      areaServed: 'Казахстан',
-    }),
-  ];
+  );
+
+  const offerCatalog = getOfferCatalogSchema(
+    servicesList.map((s) => ({
+      name: s.title,
+      description: s.items.join('. '),
+      priceFrom: s.priceFrom,
+    })),
+  );
 
   return (
     <>
@@ -35,12 +44,11 @@ export function ServicesPage() {
         keywords={seoConfig.keywords}
         ogType={seoConfig.ogType}
       />
-      <StructuredData data={[breadcrumbs, ...serviceSchemas]} />
+      <StructuredData data={[breadcrumbs, offerCatalog, ...serviceSchemas]} />
       <MainContainer>
         <BackButton />
         <ServicesSection fullPage />
       </MainContainer>
-      {/* <AssistantWidget /> */}
     </>
   );
 }

@@ -714,12 +714,219 @@ npm run build{details}</pre>
     )
 
 
-@app.get("/", response_class=HTMLResponse)
-async def root():
-    """Главная SPA-страница"""
-    if react_index_file.exists() or await _ensure_react_build_async():
+def _html_escape(value: str) -> str:
+    """Минимальное HTML-экранирование для инъекции в meta-теги."""
+    if value is None:
+        return ""
+    return (
+        str(value)
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+        .replace("'", "&#39;")
+    )
+
+
+def _build_product_image_url(product: dict) -> str:
+    """Возвращает абсолютный URL первой картинки товара или og-image по умолчанию."""
+    base = SITEMAP_BASE_URL.rstrip("/")
+    images = product.get("images") or []
+    model = (product.get("model") or "").strip()
+    if images and model:
+        from urllib.parse import quote
+        folder = quote(model, safe="")
+        first = images[0]
+        return f"{base}/catalog/portal_export/{folder}/{first}"
+    return f"{base}/og-image.png"
+
+
+def _truncate(text: str, limit: int = 160) -> str:
+    text = (text or "").strip()
+    if len(text) <= limit:
+        return text
+    return text[: limit - 1].rstrip() + "…"
+
+
+def _build_product_seo_block(product: dict) -> str:
+    """
+    Генерирует <head>-блок с meta-тегами + JSON-LD Product для конкретного товара.
+    Возвращает HTML, который надо вставить ПЕРЕД </head> в index.html.
+    """
+    base = SITEMAP_BASE_URL.rstrip("/")
+    name = (product.get("name") or product.get("model") or "Товар").strip()
+    model = (product.get("model") or "").strip()
+    brand = (product.get("brand") or "").strip()
+    description_raw = (product.get("description") or "").strip()
+    if not description_raw:
+        # fallback из html-описания
+        html_desc = product.get("description_html") or ""
+        description_raw = re.sub(r"<[^>]+>", " ", html_desc)
+        description_raw = re.sub(r"\s+", " ", description_raw).strip()
+    if not description_raw:
+        description_raw = f"{name}. {brand}. Купить в Казахстане у G&R Group: оригинал, гарантия, доставка."
+
+    description = _truncate(description_raw, 160)
+    title = f"{name} — купить в Казахстане | G&R Group"
+    canonical = f"{base}/catalog/?model={model}"
+    image_url = _build_product_image_url(product)
+
+    final_price = product.get("final_price") or product.get("price")
+    quantity = product.get("quantity")
+    in_stock = quantity is None or (isinstance(quantity, (int, float)) and quantity > 0)
+
+    # JSON-LD Product
+    schema = {
+        "@context": "https://schema.org/",
+        "@type": "Product",
+        "name": name,
+        "sku": model,
+        "description": description,
+        "image": image_url,
+        "url": canonical,
+    }
+    if brand:
+        schema["brand"] = {"@type": "Brand", "name": brand}
+
+    # Offer block — только если цена осмысленная
+    if final_price and isinstance(final_price, (int, float)) and 0 < final_price < 10**9:
+        schema["offers"] = {
+            "@type": "Offer",
+            "url": canonical,
+            "priceCurrency": "KZT",
+            "price": str(int(final_price)),
+            "availability": "https://schema.org/InStock" if in_stock else "https://schema.org/OutOfStock",
+            "seller": {"@type": "Organization", "name": "ТОО «G&R Group»"},
+        }
+
+    # Breadcrumbs
+    breadcrumbs = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "Главная", "item": f"{base}/"},
+            {"@type": "ListItem", "position": 2, "name": "Каталог", "item": f"{base}/catalog/"},
+            {"@type": "ListItem", "position": 3, "name": name, "item": canonical},
+        ],
+    }
+
+    title_e = _html_escape(title)
+    desc_e = _html_escape(description)
+    canonical_e = _html_escape(canonical)
+    image_e = _html_escape(image_url)
+
+    return f"""
+    <!-- SEO: динамические meta для товара -->
+    <title>{title_e}</title>
+    <meta name="description" content="{desc_e}" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="{canonical_e}" />
+    <meta property="og:type" content="product" />
+    <meta property="og:url" content="{canonical_e}" />
+    <meta property="og:title" content="{title_e}" />
+    <meta property="og:description" content="{desc_e}" />
+    <meta property="og:image" content="{image_e}" />
+    <meta property="og:locale" content="ru_KZ" />
+    <meta property="og:site_name" content="ТОО «G&amp;R Group»" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{title_e}" />
+    <meta name="twitter:description" content="{desc_e}" />
+    <meta name="twitter:image" content="{image_e}" />
+    <script type="application/ld+json">{json.dumps(schema, ensure_ascii=False)}</script>
+    <script type="application/ld+json">{json.dumps(breadcrumbs, ensure_ascii=False)}</script>
+    """.strip()
+
+
+def _build_catalog_index_seo_block() -> str:
+    """SEO-блок для самого каталога (когда нет ?model=)."""
+    base = SITEMAP_BASE_URL.rstrip("/")
+    title = "Каталог оборудования: видеонаблюдение, домофония, СКУД | G&R Group"
+    description = (
+        "Каталог профессионального оборудования: камеры Dahua, Hikvision, Imou, домофоны Akuvox, "
+        "СКУД, кабельная продукция. Прямые поставки в Казахстан, гарантия от производителя."
+    )
+    canonical = f"{base}/catalog/"
+    schema = {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": title,
+        "description": description,
+        "url": canonical,
+        "isPartOf": {"@type": "WebSite", "name": "ТОО «G&R Group»", "url": base},
+    }
+    breadcrumbs = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "Главная", "item": f"{base}/"},
+            {"@type": "ListItem", "position": 2, "name": "Каталог", "item": canonical},
+        ],
+    }
+    title_e = _html_escape(title)
+    desc_e = _html_escape(description)
+    canonical_e = _html_escape(canonical)
+    return f"""
+    <!-- SEO: каталог (раздел) -->
+    <title>{title_e}</title>
+    <meta name="description" content="{desc_e}" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="{canonical_e}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="{canonical_e}" />
+    <meta property="og:title" content="{title_e}" />
+    <meta property="og:description" content="{desc_e}" />
+    <meta property="og:locale" content="ru_KZ" />
+    <meta property="og:site_name" content="ТОО «G&amp;R Group»" />
+    <script type="application/ld+json">{json.dumps(schema, ensure_ascii=False)}</script>
+    <script type="application/ld+json">{json.dumps(breadcrumbs, ensure_ascii=False)}</script>
+    """.strip()
+
+
+async def _serve_catalog_html(model_param: Optional[str], cached_data: dict) -> HTMLResponse:
+    """
+    Отдаёт index.html SPA с инъекцией SEO-метаданных:
+    - если ?model=X — товарные meta + JSON-LD Product
+    - иначе — meta каталога + CollectionPage
+    """
+    if not (react_index_file.exists() or await _ensure_react_build_async()):
+        return _react_build_missing_response()
+
+    try:
+        html = react_index_file.read_text(encoding="utf-8")
+    except Exception as exc:
+        logger.error("Не удалось прочитать index.html: %s", exc)
         return FileResponse(react_index_file)
-    return _react_build_missing_response()
+
+    seo_block = ""
+    if model_param:
+        products = cached_data.get("products", []) or []
+        product = _find_product_by_model(products, model_param)
+        if product:
+            seo_block = _build_product_seo_block(product)
+    if not seo_block:
+        seo_block = _build_catalog_index_seo_block()
+
+    # Удаляем существующий <title> из index.html, чтобы наш заголовок не дублировался
+    html_modified = re.sub(r"<title>[^<]*</title>", "", html, count=1)
+    # Вставляем SEO-блок прямо перед </head>
+    if "</head>" in html_modified:
+        html_modified = html_modified.replace("</head>", f"{seo_block}\n  </head>", 1)
+    else:
+        html_modified = seo_block + html_modified
+
+    return HTMLResponse(content=html_modified)
+
+
+@app.get("/", response_class=HTMLResponse)
+async def root(model: Optional[str] = None, cached_data: dict = Depends(get_cached_data)):
+    """Главная SPA-страница каталога с SEO-инъекцией."""
+    return await _serve_catalog_html(model, cached_data)
+
+
+@app.get("/catalog", response_class=HTMLResponse)
+async def catalog_page(model: Optional[str] = None, cached_data: dict = Depends(get_cached_data)):
+    """Альтернативный путь каталога (для basename совместимости)."""
+    return await _serve_catalog_html(model, cached_data)
 
 
 @app.get("/checkout", response_class=HTMLResponse)
@@ -732,44 +939,59 @@ async def checkout_page():
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_page():
-    """SPA маршрут админки"""
-    if react_index_file.exists() or await _ensure_react_build_async():
+    """SPA маршрут админки (noindex)."""
+    if not (react_index_file.exists() or await _ensure_react_build_async()):
+        return _react_build_missing_response()
+    try:
+        html = react_index_file.read_text(encoding="utf-8")
+        if "<head>" in html:
+            html = html.replace("<head>", '<head><meta name="robots" content="noindex, nofollow" />', 1)
+        return HTMLResponse(content=html)
+    except Exception:
         return FileResponse(react_index_file)
-    return _react_build_missing_response()
 
 
 @app.get("/sitemap.xml")
 async def sitemap_xml(cached_data: dict = Depends(get_cached_data)):
     """
-    Генерирует sitemap.xml для поисковиков: главная, страницы сайта, каталог, опционально товары.
-    Nginx проксирует запрос grgroup.kz/sitemap.xml сюда.
+    Генерирует sitemap.xml: главная, страницы сайта, каталог, все товары с lastmod и image:image.
+    Nginx проксирует grgroup.kz/sitemap.xml сюда.
     """
     from urllib.parse import quote
-    base = SITEMAP_BASE_URL
+    from datetime import datetime, timezone
+
+    base = SITEMAP_BASE_URL.rstrip("/")
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
     lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
-        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"',
+        '        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">',
     ]
-    # Статические страницы
+
+    # Статические страницы маркетингового сайта
     static_urls = [
         (f"{base}/", "1.0", "weekly"),
         (f"{base}/services", "0.9", "monthly"),
+        (f"{base}/projects", "0.8", "monthly"),
+        (f"{base}/smart-systems", "0.85", "monthly"),
+        (f"{base}/digital-ecosystem", "0.85", "monthly"),
+        (f"{base}/work", "0.7", "monthly"),
+        (f"{base}/calculator", "0.85", "monthly"),
         (f"{base}/contacts", "0.9", "monthly"),
-        (f"{base}/projects", "0.9", "monthly"),
-        (f"{base}/smart-systems", "0.9", "monthly"),
-        (f"{base}/digital-ecosystem", "0.9", "monthly"),
-        (f"{base}/work", "0.9", "monthly"),
-        (f"{base}/catalog/", "0.8", "weekly"),
+        (f"{base}/catalog/", "0.95", "weekly"),
     ]
     for loc, priority, changefreq in static_urls:
         lines.append("  <url>")
         lines.append(f"    <loc>{loc}</loc>")
+        lines.append(f"    <lastmod>{today}</lastmod>")
         lines.append(f"    <changefreq>{changefreq}</changefreq>")
         lines.append(f"    <priority>{priority}</priority>")
         lines.append("  </url>")
-    # Товары: ссылки на каталог с ?model= для глубокой индексации (каталог может поддержать ?model= позже)
+
+    # Все товары (Google разрешает до 50k URL в одном sitemap)
     products = cached_data.get("products", []) or []
-    for p in products[:5000]:  # лимит 5000, чтобы sitemap не разрастался
+    for p in products[:50000]:
         model = (p.get("model") or "").strip()
         if not model:
             continue
@@ -777,12 +999,51 @@ async def sitemap_xml(cached_data: dict = Depends(get_cached_data)):
         loc = f"{base}/catalog/?model={encoded}"
         lines.append("  <url>")
         lines.append(f"    <loc>{loc}</loc>")
+        lines.append(f"    <lastmod>{today}</lastmod>")
         lines.append("    <changefreq>weekly</changefreq>")
         lines.append("    <priority>0.6</priority>")
+        # image:image — помогает Google Image Search
+        images = p.get("images") or []
+        if images:
+            img_folder = quote(model, safe="")
+            img_url = f"{base}/catalog/portal_export/{img_folder}/{images[0]}"
+            img_title = _html_escape((p.get("name") or model)[:120])
+            lines.append("    <image:image>")
+            lines.append(f"      <image:loc>{img_url}</image:loc>")
+            lines.append(f"      <image:title>{img_title}</image:title>")
+            lines.append("    </image:image>")
         lines.append("  </url>")
     lines.append("</urlset>")
     xml_body = "\n".join(lines)
-    return Response(content=xml_body, media_type="application/xml")
+    return Response(
+        content=xml_body,
+        media_type="application/xml",
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
+
+
+@app.get("/robots.txt", response_class=HttpResponse)
+async def robots_txt():
+    """robots.txt с указанием sitemap. Nginx может маршрутизировать сюда для каталога."""
+    base = SITEMAP_BASE_URL.rstrip("/")
+    body = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /admin\n"
+        "Disallow: /api/\n"
+        "Disallow: /checkout\n"
+        "Disallow: /*?embedded=1\n"
+        "\n"
+        "User-agent: Googlebot\n"
+        "Allow: /\n"
+        "\n"
+        "User-agent: Yandex\n"
+        "Allow: /\n"
+        "Clean-param: embedded /\n"
+        "\n"
+        f"Sitemap: {base}/sitemap.xml\n"
+    )
+    return HttpResponse(content=body, media_type="text/plain")
 
 
 @app.get("/products", response_model=ProductsResponse)

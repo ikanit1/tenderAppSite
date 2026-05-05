@@ -2,19 +2,29 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- Performance hints -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="//grgroup.kz" />
+    <link rel="preload" as="image" href="/og-image.png" />
 
     <!-- SEO Meta Tags -->
     <meta name="description" content="Комплексные инженерные системы безопасности в Казахстане: видеонаблюдение, СКУД, Face ID домофония, умный город. ИИ-аналитика, 5 лет гарантии, поддержка 24/7." />
-    <meta name="keywords" content="видеонаблюдение Астана, СКУД Казахстан, домофония, слаботочные системы, умный дом Астана, системы безопасности" />
-    <meta name="author" content="ТОО G&R Group" />
-    <meta name="robots" content="index, follow" />
-
-    <!-- Google Search Console Verification -->
-    <meta name="google-site-verification" content="REPLACE_WITH_YOUR_CODE" />
+    <meta name="keywords" content="видеонаблюдение Астана, СКУД Казахстан, домофония Akuvox, слаботочные системы, умный дом Астана, системы безопасности, видеоаналитика, Face ID" />
+    <meta name="author" content="ТОО «G&R Group»" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="format-detection" content="telephone=yes" />
 
     <!-- Canonical URL -->
     <link rel="canonical" href="https://grgroup.kz/" />
+
+    <!-- Hreflang (для будущих языковых версий) -->
+    <link rel="alternate" hreflang="ru-KZ" href="https://grgroup.kz/" />
+    <link rel="alternate" hreflang="x-default" href="https://grgroup.kz/" />
 
     <!-- Favicons & Icons -->
     <link rel="icon" type="image/svg+xml" href="/GR.svg" />
@@ -57,16 +67,21 @@
     {
       "@context": "https://schema.org",
       "@type": ["Organization", "LocalBusiness"],
+      "@id": "https://grgroup.kz/#organization",
       "name": "ТОО «G&R Group»",
+      "alternateName": "GR Group",
       "url": "https://grgroup.kz",
       "logo": "https://grgroup.kz/GR.svg",
-      "image": "https://grgroup.kz/GR.png",
+      "image": "https://grgroup.kz/og-image.png",
       "description": "Профессиональные слаботочные системы и системы безопасности в Казахстане. Видеонаблюдение, СКУД, домофония, умный город.",
-      "telephone": "+7-XXX-XXX-XXXX",
+      "telephone": "+77714215593",
+      "email": "Hello@atta.la",
       "priceRange": "₸₸",
       "address": {
         "@type": "PostalAddress",
+        "streetAddress": "ул. Кабанбай Батыра, 56",
         "addressLocality": "Астана",
+        "addressRegion": "Астана",
         "addressCountry": "KZ"
       },
       "geo": {
@@ -74,12 +89,35 @@
         "latitude": 51.1694,
         "longitude": 71.4491
       },
-      "openingHoursSpecification": {
-        "@type": "OpeningHoursSpecification",
-        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-        "opens": "09:00",
-        "closes": "18:00"
-      }
+      "areaServed": {
+        "@type": "Country",
+        "name": "Казахстан"
+      },
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+          "opens": "09:00",
+          "closes": "18:00"
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": "Saturday",
+          "opens": "10:00",
+          "closes": "16:00"
+        }
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+77714215593",
+        "contactType": "sales",
+        "areaServed": "KZ",
+        "availableLanguage": ["Russian", "Kazakh"]
+      },
+      "sameAs": [
+        "https://wa.me/77714215593",
+        "https://t.me/GQ_iYi"
+      ]
     }
     </script>
 
