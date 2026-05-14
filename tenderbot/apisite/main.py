@@ -1048,12 +1048,14 @@ async def robots_txt():
 
 @app.get("/products", response_model=ProductsResponse)
 async def get_products(
+    request: Request,
     brand: Optional[str] = None,
     search: Optional[str] = None,
     category: Optional[str] = None,
     min_quantity: Optional[int] = None,
     limit: Optional[int] = None,
     offset: int = 0,
+    include_hidden: bool = False,
     cached_data: dict = Depends(get_cached_data)
 ):
     """
@@ -1107,6 +1109,12 @@ async def get_products(
 
     if min_quantity is not None:
         products = [p for p in products if (p.get("quantity") or 0) >= min_quantity]
+
+    # Скрытые товары (по бренду/модели) исключаются из каталога.
+    # include_hidden=1 доступен только админу — для управления видимостью.
+    if not (include_hidden and is_admin_authenticated(request)):
+        from visibility_manager import filter_visible
+        products = filter_visible(products)
 
     total = len(products)
     if limit is not None:
@@ -1287,7 +1295,11 @@ async def get_product_by_model(
     
     if not product_data:
         raise HTTPException(status_code=404, detail="Товар не найден")
-    
+
+    from visibility_manager import is_product_hidden
+    if is_product_hidden(product_data.get("model", ""), product_data.get("brand", "")):
+        raise HTTPException(status_code=404, detail="Товар не найден")
+
     # Применяем расчет цен
     # В кэше часто price_rrc=0, актуальная цена в price_client
     price_rrc_raw = product_data.get("price_rrc")
@@ -1636,6 +1648,12 @@ class BrandDiscountRequest(BaseModel):
 class CustomPriceRequest(BaseModel):
     model: str
     price: float
+
+class HiddenBrandRequest(BaseModel):
+    brand: str
+
+class HiddenModelRequest(BaseModel):
+    model: str
 
 
 class AssistantChatRequest(BaseModel):
@@ -2462,6 +2480,80 @@ async def remove_custom_price(request: Request, model: str):
             raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
     except Exception as e:
         logger.error(f"Ошибка при удалении кастомной цены: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==================== API для управления видимостью товаров ====================
+
+@app.get("/api/admin/visibility")
+async def get_visibility_settings(request: Request):
+    """Возвращает настройки видимости товаров (скрытые бренды и модели)."""
+    require_admin_auth(request)
+    try:
+        from visibility_manager import get_visibility
+        return get_visibility()
+    except Exception as e:
+        logger.error(f"Ошибка при получении настроек видимости: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/admin/visibility/brand")
+async def add_hidden_brand(request: Request, payload: HiddenBrandRequest):
+    """Скрывает все товары бренда из каталога."""
+    require_admin_auth(request)
+    try:
+        from visibility_manager import add_hidden_brand as _add
+        if _add(payload.brand):
+            return {"status": "success", "message": f"Бренд {payload.brand} скрыт из каталога"}
+        raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Ошибка при скрытии бренда: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/admin/visibility/brand/{brand}")
+async def remove_hidden_brand(request: Request, brand: str):
+    """Возвращает бренд в каталог."""
+    require_admin_auth(request)
+    try:
+        from visibility_manager import remove_hidden_brand as _remove
+        if _remove(brand):
+            return {"status": "success", "message": f"Бренд {brand} снова виден в каталоге"}
+        raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
+    except Exception as e:
+        logger.error(f"Ошибка при возврате бренда: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/admin/visibility/model")
+async def add_hidden_model(request: Request, payload: HiddenModelRequest):
+    """Скрывает товар по модели из каталога."""
+    require_admin_auth(request)
+    try:
+        from visibility_manager import add_hidden_model as _add
+        if _add(payload.model):
+            return {"status": "success", "message": f"Модель {payload.model} скрыта из каталога"}
+        raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Ошибка при скрытии модели: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/admin/visibility/model/{model:path}")
+async def remove_hidden_model(request: Request, model: str):
+    """Возвращает товар в каталог."""
+    require_admin_auth(request)
+    try:
+        from visibility_manager import remove_hidden_model as _remove
+        if _remove(model):
+            return {"status": "success", "message": f"Модель {model} снова видна в каталоге"}
+        raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
+    except Exception as e:
+        logger.error(f"Ошибка при возврате модели: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
