@@ -192,9 +192,8 @@ image_parser_state = {
 _cart_storage: dict[str, list] = {}
 _cart_storage_lock = threading.Lock()
 
-# Хранилище сессий админа: session_id -> True (если авторизован)
-_admin_sessions: set[str] = set()
-_admin_sessions_lock = threading.Lock()
+# Сессии админа хранятся персистентно в data/admin_sessions.json (session_store),
+# чтобы рестарт контейнера не выкидывал из панели.
 
 # Защита от брутфорса входа в админку: IP -> (количество неудачных попыток, время разблокировки)
 _admin_login_attempts: dict[str, tuple[int, float]] = {}
@@ -298,19 +297,19 @@ def get_admin_session_id(request: Request) -> Optional[str]:
 
 def is_admin_authenticated(request: Request) -> bool:
     """Проверяет, авторизован ли админ"""
+    import session_store
     session_id = get_admin_session_id(request)
     if not session_id:
         return False
-    with _admin_sessions_lock:
-        return session_id in _admin_sessions
+    return session_store.is_valid(session_id)
 
 
 def create_admin_session(response: Response, request: Request) -> str:
     """Создает новую сессию админа"""
+    import session_store
     session_id = str(uuid.uuid4())
-    with _admin_sessions_lock:
-        _admin_sessions.add(session_id)
-    
+    session_store.add_session(session_id)
+
     forwarded_proto = (request.headers.get("x-forwarded-proto") or "").lower()
     is_https = forwarded_proto == "https" or (getattr(request.url, "scheme", "") == "https")
     
@@ -328,11 +327,11 @@ def create_admin_session(response: Response, request: Request) -> str:
 
 def remove_admin_session(request: Request, response: Response) -> None:
     """Удаляет сессию админа"""
+    import session_store
     session_id = get_admin_session_id(request)
     if session_id:
-        with _admin_sessions_lock:
-            _admin_sessions.discard(session_id)
-    
+        session_store.remove_session(session_id)
+
     forwarded_proto = (request.headers.get("x-forwarded-proto") or "").lower()
     is_https = forwarded_proto == "https" or (getattr(request.url, "scheme", "") == "https")
     
@@ -2304,6 +2303,8 @@ async def admin_login(request: Request, response: Response, login_data: AdminLog
     if login_ok and password_ok:
         _clear_admin_login_fail(request)
         create_admin_session(response, request)
+        import audit_manager
+        audit_manager.log("Вход в админ-панель", ip=_get_client_ip(request))
         return {"ok": True}
     _record_admin_login_fail(request)
     raise HTTPException(status_code=401, detail="Неверный логин или пароль")
@@ -2377,6 +2378,8 @@ async def set_global_discount(request: Request, discount_request: DiscountReques
     try:
         from price_manager import set_global_discount
         if set_global_discount(discount_request.discount):
+            import audit_manager
+            audit_manager.log("Глобальная скидка", details=f"{discount_request.discount}%", ip=_get_client_ip(request))
             return {"status": "success", "message": f"Глобальная скидка установлена: {discount_request.discount}%"}
         else:
             raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
@@ -2394,6 +2397,8 @@ async def set_model_discount(request: Request, model_discount_request: ModelDisc
     try:
         from price_manager import set_model_discount
         if set_model_discount(model_discount_request.model, model_discount_request.discount):
+            import audit_manager
+            audit_manager.log("Скидка по модели", target=model_discount_request.model, details=f"{model_discount_request.discount}%", ip=_get_client_ip(request))
             return {"status": "success", "message": f"Скидка для модели {model_discount_request.model} установлена: {model_discount_request.discount}%"}
         else:
             raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
@@ -2411,6 +2416,8 @@ async def remove_model_discount(request: Request, model: str):
     try:
         from price_manager import remove_model_discount
         if remove_model_discount(model):
+            import audit_manager
+            audit_manager.log("Удалена скидка по модели", target=model, ip=_get_client_ip(request))
             return {"status": "success", "message": f"Скидка для модели {model} удалена"}
         else:
             raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
@@ -2426,6 +2433,8 @@ async def set_brand_discount(request: Request, brand_discount_request: BrandDisc
     try:
         from price_manager import set_brand_discount
         if set_brand_discount(brand_discount_request.brand, brand_discount_request.discount):
+            import audit_manager
+            audit_manager.log("Скидка по бренду", target=brand_discount_request.brand, details=f"{brand_discount_request.discount}%", ip=_get_client_ip(request))
             return {"status": "success", "message": f"Скидка для бренда {brand_discount_request.brand} установлена: {brand_discount_request.discount}%"}
         else:
             raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
@@ -2443,6 +2452,8 @@ async def remove_brand_discount(request: Request, brand: str):
     try:
         from price_manager import remove_brand_discount
         if remove_brand_discount(brand):
+            import audit_manager
+            audit_manager.log("Удалена скидка по бренду", target=brand, ip=_get_client_ip(request))
             return {"status": "success", "message": f"Скидка для бренда {brand} удалена"}
         else:
             raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
@@ -2458,6 +2469,8 @@ async def set_custom_price(request: Request, custom_price_request: CustomPriceRe
     try:
         from price_manager import set_custom_price
         if set_custom_price(custom_price_request.model, custom_price_request.price):
+            import audit_manager
+            audit_manager.log("Кастомная цена", target=custom_price_request.model, details=f"{custom_price_request.price} ₸", ip=_get_client_ip(request))
             return {"status": "success", "message": f"Кастомная цена для модели {custom_price_request.model} установлена: {custom_price_request.price} ₸"}
         else:
             raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
@@ -2475,6 +2488,8 @@ async def remove_custom_price(request: Request, model: str):
     try:
         from price_manager import remove_custom_price
         if remove_custom_price(model):
+            import audit_manager
+            audit_manager.log("Удалена кастомная цена", target=model, ip=_get_client_ip(request))
             return {"status": "success", "message": f"Кастомная цена для модели {model} удалена"}
         else:
             raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
@@ -2504,6 +2519,8 @@ async def add_hidden_brand(request: Request, payload: HiddenBrandRequest):
     try:
         from visibility_manager import add_hidden_brand as _add
         if _add(payload.brand):
+            import audit_manager
+            audit_manager.log("Скрыт бренд", target=payload.brand, ip=_get_client_ip(request))
             return {"status": "success", "message": f"Бренд {payload.brand} скрыт из каталога"}
         raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
     except ValueError as e:
@@ -2520,6 +2537,8 @@ async def remove_hidden_brand(request: Request, brand: str):
     try:
         from visibility_manager import remove_hidden_brand as _remove
         if _remove(brand):
+            import audit_manager
+            audit_manager.log("Возвращён бренд", target=brand, ip=_get_client_ip(request))
             return {"status": "success", "message": f"Бренд {brand} снова виден в каталоге"}
         raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
     except Exception as e:
@@ -2534,6 +2553,8 @@ async def add_hidden_model(request: Request, payload: HiddenModelRequest):
     try:
         from visibility_manager import add_hidden_model as _add
         if _add(payload.model):
+            import audit_manager
+            audit_manager.log("Скрыта модель", target=payload.model, ip=_get_client_ip(request))
             return {"status": "success", "message": f"Модель {payload.model} скрыта из каталога"}
         raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
     except ValueError as e:
@@ -2550,10 +2571,24 @@ async def remove_hidden_model(request: Request, model: str):
     try:
         from visibility_manager import remove_hidden_model as _remove
         if _remove(model):
+            import audit_manager
+            audit_manager.log("Возвращена модель", target=model, ip=_get_client_ip(request))
             return {"status": "success", "message": f"Модель {model} снова видна в каталоге"}
         raise HTTPException(status_code=500, detail="Не удалось сохранить настройки")
     except Exception as e:
         logger.error(f"Ошибка при возврате модели: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/admin/audit")
+async def get_audit_log(request: Request, limit: int = 100):
+    """Возвращает последние записи аудит-лога (новые сверху)."""
+    require_admin_auth(request)
+    try:
+        import audit_manager
+        return {"entries": audit_manager.get_log(limit=max(1, min(limit, audit_manager.MAX_ENTRIES)))}
+    except Exception as e:
+        logger.error(f"Ошибка при получении аудит-лога: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
