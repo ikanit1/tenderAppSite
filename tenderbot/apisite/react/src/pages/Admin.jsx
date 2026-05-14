@@ -13,6 +13,7 @@ const TABS = [
   { id: 'parser', label: 'Парсер изображений', icon: '🖼️' },
   { id: 'portal', label: 'Портал', icon: '🔍' },
   { id: 'enrichment', label: 'Обогащение', icon: '✨' },
+  { id: 'audit', label: 'Аудит', icon: '📋' },
 ];
 
 const sectionVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { delay: 0.05 } } };
@@ -171,6 +172,10 @@ export default function Admin() {
   const [newHiddenBrand, setNewHiddenBrand] = useState('');
   const [newHiddenModel, setNewHiddenModel] = useState('');
 
+  // Audit log state
+  const [auditEntries, setAuditEntries] = useState([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+
   // Health (dashboard last update)
   const [healthData, setHealthData] = useState(null);
   // Brand filter for "Товары без цены"
@@ -302,6 +307,18 @@ export default function Admin() {
     }
   }, []);
 
+  const loadAudit = useCallback(async () => {
+    setAuditLoading(true);
+    try {
+      const data = await api('/api/admin/audit?limit=200');
+      setAuditEntries(data.entries || []);
+    } catch (err) {
+      setPriceMessage({ type: 'error', text: err.message });
+    } finally {
+      setAuditLoading(false);
+    }
+  }, []);
+
   const checkAuth = useCallback(async () => {
     try {
       const data = await api('/api/admin/check');
@@ -383,6 +400,10 @@ export default function Admin() {
     if (!authenticated) return;
     if (tab === 'visibility') loadVisibility();
   }, [tab, loadVisibility, authenticated]);
+  useEffect(() => {
+    if (!authenticated) return;
+    if (tab === 'audit') loadAudit();
+  }, [tab, loadAudit, authenticated]);
 
   useEffect(() => {
     setWithoutPricePage(1);
@@ -1511,8 +1532,6 @@ export default function Admin() {
                 </motion.section>
               </div>
             )}
-            </motion.div>
-          </AnimatePresence>
 
             {tab === 'enrichment' && (
               <div className="admin-enrichment">
@@ -1640,6 +1659,63 @@ export default function Admin() {
                 </motion.section>
               </div>
             )}
+
+            {tab === 'audit' && (
+              <div className="admin-audit">
+                <motion.section className="admin-section" initial="hidden" animate="visible" variants={sectionVariants}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <h2 style={{ margin: 0 }}>Журнал изменений</h2>
+                    <motion.button
+                      type="button"
+                      className="btn-action btn-sm btn-secondary"
+                      onClick={loadAudit}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      🔁 Обновить
+                    </motion.button>
+                  </div>
+                  <p className="admin-hint" style={{ marginTop: 8 }}>
+                    Записываются изменения цен, скидок, видимости товаров и входы в панель (последние {auditEntries.length}).
+                  </p>
+                  {auditLoading ? (
+                    <div className="loading">
+                      <div className="spinner"></div>
+                      <p>Загрузка...</p>
+                    </div>
+                  ) : auditEntries.length === 0 ? (
+                    <p className="admin-hint">Записей пока нет.</p>
+                  ) : (
+                    <div className="admin-table-wrap">
+                      <table className="admin-table">
+                        <thead>
+                          <tr>
+                            <th>Время</th>
+                            <th>Действие</th>
+                            <th>Объект</th>
+                            <th>Детали</th>
+                            <th>IP</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {auditEntries.map((e, i) => (
+                            <tr key={`${e.timestamp}-${i}`}>
+                              <td>{formatDateTime(e.timestamp)}</td>
+                              <td>{e.action}</td>
+                              <td>{e.target || '—'}</td>
+                              <td>{e.details || '—'}</td>
+                              <td><code>{e.ip || '—'}</code></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </motion.section>
+              </div>
+            )}
+            </motion.div>
+          </AnimatePresence>
 
           <div className="admin-footer">
             <MotionLink to="/" className="btn-action btn-secondary" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>← Вернуться в каталог</MotionLink>
