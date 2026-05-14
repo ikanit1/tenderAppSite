@@ -9,6 +9,7 @@ import Background from '../components/Background';
 const TABS = [
   { id: 'dashboard', label: 'Дашборд', icon: '📊' },
   { id: 'prices', label: 'Цены и скидки', icon: '💰' },
+  { id: 'visibility', label: 'Видимость', icon: '👁️' },
   { id: 'parser', label: 'Парсер изображений', icon: '🖼️' },
   { id: 'portal', label: 'Портал', icon: '🔍' },
   { id: 'enrichment', label: 'Обогащение', icon: '✨' },
@@ -163,6 +164,13 @@ export default function Admin() {
   const [enrichmentLogPaused, setEnrichmentLogPaused] = useState(false);
   const enrichLogRef = useRef(null);
 
+  // Visibility state
+  const [visibilityConfig, setVisibilityConfig] = useState(null);
+  const [visibilityLoading, setVisibilityLoading] = useState(false);
+  const [allBrandsList, setAllBrandsList] = useState([]);
+  const [newHiddenBrand, setNewHiddenBrand] = useState('');
+  const [newHiddenModel, setNewHiddenModel] = useState('');
+
   // Health (dashboard last update)
   const [healthData, setHealthData] = useState(null);
   // Brand filter for "Товары без цены"
@@ -276,6 +284,24 @@ export default function Admin() {
     }
   }, []);
 
+  const loadVisibility = useCallback(async () => {
+    setVisibilityLoading(true);
+    try {
+      const data = await api('/api/admin/visibility');
+      setVisibilityConfig(data);
+    } catch (err) {
+      setPriceMessage({ type: 'error', text: err.message });
+    } finally {
+      setVisibilityLoading(false);
+    }
+    try {
+      const data = await api('/products?include_hidden=1&limit=1');
+      setAllBrandsList(data.brands || []);
+    } catch {
+      setAllBrandsList([]);
+    }
+  }, []);
+
   const checkAuth = useCallback(async () => {
     try {
       const data = await api('/api/admin/check');
@@ -353,6 +379,10 @@ export default function Admin() {
     if (!authenticated) return;
     if (tab === 'enrichment') { loadEnrichmentStatus(); loadEnrichmentLogs(); }
   }, [tab, loadEnrichmentStatus, loadEnrichmentLogs, authenticated]);
+  useEffect(() => {
+    if (!authenticated) return;
+    if (tab === 'visibility') loadVisibility();
+  }, [tab, loadVisibility, authenticated]);
 
   useEffect(() => {
     setWithoutPricePage(1);
@@ -564,6 +594,60 @@ export default function Admin() {
     }
   };
 
+  const addHiddenBrand = async () => {
+    const brand = (newHiddenBrand || '').trim();
+    if (!brand) { showPriceMsg('error', 'Выберите бренд'); return; }
+    try {
+      await api('/api/admin/visibility/brand', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brand }),
+      });
+      showPriceMsg('success', `Бренд ${brand} скрыт из каталога`);
+      setNewHiddenBrand('');
+      loadVisibility();
+    } catch (err) {
+      showPriceMsg('error', err.message);
+    }
+  };
+
+  const removeHiddenBrand = async (brand) => {
+    try {
+      await api(`/api/admin/visibility/brand/${encodeURIComponent(brand)}`, { method: 'DELETE' });
+      showPriceMsg('success', `Бренд ${brand} снова виден в каталоге`);
+      loadVisibility();
+    } catch (err) {
+      showPriceMsg('error', err.message);
+    }
+  };
+
+  const addHiddenModel = async () => {
+    const model = (newHiddenModel || '').trim();
+    if (!model) { showPriceMsg('error', 'Введите модель'); return; }
+    try {
+      await api('/api/admin/visibility/model', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model }),
+      });
+      showPriceMsg('success', `Модель ${model} скрыта из каталога`);
+      setNewHiddenModel('');
+      loadVisibility();
+    } catch (err) {
+      showPriceMsg('error', err.message);
+    }
+  };
+
+  const removeHiddenModel = async (model) => {
+    try {
+      await api(`/api/admin/visibility/model/${encodeURIComponent(model)}`, { method: 'DELETE' });
+      showPriceMsg('success', `Модель ${model} снова видна в каталоге`);
+      loadVisibility();
+    } catch (err) {
+      showPriceMsg('error', err.message);
+    }
+  };
+
   const startParser = async () => {
     setParserAction('start');
     try {
@@ -683,6 +767,11 @@ export default function Admin() {
   const modelDiscounts = pricesConfig?.model_discounts || {};
   const brandDiscounts = pricesConfig?.brand_discounts || {};
   const customPrices = pricesConfig?.custom_prices || {};
+  const hiddenBrands = visibilityConfig?.hidden_brands || [];
+  const hiddenModels = visibilityConfig?.hidden_models || [];
+  const availableBrands = allBrandsList.filter(
+    b => !hiddenBrands.some(hb => hb.toLowerCase() === b.toLowerCase())
+  );
   const withoutPriceAll = products.filter(p => !p.final_price || p.final_price <= 0);
   const withoutPriceFiltered = brandFilter ? withoutPriceAll.filter(p => p.brand === brandFilter) : withoutPriceAll;
   const withoutPrice = withoutPriceFiltered.slice(0, withoutPricePage * NOPRICE_PAGE_SIZE);
@@ -1101,6 +1190,80 @@ export default function Admin() {
                         )}
                         </>
                       )}
+                    </motion.section>
+                  </>
+                )}
+              </div>
+            )}
+
+            {tab === 'visibility' && (
+              <div className="admin-visibility">
+                {visibilityLoading ? (
+                  <div className="loading">
+                    <div className="spinner"></div>
+                    <p>Загрузка настроек...</p>
+                  </div>
+                ) : (
+                  <>
+                    <motion.div
+                      className="admin-dashboard-hint"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                    >
+                      <p>Скрытые товары не показываются в каталоге (ни на главном экране, ни в категориях). Данные не удаляются — товары можно вернуть в любой момент.</p>
+                    </motion.div>
+
+                    <motion.section className="admin-section" initial="hidden" animate="visible" variants={sectionVariants}>
+                      <h2>Скрыть бренд целиком</h2>
+                      <div className="form-row">
+                        <select
+                          value={newHiddenBrand}
+                          onChange={e => setNewHiddenBrand(e.target.value)}
+                          className="admin-input"
+                        >
+                          <option value="">— выберите бренд —</option>
+                          {availableBrands.map(b => (
+                            <option key={b} value={b}>{b}</option>
+                          ))}
+                        </select>
+                        <motion.button type="button" className="btn-action btn-success" onClick={addHiddenBrand} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>Скрыть</motion.button>
+                      </div>
+                      <motion.ul className="admin-list" initial="hidden" animate="visible" variants={listContainerVariants}>
+                        {hiddenBrands.length === 0 && (
+                          <p className="admin-hint">Скрытых брендов нет.</p>
+                        )}
+                        {hiddenBrands.map(b => (
+                          <motion.li key={b} className="list-item" variants={listItemVariants}>
+                            <span>{b}</span>
+                            <motion.button type="button" className="btn-action btn-secondary btn-sm" onClick={() => removeHiddenBrand(b)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>Вернуть в каталог</motion.button>
+                          </motion.li>
+                        ))}
+                      </motion.ul>
+                    </motion.section>
+
+                    <motion.section className="admin-section" initial="hidden" animate="visible" variants={sectionVariants}>
+                      <h2>Скрыть отдельную модель</h2>
+                      <div className="form-row">
+                        <input
+                          placeholder="Модель товара"
+                          value={newHiddenModel}
+                          onChange={e => setNewHiddenModel(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && addHiddenModel()}
+                          className="admin-input"
+                        />
+                        <motion.button type="button" className="btn-action btn-success" onClick={addHiddenModel} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>Скрыть</motion.button>
+                      </div>
+                      <motion.ul className="admin-list" initial="hidden" animate="visible" variants={listContainerVariants}>
+                        {hiddenModels.length === 0 && (
+                          <p className="admin-hint">Скрытых моделей нет.</p>
+                        )}
+                        {hiddenModels.map(m => (
+                          <motion.li key={m} className="list-item" variants={listItemVariants}>
+                            <span>{m}</span>
+                            <motion.button type="button" className="btn-action btn-secondary btn-sm" onClick={() => removeHiddenModel(m)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>Вернуть в каталог</motion.button>
+                          </motion.li>
+                        ))}
+                      </motion.ul>
                     </motion.section>
                   </>
                 )}
